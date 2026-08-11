@@ -4,51 +4,61 @@ title: Home
 lang: en
 description: Foreign Immigration Services is a Bureau of Immigration accredited consultancy in the Philippines, providing guidance on visa, extension, residency and corporate mobility matters.
 ---
+{% from "partials/icons.njk" import icon %}
+{% include "partials/urgent-banner.njk" %}
+
 <section class="hero">
-  <div class="wrap">
-    <p class="hero__eyebrow">Philippine Immigration Consultancy</p>
-    <h1>Considered guidance on immigration matters in the Philippines.</h1>
-    <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy, assisting individuals, families and organisations with visa, extension, residency and corporate mobility matters in the Philippines.</p>
-    <div class="hero__actions">
-      <a class="btn btn-primary" href="/contact/">Send an Enquiry</a>
-      <a class="btn btn-secondary" href="/services/">View Our Services</a>
+  <div class="wrap hero__grid">
+    <div class="hero__content">
+      <p class="hero__eyebrow">Philippine Immigration Consultancy</p>
+      <h1>Considered guidance on immigration matters in the Philippines.</h1>
+      <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy, assisting individuals, families and organisations with visa, extension, residency, corporate mobility and related immigration matters in the Philippines.</p>
+      <div class="hero__actions">
+        <a class="btn btn-primary" href="/contact/">Send an Enquiry</a>
+        <a class="btn btn-secondary" href="/services/">Explore Our Services</a>
+      </div>
+      <p class="hero__accreditation">
+        {{ icon("accreditation", 40) }}
+        <span><strong>Bureau of Immigration Accredited Consultancy</strong><br>Accreditation No. {{ site.accreditation.number }}</span>
+      </p>
+    </div>
+    <div class="hero__visual">
+{% include "partials/hero-motif.njk" %}
+      <img class="hero__logo" src="/assets/images/fis-logo.png" alt="Foreign Immigration Services" width="612" height="408">
     </div>
   </div>
 </section>
 
-<div class="accreditation-strip">
-  <div class="wrap">
-    <span>Bureau of Immigration Accredited Consultancy</span>
-    <strong>Accreditation No. CA-202623557</strong>
-  </div>
-</div>
-
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
-      <h2>Our Service Pillars</h2>
-      <p>Our practice is organised across four areas of immigration work.</p>
+      <h2>Core Immigration Services</h2>
+      <p>Our practice is organised across four core areas of immigration work.</p>
     </div>
     <div class="card-grid">
       <div class="card">
-        <h3>Visa and Immigration Applications</h3>
-        <p>Guidance on entry visas and immigration applications for the Philippines.</p>
-        <a href="/services/visa-and-immigration-applications/">Learn more →</a>
+        {{ icon("visa-applications", 44) }}
+        <h3>Visa &amp; Immigration Applications</h3>
+        <p>Planning to enter, work, study or otherwise stay in the Philippines and unsure which visa applies to you?</p>
+        <a class="card__link" href="/services/visa-and-immigration-applications/">Learn more →</a>
       </div>
       <div class="card">
-        <h3>Extensions and Compliance</h3>
-        <p>Extension of stay and ongoing compliance for foreign nationals already in the Philippines.</p>
-        <a href="/services/extensions-and-compliance/">Learn more →</a>
+        {{ icon("extensions-compliance", 44) }}
+        <h3>Extensions &amp; Compliance</h3>
+        <p>Already in the Philippines and need to extend your stay or keep up with reporting requirements?</p>
+        <a class="card__link" href="/services/extensions-and-compliance/">Learn more →</a>
       </div>
       <div class="card">
-        <h3>Residency and Long-Term Status</h3>
-        <p>Longer-term immigration status for foreign nationals intending to remain in the Philippines.</p>
-        <a href="/services/residency-and-long-term-status/">Learn more →</a>
+        {{ icon("residency-status", 44) }}
+        <h3>Residency &amp; Long-Term Status</h3>
+        <p>Considering a longer-term or permanent move to the Philippines?</p>
+        <a class="card__link" href="/services/residency-and-long-term-status/">Learn more →</a>
       </div>
       <div class="card">
-        <h3>Corporate and Global Mobility</h3>
-        <p>Immigration support for organisations and their internationally mobile personnel.</p>
-        <a href="/services/corporate-and-global-mobility/">Learn more →</a>
+        {{ icon("corporate-mobility", 44) }}
+        <h3>Corporate &amp; Global Mobility</h3>
+        <p>Relocating employees or managing cross-border staff moving into the Philippines?</p>
+        <a class="card__link" href="/services/corporate-and-global-mobility/">Learn more →</a>
       </div>
     </div>
   </div>
@@ -56,10 +66,118 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
 
 <section class="section section--muted">
   <div class="wrap">
-    <div class="section__intro prose">
-      <h2>How We Work</h2>
-      <p>Foreign Immigration Services operates as an institutional consultancy. In keeping with client confidentiality and professional discretion, we represent our work under the firm rather than individual staff profiles, and all engagements are conducted through our official channels.</p>
-      <p><a href="/about/">More about the firm →</a></p>
+    <div class="section__intro">
+      <h2>Specialised Services</h2>
+      <p>Focused assistance for specific, often time-sensitive, immigration situations.</p>
+    </div>
+    <div class="card-grid card-grid--specialised">
+      <div class="card">
+        {{ icon("status-review", 44) }}
+        <h3>Immigration Status Review &amp; Regularisation Assistance</h3>
+        <p>Uncertain about your immigration status, visa validity, or Bureau of Immigration records?</p>
+        <a class="card__link" href="/services/immigration-status-review-and-regularisation/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("airport-vip", 44) }}
+        <h3>Airport VIP Meet &amp; Assist</h3>
+        <p>Want a smoother, personally assisted airport arrival or departure?</p>
+        <a class="card__link" href="/services/airport-vip-meet-and-assist/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("motions-blacklist", 44) }}
+        <h3>Immigration Motions, Blacklist &amp; Derogatory Record Assistance</h3>
+        <p>Dealing with a blacklist, watchlist, or other derogatory immigration record?</p>
+        <a class="card__link" href="/services/immigration-motions-blacklist-and-derogatory-record-assistance/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("legal-support", 44) }}
+        <h3>Legal Support for Foreign Nationals</h3>
+        <p>Facing criminal or immigration proceedings in the Philippines?</p>
+        <a class="card__link" href="/services/legal-support-for-foreign-nationals/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("lost-passport", 44) }}
+        <h3>Lost Passport &amp; Travel Document Assistance</h3>
+        <p>Lost your passport or travel document while in the Philippines?</p>
+        <a class="card__link" href="/services/lost-passport-and-travel-document-assistance/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("document-verification", 44) }}
+        <h3>Visa &amp; Immigration Document Verification</h3>
+        <p>Need to verify the authenticity or status of a visa or immigration document?</p>
+        <a class="card__link" href="/services/visa-and-immigration-document-verification/">Learn more →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="wrap">
+    <h2>Not Sure What You Need?</h2>
+    <p>Whether you have lost your passport, are uncertain about your immigration status, need to verify a visa or document, or simply do not know which immigration process applies to your circumstances, tell us what is happening and we can help identify the appropriate next step.</p>
+    <p><a class="btn btn-on-dark" href="/contact/">Tell Us Your Situation</a></p>
+  </div>
+</section>
+
+<section class="feature-split">
+  <div class="wrap feature-split__grid">
+    <div class="feature-split__content">
+      <p class="tag">Featured Service</p>
+      <h2>Airport VIP Meet &amp; Assist</h2>
+      <p class="feature-split__lede">A smoother airport experience, from arrival to onward transport.</p>
+      <p>Our Airport VIP Meet &amp; Assist service provides personalised assistance throughout the airport journey while observing all applicable airline, airport, Immigration, Customs, security and other government procedures.</p>
+      <p><a class="btn btn-on-dark" href="/services/airport-vip-meet-and-assist/">Learn More About Airport VIP Meet &amp; Assist</a></p>
+    </div>
+    <div class="feature-split__visual">
+      {{ icon("airport-vip", 140) }}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__intro">
+      <h2>Client Portal</h2>
+      <p>A secure Client Portal is being developed in stages. Here is what is available now, and what is coming.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        {{ icon("portal-enquiry", 44) }}
+        <p class="tag tag--available">Available now, interim</p>
+        <h3>Send an Enquiry</h3>
+        <p>Reach us directly by email while the dedicated system is developed.</p>
+      </div>
+      <div class="card card--muted">
+        {{ icon("portal-upload", 44) }}
+        <p class="tag">Not yet available</p>
+        <h3>Document Upload</h3>
+        <p>Planned once storage, retention and privacy safeguards are finalised.</p>
+      </div>
+      <div class="card card--muted">
+        {{ icon("portal-track", 44) }}
+        <p class="tag">Not yet available</p>
+        <h3>Track Your Enquiry / Application</h3>
+        <p>Planned alongside our secure client system.</p>
+      </div>
+      <div class="card card--notice">
+        {{ icon("portal-payments", 44) }}
+        <p class="tag">Not yet available</p>
+        <h3>Payments</h3>
+        <p>Accepted after the scope of services and applicable fees have been confirmed by our team.</p>
+      </div>
+    </div>
+    <p class="mt-md"><a class="btn btn-secondary" href="/client-portal/">Open the Client Portal →</a></p>
+  </div>
+</section>
+
+<section class="section trust-section">
+  <div class="wrap">
+    <div class="trust-section__inner">
+      {{ icon("accreditation", 52) }}
+      <div>
+        <h2>Bureau of Immigration Accredited Consultancy</h2>
+        <p>Accreditation No. {{ site.accreditation.number }}. See our <a href="/accreditation/">Accreditation page</a> for details.</p>
+      </div>
     </div>
   </div>
 </section>

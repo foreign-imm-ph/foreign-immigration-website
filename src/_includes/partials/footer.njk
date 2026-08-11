@@ -1,27 +1,31 @@
 <footer class="site-footer">
-  <div class="wrap site-footer__inner">
-    <div class="site-footer__col">
-      <p class="site-footer__brand">{{ site.name }}</p>
+  <div class="site-footer__brand-panel">
+    <div class="wrap site-footer__brand-inner">
+      <img class="site-footer__logo" src="/assets/images/fis-logo.png" alt="{{ site.name }}" width="612" height="408">
       <p class="site-footer__accreditation">
-        {{ site.accreditation.authority }} {{ site.accreditation.designation }}<br>
+        {{ site.accreditation.authority }} {{ site.accreditation.designation }} &middot;
         Accreditation No. {{ site.accreditation.number }}
       </p>
     </div>
-
-    <div class="site-footer__col">
-      <p><a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
-    </div>
-
-    <nav class="site-footer__col" aria-label="Legal">
-      <ul>
-        <li><a href="/privacy-notice/">Privacy Notice</a></li>
-        <li><a href="/terms-of-use/">Terms of Use</a></li>
-        <li><a href="/accessibility/">Accessibility</a></li>
-      </ul>
-    </nav>
   </div>
 
-  <div class="wrap site-footer__legal">
-    <p>&copy; {{ currentYear }} {{ site.name }}. All rights reserved.</p>
+  <div class="site-footer__legal-panel">
+    <div class="wrap site-footer__legal-inner">
+      <div class="site-footer__col">
+        <p><a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
+      </div>
+
+      <nav class="site-footer__col" aria-label="Legal">
+        <ul>
+          <li><a href="/privacy-notice/">Privacy Notice</a></li>
+          <li><a href="/terms-of-use/">Terms of Use</a></li>
+          <li><a href="/accessibility/">Accessibility</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="wrap site-footer__legal">
+      <p>&copy; {{ currentYear }} {{ site.name }}. All rights reserved.</p>
+    </div>
   </div>
 </footer>
