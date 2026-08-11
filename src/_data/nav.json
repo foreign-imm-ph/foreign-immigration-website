@@ -1,0 +1,8 @@
+[
+  { "label": "Home", "url": "/" },
+  { "label": "About", "url": "/about/" },
+  { "label": "Services", "url": "/services/" },
+  { "label": "Accreditation", "url": "/accreditation/" },
+  { "label": "Client Portal", "url": "/client-portal/" },
+  { "label": "Contact", "url": "/contact/" }
+]

@@ -1,0 +1,17 @@
+{
+  "name": "Foreign Immigration Services",
+  "shortName": "Foreign Immigration Services",
+  "url": "https://foreignimmigration.ph",
+  "email": "info@foreignimmigration.ph",
+  "accreditation": {
+    "authority": "Bureau of Immigration",
+    "designation": "Accredited Consultancy",
+    "number": "CA-202623557"
+  },
+  "defaultLocale": "en",
+  "locales": {
+    "en": { "label": "English", "path": "/", "status": "available" },
+    "zh-Hans": { "label": "简体中文", "path": "/zh-Hans/", "status": "planned" },
+    "ko": { "label": "한국어", "path": "/ko/", "status": "planned" }
+  }
+}

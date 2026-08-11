@@ -1,0 +1,27 @@
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <div class="site-footer__col">
+      <p class="site-footer__brand">{{ site.name }}</p>
+      <p class="site-footer__accreditation">
+        {{ site.accreditation.authority }} {{ site.accreditation.designation }}<br>
+        Accreditation No. {{ site.accreditation.number }}
+      </p>
+    </div>
+
+    <div class="site-footer__col">
+      <p><a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
+    </div>
+
+    <nav class="site-footer__col" aria-label="Legal">
+      <ul>
+        <li><a href="/privacy-notice/">Privacy Notice</a></li>
+        <li><a href="/terms-of-use/">Terms of Use</a></li>
+        <li><a href="/accessibility/">Accessibility</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="wrap site-footer__legal">
+    <p>&copy; {{ currentYear }} {{ site.name }}. All rights reserved.</p>
+  </div>
+</footer>
