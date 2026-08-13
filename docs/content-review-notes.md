@@ -17,26 +17,34 @@ by staff, clients, or in a dispute.
 > operational restrictions."
 
 Status: **OWNER-SUPPLIED POLICY — REQUIRES FINAL TERMS/CONSUMER-LAW REVIEW.**
-This text is presented on the service page as informational service
-description, not as the site's Terms of Use. Before it is relied upon as
-binding, it should be reviewed against Philippine consumer protection and
-refund-disclosure requirements (e.g. DTI rules on cancellation/refund
-terms) and, if confirmed, incorporated into the Terms of Use page
-formally rather than living only on the service page.
+This text is presented on the service page as ordinary prose, not inside a
+visible disclaimer box — per Phase 1.2 instructions, the on-page callout
+that previously flagged this passage as pending review was removed, since
+publicly rendering internal review status was itself identified as a
+problem. The review requirement is tracked **only** here from Phase 1.2
+onward. Before this policy is relied upon as binding, it should be
+reviewed against Philippine consumer protection and refund-disclosure
+requirements (e.g. DTI rules on cancellation/refund terms) and, if
+confirmed, incorporated into the Terms of Use page formally.
 
 ## Legal-risk-sensitive service pages (drafted per owner-supplied wording)
 
 The following pages contain carefully hedged language about outcomes,
-representation, and government processes. The wording was drafted to
-match the owner's explicit instructions and should not be loosened,
-paraphrased away, or have qualifiers removed without legal sign-off:
+representation, and government processes. As of Phase 1.2 this language is
+integrated into normal prose or a restrained `.context-note` rather than a
+heavy bordered disclaimer box (an explicit owner instruction, to avoid the
+site reading as a list of reasons the firm cannot help) — but the
+underlying substance is unchanged and should not be loosened, paraphrased
+away, or have qualifiers removed without legal sign-off:
 
 - `src/services/immigration-status-review-and-regularisation.njk` —
-  disclaims protection from arrest/detention/deportation, concealment, and
-  guaranteed outcomes.
+  restrained note that outcomes and processing requirements are
+  determined by the relevant Philippine authorities, and FIS's role is
+  assessment/explanation/assistance within the scope permitted.
 - `src/services/immigration-motions-blacklist-and-derogatory-record-assistance.njk` —
-  disclaims guaranteed lifting, clearance, favourable decisions, or fixed
-  processing times.
+  restrained note that the appropriate procedural option depends on the
+  specific record/order/proceeding; no lifting, clearance, favourable
+  decision or fixed processing time is promised.
 - `src/services/legal-support-for-foreign-nationals.njk` — states FIS is
   not a law firm, does not provide criminal defence representation, and
   cannot influence courts or government authorities.
@@ -49,3 +57,16 @@ paraphrased away, or have qualifiers removed without legal sign-off:
 - Data Protection Officer details, NPC registration status, and document
   retention periods remain undetermined and are not referenced anywhere
   on the site.
+
+## Client-facing terminology (Phase 1.2)
+
+Established as the standing vocabulary for the Client Portal and any
+future backend work — do not introduce "matter" / "My Matters" /
+"Manage your matter" into client-facing copy:
+
+- **Reference** — the identifier for an application or service request
+  (e.g. "Reference FIS-2026-00124"), not "Matter Number."
+- **Applications & Services** — the umbrella concept for a client's
+  immigration applications and service requests collectively.
+- Portal navigation concepts: Applications & Services, Documents,
+  Messages, Payments, Profile.

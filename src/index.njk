@@ -115,7 +115,7 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
   <div class="wrap">
     <h2>Not Sure What You Need?</h2>
     <p>Whether you have lost your passport, are uncertain about your immigration status, need to verify a visa or document, or simply do not know which immigration process applies to your circumstances, tell us what is happening and we can help identify the appropriate next step.</p>
-    <p><a class="btn btn-on-dark" href="/contact/">Tell Us Your Situation</a></p>
+    <p><a class="btn btn-on-dark" href="/contact/?service=other">Tell Us Your Situation</a></p>
   </div>
 </section>
 
@@ -134,50 +134,19 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
   </div>
 </section>
 
-<section class="section">
+<section class="section section--muted">
   <div class="wrap">
     <div class="section__intro">
       <h2>Client Portal</h2>
-      <p>A secure Client Portal is being developed in stages. Here is what is available now, and what is coming.</p>
+      <p>Your applications and service requests, documents, messages, payments and profile, all in one place.</p>
     </div>
-    <div class="card-grid">
-      <div class="card">
-        {{ icon("portal-enquiry", 44) }}
-        <p class="tag tag--available">Available now, interim</p>
-        <h3>Send an Enquiry</h3>
-        <p>Reach us directly by email while the dedicated system is developed.</p>
-      </div>
-      <div class="card card--muted">
-        {{ icon("portal-upload", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Document Upload</h3>
-        <p>Planned once storage, retention and privacy safeguards are finalised.</p>
-      </div>
-      <div class="card card--muted">
-        {{ icon("portal-track", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Track Your Enquiry / Application</h3>
-        <p>Planned alongside our secure client system.</p>
-      </div>
-      <div class="card card--notice">
-        {{ icon("portal-payments", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Payments</h3>
-        <p>Accepted after the scope of services and applicable fees have been confirmed by our team.</p>
-      </div>
+    <div class="portal-preview-grid">
+      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>Applications &amp; Services</span></div>
+      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>Documents</span></div>
+      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>Messages</span></div>
+      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>Payments</span></div>
+      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>Profile</span></div>
     </div>
     <p class="mt-md"><a class="btn btn-secondary" href="/client-portal/">Open the Client Portal →</a></p>
-  </div>
-</section>
-
-<section class="section trust-section">
-  <div class="wrap">
-    <div class="trust-section__inner">
-      {{ icon("accreditation", 52) }}
-      <div>
-        <h2>Bureau of Immigration Accredited Consultancy</h2>
-        <p>Accreditation No. {{ site.accreditation.number }}. See our <a href="/accreditation/">Accreditation page</a> for details.</p>
-      </div>
-    </div>
   </div>
 </section>

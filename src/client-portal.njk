@@ -2,17 +2,17 @@
 layout: layouts/base.njk
 title: Client Portal
 lang: en
-description: The Foreign Immigration Services Client Portal is in development. Learn what is available now and what is planned.
+description: The Foreign Immigration Services Client Portal brings your applications, documents, messages, payments and profile together in one place.
 ---
 {% from "partials/icons.njk" import icon %}
 <section class="section trust-section">
   <div class="wrap">
     <div class="trust-section__inner">
-      {{ icon("portal-enquiry", 52) }}
+      {{ icon("portal-applications", 52) }}
       <div>
         <p class="tag">Client Portal</p>
-        <h1>A Secure Digital Service Hub, Built in Stages</h1>
-        <p>Foreign Immigration Services is developing a secure Client Portal to provide clients with direct channels for enquiries, document submission, application tracking and payments. Rather than launch incomplete functionality, each capability below goes live only once it is genuinely operational. Current status is set out honestly below.</p>
+        <h1>Your Immigration Services, All in One Place</h1>
+        <p>Access your applications and service requests, securely submit requested documents, follow progress, and manage payments through the Foreign Immigration Services Client Portal.</p>
       </div>
     </div>
   </div>
@@ -22,40 +22,36 @@ description: The Foreign Immigration Services Client Portal is in development. L
   <div class="wrap">
     <div class="card-grid">
       <div class="card">
-        {{ icon("portal-enquiry", 44) }}
-        <p class="tag tag--available">Available now, interim</p>
-        <h3>Send an Enquiry</h3>
-        <p>A dedicated enquiry system is in development. Until it is available, you can reach us directly by email.</p>
-        <a class="card__link" href="/contact/">Go to Contact →</a>
+        {{ icon("portal-applications", 44) }}
+        <h3>Applications &amp; Services</h3>
+        <p>View and manage your immigration applications and service requests in one place, each with its own reference and status.</p>
       </div>
-
-      <div class="card card--muted">
+      <div class="card">
         {{ icon("portal-upload", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Document Upload</h3>
-        <p>Secure document upload is planned for a future release, once storage, retention and privacy safeguards have been finalised. This feature is not yet operational.</p>
+        <h3>Documents</h3>
+        <p>Securely submit and access the documents relevant to your applications and service requests.</p>
       </div>
-
-      <div class="card card--muted">
-        {{ icon("portal-track", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Track Your Enquiry</h3>
-        <p>Enquiry tracking will be introduced alongside our secure client system. This feature is not yet operational.</p>
+      <div class="card">
+        {{ icon("portal-enquiry", 44) }}
+        <h3>Messages</h3>
+        <p>Communicate directly with our team about your enquiry or application.</p>
       </div>
-
-      <div class="card card--muted">
-        {{ icon("portal-track", 44) }}
-        <p class="tag">Not yet available</p>
-        <h3>Track Your Application / Transaction</h3>
-        <p>Application and transaction tracking will be introduced alongside our secure client system. This feature is not yet operational.</p>
-      </div>
-
-      <div class="card card--notice">
+      <div class="card">
         {{ icon("portal-payments", 44) }}
-        <p class="tag">Not yet available</p>
         <h3>Payments</h3>
-        <p>Payments are accepted after the scope of services and applicable fees have been confirmed by our team.</p>
+        <p>Review and settle applicable fees once the scope of services has been confirmed by our team.</p>
       </div>
+      <div class="card">
+        {{ icon("portal-profile", 44) }}
+        <h3>Profile</h3>
+        <p>Keep your contact and personal details up to date.</p>
+      </div>
+    </div>
+
+    <div class="service-cta">
+      <h2>Get Started</h2>
+      <p>Send us an enquiry and our team will guide you through the next steps for your Client Portal access.</p>
+      <p><a class="btn btn-primary" href="/contact/">Send an Enquiry</a></p>
     </div>
   </div>
 </section>

@@ -2,24 +2,95 @@
 layout: layouts/base.njk
 title: Contact
 lang: en
-description: Contact Foreign Immigration Services by email to send an enquiry.
+description: Contact Foreign Immigration Services with your enquiry, or reach us directly by email.
 ---
 <section class="section">
   <div class="wrap prose">
     <p class="tag">Contact</p>
     <h1>Contact &amp; Enquiries</h1>
-    <p>A dedicated online enquiry system is in development. Until it is available, the way to reach Foreign Immigration Services is by email.</p>
+    <p class="service-lede">Tell us how we can assist.</p>
 
-    <div class="notice-box">
-      <p><strong>Email:</strong> <a href="mailto:info@foreignimmigration.ph">info@foreignimmigration.ph</a></p>
+    <p>Whether you are planning an immigration application, need assistance with your current status, require support for an employee, or have a time-sensitive immigration concern, you can contact Foreign Immigration Services using the enquiry form below.</p>
+
+    <p><strong>Email:</strong> <a href="mailto:info@foreignimmigration.ph">info@foreignimmigration.ph</a></p>
+
+    <form id="enquiry-form" class="enquiry-form">
+      <div class="form-field">
+        <label for="fullName">Full Name <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="fullName" name="fullName" data-field-label="Full Name" autocomplete="name" required>
+      </div>
+
+      <div class="form-field">
+        <label for="email">Email Address <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" data-field-label="Email Address" autocomplete="email" required>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">Phone / Preferred Contact Details</label>
+        <input type="text" id="phone" name="phone" data-field-label="Phone / Preferred Contact Details" autocomplete="tel">
+      </div>
+
+      <div class="form-field">
+        <label for="nationality">Nationality <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="nationality" name="nationality" data-field-label="Nationality" required>
+      </div>
+
+      <div class="form-field">
+        <label for="location">Current Country / Location</label>
+        <input type="text" id="location" name="location" data-field-label="Current Country / Location">
+      </div>
+
+      <div class="form-field">
+        <label for="language">Preferred Language</label>
+        <select id="language" name="language" data-field-label="Preferred Language">
+          <option value="" selected>— Select —</option>
+          <option value="English">English</option>
+          <option value="Simplified Chinese">Simplified Chinese (简体中文)</option>
+          <option value="Korean">Korean (한국어)</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="service">Service Required <span class="required-mark" aria-hidden="true">*</span></label>
+        <select id="service" name="service" data-field-label="Service Required" required>
+          <option value="" disabled selected>— Select a service —</option>
+          <option value="visa-applications">Visa &amp; Immigration Applications</option>
+          <option value="extensions-compliance">Extensions &amp; Compliance</option>
+          <option value="residency-status">Residency &amp; Long-Term Status</option>
+          <option value="corporate-mobility">Corporate &amp; Global Mobility</option>
+          <option value="status-review">Immigration Status Review &amp; Regularisation Assistance</option>
+          <option value="airport-vip">Airport VIP Meet &amp; Assist</option>
+          <option value="motions-blacklist">Immigration Motions, Blacklist &amp; Derogatory Record Assistance</option>
+          <option value="legal-support">Legal Support for Foreign Nationals</option>
+          <option value="lost-passport">Lost Passport &amp; Travel Document Assistance</option>
+          <option value="document-verification">Visa &amp; Immigration Document Verification</option>
+          <option value="other">Not Sure / Other Immigration Matter</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <div class="context-note">
+          <p>Please do not submit passport scans or other sensitive documents through this general enquiry form. If supporting documents are required, we will provide instructions for secure submission.</p>
+        </div>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="description">Brief Description / How Can We Assist? <span class="required-mark" aria-hidden="true">*</span></label>
+        <textarea id="description" name="description" data-field-label="Brief Description" required></textarea>
+      </div>
+
+      <div class="enquiry-form-actions">
+        <button type="submit" class="btn btn-primary">Send Enquiry</button>
+        <p id="enquiry-form-status" class="form-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <div class="service-cta">
+      <h2>What Happens Next?</h2>
+      <p>Our team will review the information provided and contact you using the details above. If additional information or supporting documents are required to assess your enquiry, we will let you know.</p>
     </div>
-
-    <h2>What to Include</h2>
-    <ul>
-      <li>Your name and preferred language of communication</li>
-      <li>A brief description of your immigration matter or question</li>
-      <li>Your current location and nationality, if relevant</li>
-      <li>The best way to reach you</li>
-    </ul>
   </div>
 </section>
+
+<script defer src="/assets/js/enquiry-form.js"></script>
