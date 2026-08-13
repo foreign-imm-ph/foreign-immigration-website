@@ -52,12 +52,13 @@ confirms receipt.
 
 Service slugs (must stay in sync with the `<select id=\"service\">` options
 in `src/contact.njk` and the `?service=` links across `src/services/*` and
-`src/index.njk`):
+`src/index.njk`) — 15 values as of the Phase 1.3 redesign:
 
 ```
-visa-applications, extensions-compliance, residency-status,
-corporate-mobility, status-review, airport-vip, motions-blacklist,
-legal-support, lost-passport, document-verification, other
+visa-applications, work-visas, extensions-compliance, residency-status,
+family-spousal, corporate-mobility, status-review, motions-blacklist,
+legal-support, airport-vip, lost-passport, acr-icard, exit-clearance,
+document-verification, other
 ```
 
 **Required server-side behaviour:**

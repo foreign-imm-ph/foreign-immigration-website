@@ -5,6 +5,7 @@ lang: en
 description: Personalised airport assistance from arrival to onward transport, observing all applicable airline, airport, Immigration, Customs and security procedures.
 ---
 {% from "partials/icons.njk" import icon %}
+{% from "partials/media-panel.njk" import mediaPanel %}
 <section class="section">
   <div class="wrap prose">
     {{ icon("airport-vip", 56) }}
@@ -13,6 +14,8 @@ description: Personalised airport assistance from arrival to onward transport, o
     <p class="service-lede">A smoother airport experience, from arrival to onward transport.</p>
 
     <p>Our Airport VIP Meet &amp; Assist service provides personalised assistance throughout the airport journey, while observing all applicable airline, airport, Immigration, Customs, security and other government procedures.</p>
+
+    {{ mediaPanel("airport-vip", "wide") }}
 
     <h2>Arrival VIP Meet &amp; Assist</h2>
     <p>A representative will meet the passenger upon exiting the jet bridge and accompany them throughout the arrival journey, including Immigration, baggage collection, Customs, and onward coordination to their designated vehicle or transport service, subject to applicable airport, airline, security and government procedures.</p>
@@ -28,6 +31,25 @@ description: Personalised airport assistance from arrival to onward transport, o
       <h2>Arrange Your Airport Assistance</h2>
       <p>Tell us your flight details and requirements, and we will confirm availability and pricing.</p>
       <p><a class="btn btn-primary" href="/contact/?service=airport-vip">Request Airport Assistance</a></p>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary>Can someone else arrange this on the passenger's behalf?</summary>
+        <p>Yes — a family member, employer or colleague can make the arrangements, provided the passenger's passport and flight details are supplied.</p>
+      </details>
+      <details>
+        <summary>What if the flight is delayed or changes?</summary>
+        <p>Contact us as soon as possible. The booking-transfer policy above may apply, subject to availability and the notice period.</p>
+      </details>
+    </div>
+
+    <div class="related-services">
+      <h2>Related Services</h2>
+      <ul>
+        <li><a href="/services/lost-passport-and-travel-document-assistance/">Lost Passport &amp; Travel Document Assistance</a></li>
+        <li><a href="/services/exit-clearance-and-departure/">Exit Clearance &amp; Departure Requirements</a></li>
+      </ul>
     </div>
   </div>
 </section>

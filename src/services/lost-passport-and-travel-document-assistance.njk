@@ -2,17 +2,26 @@
 layout: layouts/base.njk
 title: Lost Passport Assistance
 lang: en
-description: Understanding the immigration steps that may follow the loss or replacement of a passport in the Philippines.
+description: Lost your passport in the Philippines? We coordinate the embassy, immigration and travel steps that follow, so you're not managing it alone.
 ---
 {% from "partials/icons.njk" import icon %}
+{% from "partials/media-panel.njk" import mediaPanel %}
 <section class="section">
   <div class="wrap prose">
     {{ icon("lost-passport", 56) }}
     <p class="tag">Specialised Service</p>
     <h1>Lost Your Passport in the Philippines?</h1>
-    <p class="service-lede">Practical guidance for a stressful situation.</p>
+    <p class="service-lede">It's stressful, but it's a manageable, well-understood process — and you don't have to coordinate it alone.</p>
 
-    <p>We can help you understand the immigration steps that may follow the loss or replacement of your passport, and coordinate the relevant immigration documentation once a replacement travel document has been issued by the appropriate embassy or consular authority.</p>
+    <div class="media-split">
+      <div class="media-split__media">
+        {{ mediaPanel("lost-passport", "square", "light") }}
+      </div>
+      <div>
+        <h2>What We Help You Through</h2>
+        <p>A lost passport usually touches three separate things at once: getting a replacement travel document issued, updating your Philippine immigration record to match it, and making sure it doesn't derail an upcoming flight or your current stay. We help coordinate all three, rather than leaving you to work out which office handles what.</p>
+      </div>
+    </div>
 
     <h2>How We Can Assist</h2>
     <ul>
@@ -25,8 +34,8 @@ description: Understanding the immigration steps that may follow the loss or rep
     <h2>What to Expect</h2>
     <ol class="step-list">
       <li>
-        <h3>Contact your embassy or consulate</h3>
-        <p>Passport issuance and replacement is handled solely by your country's embassy or consulate in the Philippines.</p>
+        <h3>We point you in the right direction</h3>
+        <p>Passport issuance and replacement is handled solely by your country's embassy or consulate in the Philippines — we tell you this upfront so you're not searching for the wrong office.</p>
       </li>
       <li>
         <h3>Reach out to us</h3>
@@ -38,14 +47,19 @@ description: Understanding the immigration steps that may follow the loss or rep
       </li>
     </ol>
 
-    <div class="context-note">
-      <p>Foreign Immigration Services does not issue passports. Our role concerns the related Philippine immigration processing and record updates once your replacement travel document has been issued.</p>
-    </div>
-
     <div class="service-cta">
       <h2>Lost Your Passport?</h2>
       <p>Tell us your situation and we will explain the steps that apply to you.</p>
       <p><a class="btn btn-primary" href="/contact/?service=lost-passport">Get Travel Document Assistance</a></p>
+    </div>
+
+    <div class="related-services">
+      <h2>Related Services</h2>
+      <ul>
+        <li><a href="/services/acr-i-card-assistance/">ACR I-Card Assistance</a></li>
+        <li><a href="/services/exit-clearance-and-departure/">Exit Clearance &amp; Departure Requirements</a></li>
+        <li><a href="/services/visa-and-immigration-document-verification/">Visa &amp; Immigration Document Verification</a></li>
+      </ul>
     </div>
   </div>
 </section>

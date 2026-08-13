@@ -1,0 +1,18 @@
+{#
+  Reserved photography slot. Real licensed photography has not been
+  sourced yet (see docs/photography-plan.md for the full brief per
+  page). Renders a considered abstract placeholder — never a fake or
+  scraped photo — sized and composed exactly as the final photograph
+  should be, so swapping in a real image later is a one-line change.
+
+  Usage: {{ mediaPanel("airport-vip", "wide", "light") }}
+  - motifIcon: icon name from icons.njk to use as the faint motif
+  - variant: "" (4:3, default) | "wide" (16:9) | "square"
+  - tone: "" (deep green, default) | "light" (cream/tint)
+#}
+{% from "partials/icons.njk" import icon %}
+{%- macro mediaPanel(motifIcon, variant="", tone="") -%}
+<div class="media-panel{% if variant == 'wide' %} media-panel--wide{% elif variant == 'square' %} media-panel--square{% endif %}{% if tone == 'light' %} media-panel--light{% endif %}" aria-hidden="true">
+  <span class="media-panel__motif">{{ icon(motifIcon, 220) }}</span>
+</div>
+{%- endmacro -%}

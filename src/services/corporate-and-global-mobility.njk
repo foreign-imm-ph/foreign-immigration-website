@@ -2,9 +2,10 @@
 layout: layouts/base.njk
 title: Corporate and Global Mobility
 lang: en
-description: Immigration support for organisations relocating staff to the Philippines or managing an internationally mobile workforce.
+description: Immigration support for organisations relocating staff to the Philippines, including multinational and PEZA/BOI-registered employers and ongoing workforce compliance.
 ---
 {% from "partials/icons.njk" import icon %}
+{% from "partials/media-panel.njk" import mediaPanel %}
 <section class="section">
   <div class="wrap prose">
     {{ icon("corporate-mobility", 56) }}
@@ -14,13 +15,26 @@ description: Immigration support for organisations relocating staff to the Phili
 
     <p>Organisations relocating staff into the Philippines, or managing an internationally mobile workforce, face a distinct set of immigration requirements. Foreign Immigration Services works with employers to coordinate the immigration side of workforce mobility.</p>
 
-    <h2>How We Can Assist</h2>
-    <ul>
-      <li>Assessing the immigration requirements associated with a proposed assignment or relocation</li>
-      <li>Coordinating visa and work-authorisation applications for employees</li>
-      <li>Advising on compliance obligations for foreign personnel</li>
-      <li>Supporting organisations managing multiple assignees across different circumstances</li>
-    </ul>
+    <div class="media-split">
+      <div>
+        <h2>How We Can Assist</h2>
+        <ul>
+          <li>Assessing the immigration requirements associated with a proposed assignment or relocation</li>
+          <li>Coordinating visa and work-authorisation applications for employees</li>
+          <li>Advising on compliance obligations for foreign personnel</li>
+          <li>Supporting organisations managing multiple assignees across different circumstances</li>
+        </ul>
+      </div>
+      <div class="media-split__media">
+        {{ mediaPanel("corporate-mobility", "wide") }}
+      </div>
+    </div>
+
+    <h2>For Multinational and PEZA/BOI-Registered Employers</h2>
+    <p>Foreign executives and specialised personnel employed by multinational regional headquarters or by companies registered with the Philippine Economic Zone Authority (PEZA) or the Board of Investments (BOI) are generally covered by a distinct immigration pathway from standard employment visas. We coordinate this employer-sponsored process directly with your organisation.</p>
+
+    <h2>For Ongoing Workforce Compliance</h2>
+    <p>Where an organisation manages more than one foreign employee, immigration needs rarely stop at the initial visa. We can act as a standing point of contact for renewals, new hires, and compliance obligations across your workforce, rather than starting from scratch with every new case.</p>
 
     <h2>Common Situations We Handle</h2>
     <ul>
@@ -60,7 +74,19 @@ description: Immigration support for organisations relocating staff to the Phili
     <div class="service-cta">
       <h2>Supporting Your Workforce</h2>
       <p>Tell us about your organisation's needs and we will explain how we can help.</p>
-      <p><a class="btn btn-primary" href="/contact/?service=corporate-mobility">Request Corporate Immigration Assistance</a></p>
+      <p>
+        <a class="btn btn-primary" href="/contact/?service=corporate-mobility">Request Corporate Immigration Assistance</a>
+        <a class="btn btn-secondary" href="/contact/?service=corporate-mobility">Talk to Us About Your Workforce</a>
+      </p>
+    </div>
+
+    <div class="related-services">
+      <h2>Related Services</h2>
+      <ul>
+        <li><a href="/services/work-and-employment-visas/">Work &amp; Employment Visas</a></li>
+        <li><a href="/services/extensions-and-compliance/">Extensions &amp; Compliance</a></li>
+        <li><a href="/services/acr-i-card-assistance/">ACR I-Card Assistance</a></li>
+      </ul>
     </div>
   </div>
 </section>

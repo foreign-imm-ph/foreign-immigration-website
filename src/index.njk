@@ -2,29 +2,30 @@
 layout: layouts/base.njk
 title: Home
 lang: en
-description: Foreign Immigration Services is a Bureau of Immigration accredited consultancy in the Philippines, providing guidance on visa, extension, residency and corporate mobility matters.
+description: Foreign Immigration Services is a Bureau of Immigration accredited consultancy that manages the visa, extension, residency and compliance process on your behalf in the Philippines.
 ---
 {% from "partials/icons.njk" import icon %}
+{% from "partials/media-panel.njk" import mediaPanel %}
 {% include "partials/urgent-banner.njk" %}
 
+<!-- Hero headline is a provisional first draft for visual assessment, per owner instruction — not locked final brand copy. -->
 <section class="hero">
   <div class="wrap hero__grid">
     <div class="hero__content">
       <p class="hero__eyebrow">Philippine Immigration Consultancy</p>
-      <h1>Considered guidance on immigration matters in the Philippines.</h1>
-      <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy, assisting individuals, families and organisations with visa, extension, residency, corporate mobility and related immigration matters in the Philippines.</p>
+      <h1>Philippine immigration, handled.</h1>
+      <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy that manages the visa, extension, residency and compliance process on your behalf — so you're not navigating it alone.</p>
       <div class="hero__actions">
         <a class="btn btn-primary" href="/contact/">Send an Enquiry</a>
         <a class="btn btn-secondary" href="/services/">Explore Our Services</a>
       </div>
       <p class="hero__accreditation">
         {{ icon("accreditation", 40) }}
-        <span><strong>Bureau of Immigration Accredited Consultancy</strong><br>Accreditation No. {{ site.accreditation.number }}</span>
+        <span><strong>Bureau of Immigration Accredited Consultancy</strong> — No. {{ site.accreditation.number }}</span>
       </p>
     </div>
     <div class="hero__visual">
-{% include "partials/hero-motif.njk" %}
-      <img class="hero__logo" src="/assets/images/fis-logo.png" alt="Foreign Immigration Services" width="612" height="408">
+      {{ mediaPanel("visa-applications") }}
     </div>
   </div>
 </section>
@@ -33,14 +34,20 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
   <div class="wrap">
     <div class="section__intro">
       <h2>Core Immigration Services</h2>
-      <p>Our practice is organised across four core areas of immigration work.</p>
+      <p>Our practice is organised across six core areas of immigration work.</p>
     </div>
-    <div class="card-grid">
+    <div class="card-grid card-grid--3up">
       <div class="card">
         {{ icon("visa-applications", 44) }}
         <h3>Visa &amp; Immigration Applications</h3>
         <p>Planning to enter, work, study or otherwise stay in the Philippines and unsure which visa applies to you?</p>
         <a class="card__link" href="/services/visa-and-immigration-applications/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("work-visas", 44) }}
+        <h3>Work &amp; Employment Visas</h3>
+        <p>Have a job offer or assignment in the Philippines and need the right work visa or permit?</p>
+        <a class="card__link" href="/services/work-and-employment-visas/">Learn more →</a>
       </div>
       <div class="card">
         {{ icon("extensions-compliance", 44) }}
@@ -53,6 +60,12 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
         <h3>Residency &amp; Long-Term Status</h3>
         <p>Considering a longer-term or permanent move to the Philippines?</p>
         <a class="card__link" href="/services/residency-and-long-term-status/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("family-spousal", 44) }}
+        <h3>Family &amp; Spousal Visas</h3>
+        <p>Married to, or the family of, someone in the Philippines and need to bring or keep your family together?</p>
+        <a class="card__link" href="/services/family-and-spousal-visas/">Learn more →</a>
       </div>
       <div class="card">
         {{ icon("corporate-mobility", 44) }}
@@ -70,18 +83,12 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
       <h2>Specialised Services</h2>
       <p>Focused assistance for specific, often time-sensitive, immigration situations.</p>
     </div>
-    <div class="card-grid card-grid--specialised">
+    <div class="card-grid card-grid--4up">
       <div class="card">
         {{ icon("status-review", 44) }}
         <h3>Immigration Status Review &amp; Regularisation Assistance</h3>
         <p>Uncertain about your immigration status, visa validity, or Bureau of Immigration records?</p>
         <a class="card__link" href="/services/immigration-status-review-and-regularisation/">Learn more →</a>
-      </div>
-      <div class="card">
-        {{ icon("airport-vip", 44) }}
-        <h3>Airport VIP Meet &amp; Assist</h3>
-        <p>Want a smoother, personally assisted airport arrival or departure?</p>
-        <a class="card__link" href="/services/airport-vip-meet-and-assist/">Learn more →</a>
       </div>
       <div class="card">
         {{ icon("motions-blacklist", 44) }}
@@ -96,10 +103,28 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
         <a class="card__link" href="/services/legal-support-for-foreign-nationals/">Learn more →</a>
       </div>
       <div class="card">
+        {{ icon("airport-vip", 44) }}
+        <h3>Airport VIP Meet &amp; Assist</h3>
+        <p>Want a smoother, personally assisted airport arrival or departure?</p>
+        <a class="card__link" href="/services/airport-vip-meet-and-assist/">Learn more →</a>
+      </div>
+      <div class="card">
         {{ icon("lost-passport", 44) }}
         <h3>Lost Passport &amp; Travel Document Assistance</h3>
         <p>Lost your passport or travel document while in the Philippines?</p>
         <a class="card__link" href="/services/lost-passport-and-travel-document-assistance/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("acr-icard", 44) }}
+        <h3>ACR I-Card Assistance</h3>
+        <p>Need to register for, renew, or replace your Alien Certificate of Registration I-Card?</p>
+        <a class="card__link" href="/services/acr-i-card-assistance/">Learn more →</a>
+      </div>
+      <div class="card">
+        {{ icon("exit-clearance", 44) }}
+        <h3>Exit Clearance &amp; Departure Requirements</h3>
+        <p>Leaving the Philippines after a long stay and unsure if you need clearance first?</p>
+        <a class="card__link" href="/services/exit-clearance-and-departure/">Learn more →</a>
       </div>
       <div class="card">
         {{ icon("document-verification", 44) }}
@@ -113,8 +138,8 @@ description: Foreign Immigration Services is a Bureau of Immigration accredited 
 
 <section class="cta-banner">
   <div class="wrap">
-    <h2>Not Sure What You Need?</h2>
-    <p>Whether you have lost your passport, are uncertain about your immigration status, need to verify a visa or document, or simply do not know which immigration process applies to your circumstances, tell us what is happening and we can help identify the appropriate next step.</p>
+    <h2>Not Sure What You Need or Can't Find What You're Looking For?</h2>
+    <p>You don't need to know the name of the visa, application or immigration process you need. Tell us what is happening, and our team can review your situation and help identify the appropriate next step.</p>
     <p><a class="btn btn-on-dark" href="/contact/?service=other">Tell Us Your Situation</a></p>
   </div>
 </section>

@@ -26,7 +26,7 @@ description: Contact Foreign Immigration Services with your enquiry, or reach us
       </div>
 
       <div class="form-field">
-        <label for="phone">Phone / Preferred Contact Details</label>
+        <label for="phone">Phone / Preferred Contact Details <span class="hint">(optional)</span></label>
         <input type="text" id="phone" name="phone" data-field-label="Phone / Preferred Contact Details" autocomplete="tel">
       </div>
 
@@ -36,12 +36,12 @@ description: Contact Foreign Immigration Services with your enquiry, or reach us
       </div>
 
       <div class="form-field">
-        <label for="location">Current Country / Location</label>
+        <label for="location">Current Country / Location <span class="hint">(optional)</span></label>
         <input type="text" id="location" name="location" data-field-label="Current Country / Location">
       </div>
 
       <div class="form-field">
-        <label for="language">Preferred Language</label>
+        <label for="language">Preferred Language <span class="hint">(optional)</span></label>
         <select id="language" name="language" data-field-label="Preferred Language">
           <option value="" selected>— Select —</option>
           <option value="English">English</option>
@@ -56,14 +56,18 @@ description: Contact Foreign Immigration Services with your enquiry, or reach us
         <select id="service" name="service" data-field-label="Service Required" required>
           <option value="" disabled selected>— Select a service —</option>
           <option value="visa-applications">Visa &amp; Immigration Applications</option>
+          <option value="work-visas">Work &amp; Employment Visas</option>
           <option value="extensions-compliance">Extensions &amp; Compliance</option>
           <option value="residency-status">Residency &amp; Long-Term Status</option>
+          <option value="family-spousal">Family &amp; Spousal Visas</option>
           <option value="corporate-mobility">Corporate &amp; Global Mobility</option>
           <option value="status-review">Immigration Status Review &amp; Regularisation Assistance</option>
-          <option value="airport-vip">Airport VIP Meet &amp; Assist</option>
           <option value="motions-blacklist">Immigration Motions, Blacklist &amp; Derogatory Record Assistance</option>
           <option value="legal-support">Legal Support for Foreign Nationals</option>
+          <option value="airport-vip">Airport VIP Meet &amp; Assist</option>
           <option value="lost-passport">Lost Passport &amp; Travel Document Assistance</option>
+          <option value="acr-icard">ACR I-Card Assistance</option>
+          <option value="exit-clearance">Exit Clearance &amp; Departure Requirements</option>
           <option value="document-verification">Visa &amp; Immigration Document Verification</option>
           <option value="other">Not Sure / Other Immigration Matter</option>
         </select>

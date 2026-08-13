@@ -45,9 +45,24 @@ away, or have qualifiers removed without legal sign-off:
   restrained note that the appropriate procedural option depends on the
   specific record/order/proceeding; no lifting, clearance, favourable
   decision or fixed processing time is promised.
-- `src/services/legal-support-for-foreign-nationals.njk` — states FIS is
-  not a law firm, does not provide criminal defence representation, and
-  cannot influence courts or government authorities.
+- `src/services/legal-support-for-foreign-nationals.njk` — as of Phase
+  1.3, the standalone "not a law firm" disclaimer paragraph was removed
+  per explicit owner instruction; the same substance (FIS coordinates,
+  independent counsel represents clients in court) is now carried in the
+  main body copy ("independent Philippine legal counsel, who advise and
+  represent clients directly in the relevant criminal or judicial
+  proceedings"). If this ever reads as ambiguous about FIS's role in a
+  future review, restore a narrow clarifying clause rather than a full
+  disclaimer paragraph.
+- `src/services/immigration-status-review-and-regularisation.njk` — as of
+  Phase 1.3, remote handling is now stated as a lead benefit rather than
+  a caveat, closing with: "We handle the review and coordination remotely
+  wherever the applicable process permits. If any later step requires
+  your personal attendance, we'll tell you in advance and guide you
+  through exactly what is required." This is deliberately worded to avoid
+  promising universal remote handling — see the verification-pending item
+  below regarding detention/enforcement claims, which this page does
+  **not** make.
 
 ## Standing items carried over from Phase 1
 
@@ -57,6 +72,49 @@ away, or have qualifiers removed without legal sign-off:
 - Data Protection Officer details, NPC registration status, and document
   retention periods remain undetermined and are not referenced anywhere
   on the site.
+
+## Deliberately omitted pending authoritative verification (Phase 1.3)
+
+Per the owner's explicit instruction, none of the following appear
+anywhere on the site. Each was identified during research but withheld
+because it either requires primary-source/legal verification or was
+sourced only from third-party commentary, not an official government
+statement:
+
+- **Circumstances in which the Bureau of Immigration may lawfully detain
+  an overstaying foreign national, and/or retain or confiscate a
+  passport or travel document.** This is the single most consequential
+  omission — research surfaced only secondary/anecdotal sources for
+  passport-retention practice specifically, not an official BI policy
+  statement. `src/services/immigration-status-review-and-regularisation.njk`
+  and `src/services/legal-support-for-foreign-nationals.njk` reference
+  general risk (fines, complications, immigration consequences) only,
+  never detention or passport retention specifically. Do not add this
+  without a verified legal/official basis.
+- **Any specific fee, threshold, deadline, or eligibility period** —
+  including the ACR I-Card 59-day tourist threshold, overstay fine
+  amounts, SWP/PWP duration limits, extension filing windows, and ECC-A/
+  ECC-B thresholds. All were found via search-engine-synthesised
+  secondary sources during planning research and are intentionally
+  written around at the category level in `acr-i-card-assistance.njk`,
+  `exit-clearance-and-departure.njk`, `work-and-employment-visas.njk`,
+  `extensions-and-compliance.njk`, and `immigration-status-review-and-regularisation.njk`.
+  Qualitative risk language (e.g. "can result in fines, additional
+  requirements, and delays") is used instead and does not require the
+  same verification bar — see the owner's clarification on this
+  distinction.
+- **Current SRRV (retirement visa) age threshold** — conflicting figures
+  found (traditional 50, a reported change to 40). Not stated anywhere;
+  `residency-and-long-term-status.njk`'s retirement section names the
+  programme and the Philippine Retirement Authority as its administrator
+  without citing an age.
+- **Current Executive Order 408 Balikbayan visa-free-privilege country
+  list** — not published anywhere on the site.
+
+Before any of the above is added to the live site, verify against the
+primary Philippine government source (immigration.gov.ph, PRA, DOJ, or
+equivalent) or confirmed current FIS operational knowledge — not a
+third-party immigration-services website.
 
 ## Client-facing terminology (Phase 1.2)
 

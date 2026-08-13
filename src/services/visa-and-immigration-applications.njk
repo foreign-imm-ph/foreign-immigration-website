@@ -5,6 +5,7 @@ lang: en
 description: Guidance and assistance with entry visa and immigration applications for the Philippines, from initial assessment through to submission and follow-up.
 ---
 {% from "partials/icons.njk" import icon %}
+{% from "partials/media-panel.njk" import mediaPanel %}
 <section class="section">
   <div class="wrap prose">
     {{ icon("visa-applications", 56) }}
@@ -12,21 +13,30 @@ description: Guidance and assistance with entry visa and immigration application
     <h1>Visa and Immigration Applications</h1>
     <p class="service-lede">Understand which process applies to your situation, and move through it with confidence.</p>
 
-    <p>Entering the Philippines to visit, work, study, invest or join family can involve a range of visa and immigration application requirements. Foreign Immigration Services helps you understand which process applies to your circumstances and manages the application on your behalf where appropriate.</p>
+    <p>Entering the Philippines to visit, study, invest or for another short-term purpose can involve a range of visa and immigration application requirements. Foreign Immigration Services helps you understand which process applies to your circumstances and manages the application on your behalf where appropriate.</p>
 
-    <h2>How We Can Assist</h2>
-    <ul>
-      <li>Assessing which visa category may be appropriate to your circumstances</li>
-      <li>Preparing and organising the documentation your application requires</li>
-      <li>Liaising with the Bureau of Immigration on your behalf, where representation is permitted</li>
-      <li>Keeping you informed as your application progresses</li>
-    </ul>
+    <div class="context-note">
+      <p>Coming for employment, or to join a spouse or family member already in the Philippines? Those situations have their own dedicated pages — see <a href="/services/work-and-employment-visas/">Work &amp; Employment Visas</a> and <a href="/services/family-and-spousal-visas/">Family &amp; Spousal Visas</a>.</p>
+    </div>
+
+    <div class="media-split">
+      <div>
+        <h2>How We Can Assist</h2>
+        <ul>
+          <li>Assessing which visa category may be appropriate to your circumstances</li>
+          <li>Preparing and organising the documentation your application requires</li>
+          <li>Liaising with the Bureau of Immigration on your behalf, where representation is permitted</li>
+          <li>Keeping you informed as your application progresses</li>
+        </ul>
+      </div>
+      <div class="media-split__media">
+        {{ mediaPanel("visa-applications", "wide") }}
+      </div>
+    </div>
 
     <h2>Common Situations We Handle</h2>
     <ul>
       <li>Entering the Philippines for tourism, business or short-term purposes</li>
-      <li>Relocating for employment</li>
-      <li>Joining a spouse or family member already in the Philippines</li>
       <li>Pursuing education or training</li>
       <li>Other entry or immigration-application circumstances not listed here</li>
     </ul>
@@ -63,6 +73,15 @@ description: Guidance and assistance with entry visa and immigration application
       <h2>Ready to Move Forward?</h2>
       <p>Tell us about your situation and we will explain the process that applies to you.</p>
       <p><a class="btn btn-primary" href="/contact/?service=visa-applications">Request a Visa Assessment</a></p>
+    </div>
+
+    <div class="related-services">
+      <h2>Related Services</h2>
+      <ul>
+        <li><a href="/services/work-and-employment-visas/">Work &amp; Employment Visas</a></li>
+        <li><a href="/services/family-and-spousal-visas/">Family &amp; Spousal Visas</a></li>
+        <li><a href="/services/extensions-and-compliance/">Extensions &amp; Compliance</a></li>
+      </ul>
     </div>
   </div>
 </section>
