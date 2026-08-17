@@ -172,9 +172,15 @@ label:focus-visible {
 }
 
 .site-header__logo {
-  height: 52px;
+  height: 84px;
   width: auto;
   transition: opacity 0.15s ease;
+}
+
+@media (max-width: 600px) {
+  .site-header__logo {
+    height: 60px;
+  }
 }
 
 .site-header__brand:hover .site-header__logo { opacity: 0.82; }
