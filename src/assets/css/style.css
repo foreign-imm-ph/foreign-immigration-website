@@ -730,6 +730,22 @@ label:focus-visible {
 
 .media-split--reverse .media-split__media { order: -1; }
 
+/* Modest breakout for a media-split whose photo needs more presence
+   than the 42em prose column can share with its paired text without
+   squeezing the paragraph into a cramped, mismatched column. Scoped to
+   individual pages via this modifier only. */
+
+@media (min-width: 900px) {
+  .media-split--feature {
+    max-width: 880px;
+    grid-template-columns: 0.83fr 1fr;
+    margin-top: 1.5rem;
+    margin-right: -104px;
+    margin-bottom: 2.5rem;
+    margin-left: -104px;
+  }
+}
+
 .media-split__media img {
   width: 100%;
   height: auto;
