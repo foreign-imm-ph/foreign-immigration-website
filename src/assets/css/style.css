@@ -730,6 +730,48 @@ label:focus-visible {
 
 .media-split--reverse .media-split__media { order: -1; }
 
+/* Visa & Immigration Applications "How We Can Assist" photograph: a
+   landscape (3:2) desk photo needs more width than the 42em prose
+   column can give it without squeezing the paired bullet list, so
+   this breaks the section out to ~900px (matching the precedent set
+   by .media-split--feature below) and gives the photo column more of
+   that width than the text column. Below the breakout, the section
+   stacks to one column early rather than squeezing a short, cramped
+   photo into the standard 313px split. Scoped to this page only;
+   leaves the shared .media-split grid untouched everywhere else. */
+
+@media (min-width: 900px) {
+  .media-split--visa-photo {
+    max-width: 900px;
+    grid-template-columns: 0.8fr 1.2fr;
+    margin-top: 1.5rem;
+    margin-right: -114px;
+    margin-bottom: 2.5rem;
+    margin-left: -114px;
+    align-items: start;
+  }
+
+  /* Zeroes the list's default top margin so its first line, not just
+     its grid cell, lines up with the photograph's top edge. */
+  .media-split--visa-photo ul {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  .media-split--visa-photo { grid-template-columns: 1fr; }
+}
+
+/* The photo is already a clean 3:2 crop, so it is shown at its native
+   proportions (no forced square crop, no object-fit: cover) rather
+   than inheriting the 1:1 cover treatment below. */
+
+.media-split--visa-photo .media-split__media img {
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
+
 /* Modest breakout for a media-split whose photo needs more presence
    than the 42em prose column can share with its paired text without
    squeezing the paragraph into a cramped, mismatched column. Scoped to
