@@ -736,10 +736,9 @@ label:focus-visible {
    surrounding prose at every breakpoint, so its left/right edges
    always match the page's established content rails; no independent
    breakout width, no negative margins. Shown at its native aspect
-   ratio; no forced crop or fixed height. Currently used only on the
-   Visa & Immigration Applications page; see the reusable-pattern note
-   in the project's design notes before adopting on other service
-   pages. */
+   ratio; no forced crop or fixed height. This is the established
+   reference pattern for landscape service-page photography (see
+   Visa & Immigration Applications and Work & Employment Visas). */
 
 .feature-image {
   margin: 2.5rem 0;
