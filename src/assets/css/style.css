@@ -730,6 +730,16 @@ label:focus-visible {
 
 .media-split--reverse .media-split__media { order: -1; }
 
+.media-split__media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: 50% 35%;
+  border-radius: var(--radius);
+  display: block;
+}
+
 @media (max-width: 780px) {
   .media-split { grid-template-columns: 1fr; }
   .media-split--reverse .media-split__media { order: 0; }
