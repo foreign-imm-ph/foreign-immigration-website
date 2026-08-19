@@ -679,6 +679,32 @@ label:focus-visible {
 .service-cta p { color: var(--color-grey); }
 .service-cta p:last-child { margin-bottom: 0; }
 
+/* Restrained premium callout for the Extensions & Compliance page's
+   dominant commercial proposition, the page's primary visual/
+   commercial focal point given it carries no photograph. Built from
+   the same tokens already used elsewhere (the green tint behind
+   .service-cta, the gold accent language used by .context-note)
+   rather than a new visual style. Scoped to this one class; leaves
+   .service-cta and .context-note themselves untouched everywhere
+   else. */
+
+.proposition-highlight {
+  background: var(--color-green-tint);
+  border-left: 3px solid var(--color-gold);
+  border-radius: var(--radius);
+  padding: 1.75rem 2rem;
+  margin: 2.5rem 0;
+}
+
+.proposition-highlight h2 {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+}
+
+.proposition-highlight p:last-child {
+  margin-bottom: 0;
+}
+
 /* Media panel — reserved photography slot.
    Real licensed photography has not been sourced yet (see
    docs/photography-plan.md); this renders a considered abstract
