@@ -1,0 +1,69 @@
+---
+layout: layouts/base.njk
+title: Client Portal
+lang: en
+description: Your Foreign Immigration Services applications, documents, messages and payments.
+---
+<section class="section">
+  <div class="wrap">
+    <div class="portal-header">
+      <div>
+        <p class="tag">Client Portal</p>
+        <h1 id="portal-welcome">Welcome</h1>
+      </div>
+      <button id="portal-logout" class="btn btn-secondary" type="button">Sign Out</button>
+    </div>
+
+    <div id="portal-loading" class="muted">Loading your account...</div>
+
+    <div id="portal-app" hidden>
+      <nav class="portal-tabs" role="tablist">
+        <button type="button" class="portal-tab" data-tab="applications" aria-selected="true">Applications &amp; Services</button>
+        <button type="button" class="portal-tab" data-tab="profile" aria-selected="false">Profile</button>
+      </nav>
+
+      <div id="portal-panel-applications" class="portal-panel">
+        <div id="portal-applications-list"></div>
+        <div id="portal-application-detail" hidden></div>
+      </div>
+
+      <div id="portal-panel-profile" class="portal-panel" hidden>
+        <form id="portal-profile-form" class="enquiry-form portal-form--profile">
+          <div class="form-field form-field--full">
+            <label for="profile-fullName">Full Name</label>
+            <input type="text" id="profile-fullName" name="fullName" required>
+          </div>
+          <div class="form-field">
+            <label for="profile-email">Email Address</label>
+            <input type="email" id="profile-email" name="email" disabled>
+            <span class="hint">Contact us to change your sign-in email.</span>
+          </div>
+          <div class="form-field">
+            <label for="profile-phone">Phone</label>
+            <input type="text" id="profile-phone" name="phone">
+          </div>
+          <div class="form-field form-field--full">
+            <label for="profile-nationality">Nationality</label>
+            <input type="text" id="profile-nationality" name="nationality">
+          </div>
+          <div class="enquiry-form-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <p id="portal-profile-status" class="form-status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<template id="portal-application-item-template">
+  <button class="portal-application-item" type="button">
+    <span class="visually-hidden">View application </span>
+    <span class="portal-application-item__ref"></span>
+    <span class="portal-application-item__service"></span>
+    <span class="portal-application-item__status status-badge"></span>
+  </button>
+</template>
+
+<script defer src="/assets/js/portal-config.js"></script>
+<script defer src="/assets/js/portal-app.js"></script>

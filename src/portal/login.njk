@@ -1,0 +1,31 @@
+---
+layout: layouts/base.njk
+title: Sign In
+lang: en
+description: Sign in to the Foreign Immigration Services Client Portal.
+---
+<section class="section">
+  <div class="wrap prose">
+    <p class="tag">Client Portal</p>
+    <h1>Sign In</h1>
+    <p class="service-lede">Enter your email and we'll send you a secure sign-in link. No password needed.</p>
+
+    <form id="portal-login-form" class="enquiry-form portal-form--login">
+      <div class="form-field form-field--full">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" autocomplete="email" required>
+      </div>
+      <div class="enquiry-form-actions">
+        <button type="submit" class="btn btn-primary">Send Sign-In Link</button>
+        <p id="portal-login-status" class="form-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <div class="context-note">
+      <p>Don't have Client Portal access yet? <a href="/contact/">Send us an enquiry</a> first and our team will set up your account.</p>
+    </div>
+  </div>
+</section>
+
+<script defer src="/assets/js/portal-config.js"></script>
+<script defer src="/assets/js/portal-login.js"></script>
