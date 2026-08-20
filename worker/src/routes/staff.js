@@ -52,10 +52,19 @@ async function dispatch(request, env, url) {
   }
 
   if (path === "/" || path === "/enquiries/") return listEnquiries(env, staff);
+  // Must be checked before the generic single-enquiry matcher below, or
+  // "archived" would be parsed as an enquiry ID and 404.
+  if (path === "/enquiries/archived/") return listArchivedEnquiries(env, staff);
   const enquiryMatch = path.match(/^\/enquiries\/([^/]+)\/?$/);
   if (enquiryMatch && method === "GET") return viewEnquiry(env, staff, enquiryMatch[1]);
   const convertMatch = path.match(/^\/enquiries\/([^/]+)\/convert$/);
   if (convertMatch && method === "POST") return convertEnquiry(request, env, staff, convertMatch[1]);
+  const archiveMatch = path.match(/^\/enquiries\/([^/]+)\/archive$/);
+  if (archiveMatch && method === "POST") return archiveEnquiry(request, env, staff, archiveMatch[1]);
+  const restoreMatch = path.match(/^\/enquiries\/([^/]+)\/restore$/);
+  if (restoreMatch && method === "POST") return restoreEnquiry(request, env, staff, restoreMatch[1]);
+  const deleteMatch = path.match(/^\/enquiries\/([^/]+)\/delete$/);
+  if (deleteMatch && method === "POST") return deleteEnquiry(request, env, staff, deleteMatch[1]);
 
   if (path === "/applications/") return listApplications(env, staff);
   const appMatch = path.match(/^\/applications\/([^/]+)\/?$/);
@@ -90,7 +99,7 @@ async function dispatch(request, env, url) {
 
 async function listEnquiries(env, staff) {
   const { results } = await env.DB.prepare(
-    "SELECT id, reference, full_name, email, service_slug, status, created_at FROM enquiries ORDER BY created_at DESC LIMIT 100"
+    "SELECT id, reference, full_name, email, service_slug, status, created_at FROM enquiries WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 100"
   ).all();
 
   const rows = results
@@ -102,6 +111,7 @@ async function listEnquiries(env, staff) {
         <td>${escapeHtml(e.service_slug)}</td>
         <td><span class="status">${escapeHtml(e.status)}</span></td>
         <td class="muted">${escapeHtml(e.created_at)}</td>
+        <td><form method="POST" action="/staff/enquiries/${e.id}/archive"><button class="secondary" type="submit">Archive</button></form></td>
       </tr>`
     )
     .join("");
@@ -110,8 +120,43 @@ async function listEnquiries(env, staff) {
     "Enquiries",
     `<h1>Enquiries</h1>
      <table>
-       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Service</th><th>Status</th><th>Received</th></tr>
-       ${rows || '<tr><td colspan="6" class="muted">No enquiries yet.</td></tr>'}
+       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Service</th><th>Status</th><th>Received</th><th></th></tr>
+       ${rows || '<tr><td colspan="7" class="muted">No enquiries yet.</td></tr>'}
+     </table>`,
+    staff.email
+  );
+}
+
+async function listArchivedEnquiries(env, staff) {
+  const { results } = await env.DB.prepare(
+    `SELECT e.id, e.reference, e.full_name, e.email, e.archived_at,
+            EXISTS(SELECT 1 FROM applications a WHERE a.enquiry_id = e.id) AS converted
+     FROM enquiries e WHERE e.archived_at IS NOT NULL ORDER BY e.archived_at DESC LIMIT 100`
+  ).all();
+
+  const rows = results
+    .map(
+      (e) => `<tr>
+        <td><a class="ref" href="/staff/enquiries/${e.id}">${escapeHtml(e.reference)}</a></td>
+        <td>${escapeHtml(e.full_name)}</td>
+        <td>${escapeHtml(e.email)}</td>
+        <td class="muted">${escapeHtml(e.archived_at)}</td>
+        <td>
+          <form method="POST" action="/staff/enquiries/${e.id}/restore" style="display:inline"><button class="secondary" type="submit">Restore</button></form>
+          ${e.converted
+            ? '<span class="muted">Converted — archive only</span>'
+            : `<form method="POST" action="/staff/enquiries/${e.id}/delete" style="display:inline" onsubmit="return confirm('Permanently delete enquiry ${escapeHtml(e.reference)}?\\n\\nThis action cannot be undone.');"><button class="danger" type="submit">Permanently Delete</button></form>`}
+        </td>
+      </tr>`
+    )
+    .join("");
+
+  return staffPage(
+    "Archived Enquiries",
+    `<h1>Archived Enquiries</h1>
+     <table>
+       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Archived</th><th>Actions</th></tr>
+       ${rows || '<tr><td colspan="5" class="muted">No archived enquiries.</td></tr>'}
      </table>`,
     staff.email
   );
@@ -123,6 +168,10 @@ async function viewEnquiry(env, staff, id) {
 
   const existingClient = await getClientByEmail(env.DB, enquiry.email);
 
+  const archiveControl = enquiry.archived_at
+    ? `<form method="POST" action="/staff/enquiries/${enquiry.id}/restore"><button class="secondary" type="submit">Restore from archive</button></form>`
+    : `<form method="POST" action="/staff/enquiries/${enquiry.id}/archive"><button class="secondary" type="submit">Archive</button></form>`;
+
   return staffPage(
     `Enquiry ${enquiry.reference}`,
     `<h1>Enquiry ${escapeHtml(enquiry.reference)}</h1>
@@ -131,7 +180,7 @@ async function viewEnquiry(env, staff, id) {
        <p class="muted">${escapeHtml(enquiry.phone || "No phone given")} · ${escapeHtml(enquiry.nationality)} · ${escapeHtml(enquiry.location || "")}</p>
        <p><strong>Service:</strong> ${escapeHtml(enquiry.service_slug)}</p>
        <p>${escapeHtml(enquiry.description).replace(/\n/g, "<br>")}</p>
-       <p class="muted">Received ${escapeHtml(enquiry.created_at)}</p>
+       <p class="muted">Received ${escapeHtml(enquiry.created_at)}${enquiry.archived_at ? ` · Archived ${escapeHtml(enquiry.archived_at)}` : ""}</p>
      </div>
      <div class="card">
        <h2>${existingClient ? "Create application for existing client" : "Convert to client"}</h2>
@@ -139,9 +188,72 @@ async function viewEnquiry(env, staff, id) {
        <form method="POST" action="/staff/enquiries/${enquiry.id}/convert">
          <button type="submit">${existingClient ? "Create application" : "Convert to client"}</button>
        </form>
+     </div>
+     <div class="card">
+       <h2>Archive</h2>
+       <p class="muted">Archiving removes this enquiry from the active list without deleting it. It can be restored at any time.</p>
+       ${archiveControl}
      </div>`,
     staff.email
   );
+}
+
+async function archiveEnquiry(request, env, staff, id) {
+  const enquiry = await env.DB.prepare("SELECT id FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  await env.DB.prepare("UPDATE enquiries SET archived_at = datetime('now') WHERE id = ? AND archived_at IS NULL")
+    .bind(id)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "archived_enquiry", targetTable: "enquiries", targetId: id });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/`, 303);
+}
+
+async function restoreEnquiry(request, env, staff, id) {
+  const enquiry = await env.DB.prepare("SELECT id FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  await env.DB.prepare("UPDATE enquiries SET archived_at = NULL WHERE id = ? AND archived_at IS NOT NULL")
+    .bind(id)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "restored_enquiry", targetTable: "enquiries", targetId: id });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/archived/`, 303);
+}
+
+// Deliberately more restrictive than archive: admin role only, must already
+// be archived (an extra deliberate step, not a one-click action from the
+// busy Active list), and rejected outright if any application was ever
+// created from this enquiry — applications.enquiry_id has no ON DELETE
+// clause in the schema, so deleting a referenced enquiry risks either a
+// foreign-key failure or an orphaned reference, neither acceptable.
+async function deleteEnquiry(request, env, staff, id) {
+  if (staff.role !== "admin") {
+    return new Response("Permanent deletion requires administrator authorization.", { status: 403 });
+  }
+
+  const enquiry = await env.DB.prepare("SELECT id, archived_at FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  if (!enquiry.archived_at) {
+    return new Response("Archive this enquiry before deleting it.", { status: 400 });
+  }
+
+  const linkedApplication = await env.DB.prepare("SELECT id FROM applications WHERE enquiry_id = ? LIMIT 1").bind(id).first();
+  if (linkedApplication) {
+    return new Response(
+      "This enquiry has been converted to an application and cannot be permanently deleted. Archive it instead.",
+      { status: 400 }
+    );
+  }
+
+  // Logged before deletion, so the audit trail still shows who deleted what
+  // and when even though the enquiry row itself is about to be gone.
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "permanently_deleted_enquiry", targetTable: "enquiries", targetId: id });
+  await env.DB.prepare("DELETE FROM enquiries WHERE id = ?").bind(id).run();
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/archived/`, 303);
 }
 
 async function convertEnquiry(request, env, staff, id) {
@@ -408,6 +520,13 @@ async function updateDocumentRequestStatus(request, env, staff, applicationId, d
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
+// Client-visible label for every staff reply — deliberately not staff.full_name
+// or staff.email. This is an institutional identity, not a personal one:
+// whichever staff member is signed in, the client sees the same "FIS Client
+// Services" sender. Internal audit attribution is unaffected — every
+// logAudit() call below still records the actual staff.email.
+const CLIENT_FACING_STAFF_LABEL = "FIS Client Services";
+
 async function sendStaffMessage(request, env, staff, applicationId) {
   const form = await request.formData();
   const body = String(form.get("body") || "").trim().slice(0, 4000);
@@ -416,7 +535,7 @@ async function sendStaffMessage(request, env, staff, applicationId) {
   await env.DB.prepare(
     "INSERT INTO messages (id, application_id, sender_type, sender_label, body) VALUES (?, ?, 'staff', ?, ?)"
   )
-    .bind(newId(), applicationId, staff.full_name || staff.email, body)
+    .bind(newId(), applicationId, CLIENT_FACING_STAFF_LABEL, body)
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_message", targetTable: "applications", targetId: applicationId });
 

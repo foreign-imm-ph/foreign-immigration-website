@@ -31,6 +31,7 @@ export function staffPage(title, bodyHtml, staffEmail) {
   input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; }
   button { background: #0d3d25; color: #fff; border: none; padding: 0.55rem 1.1rem; border-radius: 4px; font-size: 0.88rem; cursor: pointer; margin-top: 0.7rem; }
   button.secondary { background: #fff; color: #0d3d25; border: 1px solid #0d3d25; }
+  button.danger { background: #fff; color: #b3261e; border: 1px solid #b3261e; }
   .status { display: inline-block; font-size: 0.75rem; padding: 0.15em 0.6em; border-radius: 3px; background: #eef1ec; }
   .muted { color: #777; font-size: 0.85rem; }
 </style>
@@ -40,6 +41,7 @@ export function staffPage(title, bodyHtml, staffEmail) {
   <header>
     <nav>
       <a href="/staff/enquiries/">Enquiries</a>
+      <a href="/staff/enquiries/archived/">Archived Enquiries</a>
       <a href="/staff/applications/">Applications</a>
     </nav>
     <span class="muted">${escapeHtml(staffEmail || "")}</span>
