@@ -1,0 +1,40 @@
+name = "fis-backend"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# api.foreignimmigration.ph is confirmed live and proxied, with this route
+# already configured in the dashboard. Declared here too so `wrangler deploy`
+# reconciles against the same route rather than leaving it undeclared in
+# source — this matches, not creates, the existing dashboard configuration.
+routes = [
+  { pattern = "api.foreignimmigration.ph/*", zone_name = "foreignimmigration.ph" }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fis-backend"
+database_id = "85d16e91-9dba-45da-b8e4-b12c0592f779"
+
+[[r2_buckets]]
+binding = "CLIENT_FILES"
+bucket_name = "fis-client-files"
+
+[vars]
+# Non-secret configuration. Secrets (RESEND_API_KEY) are set via
+# `wrangler secret put` and must never appear in this file.
+PUBLIC_SITE_URL = "https://foreignimmigration.ph"
+EMAIL_FROM = "Foreign Immigration Services <portal@foreignimmigration.ph>"
+# portal@ sends system mail (magic links, notifications); it isn't a monitored
+# inbox, so replies should route to the address already published sitewide
+# as the human-monitored contact, per src/_data/site.json.
+EMAIL_REPLY_TO = "info@foreignimmigration.ph"
+STAFF_NOTIFICATION_EMAIL = "info@foreignimmigration.ph"
+
+# From the Cloudflare Access application's Overview page, once created
+# (Zero Trust dashboard → Access → Applications → the /staff/* application).
+# Not secret — the AUD tag only identifies which Access app to trust, it
+# doesn't grant access on its own.
+CF_ACCESS_TEAM_DOMAIN = "still-wave-079c.cloudflareaccess.com"
+# Copied from: Zero Trust dashboard → Access → Applications →
+# "FIS Staff Portal" → Overview → Application Audience (AUD) Tag.
+CF_ACCESS_AUD = "40fa2e08ff7eaad1e3a9813beb0f139a0068e852d8ac48b63a4decf32fbf6b42"

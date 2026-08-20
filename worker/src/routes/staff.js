@@ -1,0 +1,481 @@
+import { newId, newToken, sha256Hex } from "../lib/crypto.js";
+import { getClientByEmail, createClient, insertUniqueReference, logAudit } from "../lib/db.js";
+import { requireStaff } from "../lib/staffAuth.js";
+import { isSameSiteOrigin } from "../lib/session.js";
+import { staffPage, escapeHtml } from "../lib/staffHtml.js";
+import { streamObject } from "../lib/storage.js";
+import { sendMagicLink, sendDocumentRequestNotification, sendPaymentRequestNotification } from "../lib/email.js";
+
+const STATUS_OPTIONS = [
+  "enquiry_received", "under_review", "documents_required", "documents_received",
+  "preparing_application", "submitted", "awaiting_authority_action",
+  "additional_information_required", "completed",
+];
+
+function notFound() {
+  return new Response("Not found", { status: 404 });
+}
+
+// Every handler below first resolves `staff` via Access + the staff
+// allow-list (lib/staffAuth.js), then goes through this dispatcher. If
+// resolving staff fails, the request never reaches application logic.
+// Staff routes query D1 directly (they're not scoped to a single client_id
+// the way client routes are), but every action that touches a specific
+// client's data is written to audit_log.
+export async function handleStaffRequest(request, env, url) {
+  try {
+    return await dispatch(request, env, url);
+  } catch (err) {
+    // Same principle as the JSON API's withErrorHandling: log server-side
+    // only, never return a stack trace or internal detail to the client.
+    console.error("Unhandled staff route error:", err.message);
+    return new Response("Something went wrong. Please try again.", { status: 500 });
+  }
+}
+
+async function dispatch(request, env, url) {
+  const staff = await requireStaff(request, env);
+  if (!staff) {
+    return new Response("Staff sign-in required. This page is only reachable through Cloudflare Access.", { status: 401 });
+  }
+
+  const path = url.pathname.replace(/^\/staff/, "") || "/";
+  const method = request.method;
+
+  // Cloudflare Access authenticates WHO is asking, but its own session
+  // cookie is attached by the browser automatically like any cookie. It
+  // does not by itself stop a malicious page from triggering a mutation
+  // from a signed-in staff member's browser, so every state-changing
+  // staff request gets the same Origin check as the client-facing API.
+  if (method === "POST" && !isSameSiteOrigin(request, env)) {
+    return new Response("Request rejected", { status: 403 });
+  }
+
+  if (path === "/" || path === "/enquiries/") return listEnquiries(env, staff);
+  const enquiryMatch = path.match(/^\/enquiries\/([^/]+)\/?$/);
+  if (enquiryMatch && method === "GET") return viewEnquiry(env, staff, enquiryMatch[1]);
+  const convertMatch = path.match(/^\/enquiries\/([^/]+)\/convert$/);
+  if (convertMatch && method === "POST") return convertEnquiry(request, env, staff, convertMatch[1]);
+
+  if (path === "/applications/") return listApplications(env, staff);
+  const appMatch = path.match(/^\/applications\/([^/]+)\/?$/);
+  if (appMatch && method === "GET") return viewApplication(env, staff, appMatch[1]);
+
+  const statusMatch = path.match(/^\/applications\/([^/]+)\/status$/);
+  if (statusMatch && method === "POST") return updateStatus(request, env, staff, statusMatch[1]);
+
+  const docReqMatch = path.match(/^\/applications\/([^/]+)\/documents\/request$/);
+  if (docReqMatch && method === "POST") return requestDocument(request, env, staff, docReqMatch[1]);
+
+  const docDlMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/download$/);
+  if (docDlMatch && method === "GET") return downloadDocument(env, staff, docDlMatch[1], docDlMatch[2]);
+
+  const docStatusMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/status$/);
+  if (docStatusMatch && method === "POST") return updateDocumentRequestStatus(request, env, staff, docStatusMatch[1], docStatusMatch[2]);
+
+  const msgMatch = path.match(/^\/applications\/([^/]+)\/messages$/);
+  if (msgMatch && method === "POST") return sendStaffMessage(request, env, staff, msgMatch[1]);
+
+  const payMatch = path.match(/^\/applications\/([^/]+)\/payments$/);
+  if (payMatch && method === "POST") return createPaymentRequest(request, env, staff, payMatch[1]);
+
+  const payPaidMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/mark-paid$/);
+  if (payPaidMatch && method === "POST") return markPaymentPaid(request, env, staff, payPaidMatch[1], payPaidMatch[2]);
+
+  const proofMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/proof$/);
+  if (proofMatch && method === "GET") return viewPaymentProof(env, staff, proofMatch[1], proofMatch[2]);
+
+  return notFound();
+}
+
+async function listEnquiries(env, staff) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, reference, full_name, email, service_slug, status, created_at FROM enquiries ORDER BY created_at DESC LIMIT 100"
+  ).all();
+
+  const rows = results
+    .map(
+      (e) => `<tr>
+        <td><a class="ref" href="/staff/enquiries/${e.id}">${escapeHtml(e.reference)}</a></td>
+        <td>${escapeHtml(e.full_name)}</td>
+        <td>${escapeHtml(e.email)}</td>
+        <td>${escapeHtml(e.service_slug)}</td>
+        <td><span class="status">${escapeHtml(e.status)}</span></td>
+        <td class="muted">${escapeHtml(e.created_at)}</td>
+      </tr>`
+    )
+    .join("");
+
+  return staffPage(
+    "Enquiries",
+    `<h1>Enquiries</h1>
+     <table>
+       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Service</th><th>Status</th><th>Received</th></tr>
+       ${rows || '<tr><td colspan="6" class="muted">No enquiries yet.</td></tr>'}
+     </table>`,
+    staff.email
+  );
+}
+
+async function viewEnquiry(env, staff, id) {
+  const enquiry = await env.DB.prepare("SELECT * FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  const existingClient = await getClientByEmail(env.DB, enquiry.email);
+
+  return staffPage(
+    `Enquiry ${enquiry.reference}`,
+    `<h1>Enquiry ${escapeHtml(enquiry.reference)}</h1>
+     <div class="card">
+       <p><strong>${escapeHtml(enquiry.full_name)}</strong> &lt;${escapeHtml(enquiry.email)}&gt;</p>
+       <p class="muted">${escapeHtml(enquiry.phone || "No phone given")} · ${escapeHtml(enquiry.nationality)} · ${escapeHtml(enquiry.location || "")}</p>
+       <p><strong>Service:</strong> ${escapeHtml(enquiry.service_slug)}</p>
+       <p>${escapeHtml(enquiry.description).replace(/\n/g, "<br>")}</p>
+       <p class="muted">Received ${escapeHtml(enquiry.created_at)}</p>
+     </div>
+     <div class="card">
+       <h2>${existingClient ? "Create application for existing client" : "Convert to client"}</h2>
+       <p class="muted">${existingClient ? `${escapeHtml(existingClient.full_name)} is already a client — this creates a new application linked to their existing account.` : "Creates a client account (a magic-link welcome email is sent) and opens a linked application."}</p>
+       <form method="POST" action="/staff/enquiries/${enquiry.id}/convert">
+         <button type="submit">${existingClient ? "Create application" : "Convert to client"}</button>
+       </form>
+     </div>`,
+    staff.email
+  );
+}
+
+async function convertEnquiry(request, env, staff, id) {
+  const enquiry = await env.DB.prepare("SELECT * FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  let client = await getClientByEmail(env.DB, enquiry.email);
+  let isNewClient = false;
+  if (!client) {
+    client = await createClient(env.DB, {
+      fullName: enquiry.full_name,
+      email: enquiry.email,
+      phone: enquiry.phone,
+      nationality: enquiry.nationality,
+    });
+    isNewClient = true;
+  }
+
+  const applicationId = newId();
+  const reference = await insertUniqueReference(env.DB, "applications");
+  await env.DB.prepare(
+    "INSERT INTO applications (id, reference, client_id, service_slug, enquiry_id) VALUES (?, ?, ?, ?, ?)"
+  )
+    .bind(applicationId, reference, client.id, enquiry.service_slug, enquiry.id)
+    .run();
+
+  await env.DB.prepare(
+    "INSERT INTO application_status_history (id, application_id, status, changed_by_staff_email) VALUES (?, ?, 'enquiry_received', ?)"
+  )
+    .bind(newId(), applicationId, staff.email)
+    .run();
+
+  await env.DB.prepare("UPDATE enquiries SET status = 'converted' WHERE id = ?").bind(enquiry.id).run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "converted_enquiry", targetTable: "applications", targetId: applicationId });
+
+  if (isNewClient) {
+    // Welcome email doubles as the client's first magic link.
+    const rawToken = newToken();
+    const tokenHash = await sha256Hex(rawToken);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await env.DB.prepare("INSERT INTO auth_tokens (id, client_id, token_hash, expires_at) VALUES (?, ?, ?, ?)")
+      .bind(newId(), client.id, tokenHash, expiresAt)
+      .run();
+    try {
+      await sendMagicLink(env, { to: client.email, url: `${env.PUBLIC_SITE_URL}/portal/verify/?token=${rawToken}` });
+    } catch (err) {
+      console.error("Welcome email failed:", err.message);
+    }
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function listApplications(env, staff) {
+  const { results } = await env.DB.prepare(
+    `SELECT a.id, a.reference, a.service_slug, a.status, a.created_at, c.full_name, c.email
+     FROM applications a JOIN clients c ON c.id = a.client_id
+     ORDER BY a.updated_at DESC LIMIT 100`
+  ).all();
+
+  const rows = results
+    .map(
+      (a) => `<tr>
+        <td><a class="ref" href="/staff/applications/${a.id}">${escapeHtml(a.reference)}</a></td>
+        <td>${escapeHtml(a.full_name)}</td>
+        <td>${escapeHtml(a.service_slug)}</td>
+        <td><span class="status">${escapeHtml(a.status)}</span></td>
+        <td class="muted">${escapeHtml(a.created_at)}</td>
+      </tr>`
+    )
+    .join("");
+
+  return staffPage(
+    "Applications",
+    `<h1>Applications</h1>
+     <table>
+       <tr><th>Reference</th><th>Client</th><th>Service</th><th>Status</th><th>Opened</th></tr>
+       ${rows || '<tr><td colspan="5" class="muted">No applications yet.</td></tr>'}
+     </table>`,
+    staff.email
+  );
+}
+
+async function viewApplication(env, staff, id) {
+  const application = await env.DB.prepare(
+    `SELECT a.*, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
+  )
+    .bind(id)
+    .first();
+  if (!application) return notFound();
+
+  const [{ results: docRequests }, { results: documents }, { results: messages }, { results: payments }] = await Promise.all([
+    env.DB.prepare("SELECT * FROM document_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
+    env.DB.prepare("SELECT * FROM documents WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
+    env.DB.prepare("SELECT * FROM messages WHERE application_id = ? ORDER BY created_at ASC").bind(id).all(),
+    env.DB.prepare("SELECT * FROM payment_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
+  ]);
+
+  const statusOptionsHtml = STATUS_OPTIONS.map(
+    (s) => `<option value="${s}" ${s === application.status ? "selected" : ""}>${s.replace(/_/g, " ")}</option>`
+  ).join("");
+
+  const docRequestRows = docRequests
+    .map((dr) => {
+      const matchingDoc = documents.find((d) => d.document_request_id === dr.id);
+      return `<tr>
+        <td>${escapeHtml(dr.label)}</td>
+        <td><span class="status">${escapeHtml(dr.status)}</span></td>
+        <td>${matchingDoc ? `<a href="/staff/applications/${id}/documents/${matchingDoc.id}/download">${escapeHtml(matchingDoc.original_filename)}</a>` : '<span class="muted">Not uploaded</span>'}</td>
+        <td>${matchingDoc ? `<form method="POST" action="/staff/applications/${id}/documents/${dr.id}/status" style="display:inline"><input type="hidden" name="status" value="received"><button class="secondary" type="submit">Mark received</button></form>
+             <form method="POST" action="/staff/applications/${id}/documents/${dr.id}/status" style="display:inline"><input type="hidden" name="status" value="rejected"><button class="secondary" type="submit">Reject</button></form>` : ""}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const otherDocs = documents.filter((d) => !d.document_request_id);
+  const otherDocRows = otherDocs
+    .map((d) => `<tr><td colspan="3"><a href="/staff/applications/${id}/documents/${d.id}/download">${escapeHtml(d.original_filename)}</a> <span class="muted">(${escapeHtml(d.uploaded_by)})</span></td></tr>`)
+    .join("");
+
+  const messageRows = messages
+    .map(
+      (m) => `<div style="margin-bottom:0.8rem;">
+        <strong>${escapeHtml(m.sender_label)}</strong> <span class="muted">${escapeHtml(m.created_at)}</span>
+        <p style="margin:0.2rem 0 0;">${escapeHtml(m.body)}</p>
+      </div>`
+    )
+    .join("") || '<p class="muted">No messages yet.</p>';
+
+  const paymentRows = payments
+    .map(
+      (p) => `<tr>
+        <td>PHP ${p.amount_php.toFixed(2)}</td>
+        <td>${escapeHtml(p.description)}</td>
+        <td><span class="status">${escapeHtml(p.status)}</span></td>
+        <td>${p.status === "submitted" ? `<a href="/staff/applications/${id}/payments/${p.id}/proof">View proof</a>` : ""}</td>
+        <td>${p.status !== "paid" ? `<form method="POST" action="/staff/applications/${id}/payments/${p.id}/mark-paid"><button type="submit">Mark paid</button></form>` : `<span class="muted">Verified by ${escapeHtml(p.verified_by_staff_email || "")}</span>`}</td>
+      </tr>`
+    )
+    .join("");
+
+  return staffPage(
+    `Application ${application.reference}`,
+    `<h1>Application ${escapeHtml(application.reference)}</h1>
+     <div class="card">
+       <p><strong>${escapeHtml(application.full_name)}</strong> &lt;${escapeHtml(application.email)}&gt;</p>
+       <p><strong>Service:</strong> ${escapeHtml(application.service_slug)} &nbsp; <strong>Status:</strong> <span class="status">${escapeHtml(application.status)}</span></p>
+       <form method="POST" action="/staff/applications/${id}/status">
+         <label for="status">Update status</label>
+         <select name="status" id="status">${statusOptionsHtml}</select>
+         <label for="note">Note (client-visible)</label>
+         <textarea name="note" id="note" rows="2" placeholder="Optional note shown to the client with this status change"></textarea>
+         <button type="submit">Update status</button>
+       </form>
+     </div>
+
+     <div class="card">
+       <h2>Documents</h2>
+       <table>
+         <tr><th>Requested</th><th>Status</th><th>File</th><th>Action</th></tr>
+         ${docRequestRows || '<tr><td colspan="4" class="muted">No documents requested yet.</td></tr>'}
+         ${otherDocRows}
+       </table>
+       <form method="POST" action="/staff/applications/${id}/documents/request">
+         <label for="label">Request a document</label>
+         <input type="text" name="label" id="label" placeholder="e.g. Passport bio page" required>
+         <button type="submit">Request document</button>
+       </form>
+     </div>
+
+     <div class="card">
+       <h2>Messages</h2>
+       ${messageRows}
+       <form method="POST" action="/staff/applications/${id}/messages">
+         <label for="body">Reply</label>
+         <textarea name="body" id="body" rows="3" required></textarea>
+         <button type="submit">Send</button>
+       </form>
+     </div>
+
+     <div class="card">
+       <h2>Payments</h2>
+       <table>
+         <tr><th>Amount</th><th>Description</th><th>Status</th><th>Proof</th><th>Action</th></tr>
+         ${paymentRows || '<tr><td colspan="5" class="muted">No payment requests yet.</td></tr>'}
+       </table>
+       <form method="POST" action="/staff/applications/${id}/payments">
+         <label for="amount">Amount due (PHP)</label>
+         <input type="number" step="0.01" min="0" name="amount" id="amount" required>
+         <label for="description">Description</label>
+         <input type="text" name="description" id="description" placeholder="e.g. ACR I-Card processing fee" required>
+         <p class="muted">The client sees the single, standard FIS QR Ph code automatically once it's configured in R2. No per-request upload needed.</p>
+         <button type="submit">Create payment request</button>
+       </form>
+     </div>`,
+    staff.email
+  );
+}
+
+async function updateStatus(request, env, staff, id) {
+  const form = await request.formData();
+  const status = String(form.get("status") || "");
+  const note = String(form.get("note") || "").trim().slice(0, 1000) || null;
+  if (!STATUS_OPTIONS.includes(status)) return new Response("Invalid status", { status: 400 });
+
+  await env.DB.prepare("UPDATE applications SET status = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(status, id)
+    .run();
+  await env.DB.prepare(
+    "INSERT INTO application_status_history (id, application_id, status, note, changed_by_staff_email) VALUES (?, ?, ?, ?, ?)"
+  )
+    .bind(newId(), id, status, note, staff.email)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_status", targetTable: "applications", targetId: id });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
+}
+
+async function requestDocument(request, env, staff, applicationId) {
+  const form = await request.formData();
+  const label = String(form.get("label") || "").trim().slice(0, 200);
+  if (!label) return new Response("Label required", { status: 400 });
+
+  await env.DB.prepare(
+    "INSERT INTO document_requests (id, application_id, label, requested_by_staff_email) VALUES (?, ?, ?, ?)"
+  )
+    .bind(newId(), applicationId, label, staff.email)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "requested_document", targetTable: "applications", targetId: applicationId });
+
+  const application = await env.DB.prepare(
+    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(applicationId)
+    .first();
+  if (application) {
+    try {
+      await sendDocumentRequestNotification(env, { to: application.email, applicationReference: application.reference, label });
+    } catch (err) {
+      console.error("Document request email failed:", err.message);
+    }
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function downloadDocument(env, staff, applicationId, documentId) {
+  const doc = await env.DB.prepare("SELECT * FROM documents WHERE id = ? AND application_id = ?")
+    .bind(documentId, applicationId)
+    .first();
+  if (!doc) return notFound();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "viewed_document", targetTable: "documents", targetId: documentId });
+  return streamObject(env.CLIENT_FILES, doc.r2_key, doc.original_filename, doc.content_type);
+}
+
+async function updateDocumentRequestStatus(request, env, staff, applicationId, documentRequestId) {
+  const form = await request.formData();
+  const status = String(form.get("status") || "");
+  if (!["received", "rejected"].includes(status)) return new Response("Invalid status", { status: 400 });
+  await env.DB.prepare("UPDATE document_requests SET status = ?, updated_at = datetime('now') WHERE id = ? AND application_id = ?")
+    .bind(status, documentRequestId, applicationId)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "document_request_" + status, targetTable: "document_requests", targetId: documentRequestId });
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function sendStaffMessage(request, env, staff, applicationId) {
+  const form = await request.formData();
+  const body = String(form.get("body") || "").trim().slice(0, 4000);
+  if (!body) return new Response("Message required", { status: 400 });
+
+  await env.DB.prepare(
+    "INSERT INTO messages (id, application_id, sender_type, sender_label, body) VALUES (?, ?, 'staff', ?, ?)"
+  )
+    .bind(newId(), applicationId, staff.full_name || staff.email, body)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_message", targetTable: "applications", targetId: applicationId });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function createPaymentRequest(request, env, staff, applicationId) {
+  const form = await request.formData();
+  const amount = parseFloat(form.get("amount"));
+  const description = String(form.get("description") || "").trim().slice(0, 300);
+  if (!amount || amount <= 0 || !description) return new Response("Amount and description required", { status: 400 });
+
+  const paymentId = newId();
+
+  await env.DB.prepare(
+    "INSERT INTO payment_requests (id, application_id, amount_php, description) VALUES (?, ?, ?, ?)"
+  )
+    .bind(paymentId, applicationId, amount, description)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_payment_request", targetTable: "payment_requests", targetId: paymentId });
+
+  const application = await env.DB.prepare(
+    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(applicationId)
+    .first();
+  if (application) {
+    try {
+      await sendPaymentRequestNotification(env, { to: application.email, applicationReference: application.reference, amountPhp: amount, description });
+    } catch (err) {
+      console.error("Payment request email failed:", err.message);
+    }
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
+  // Deliberately the ONLY place a payment_request can become 'paid' — a
+  // manual staff action, never automatic. See routes/payments.js.
+  await env.DB.prepare(
+    "UPDATE payment_requests SET status = 'paid', paid_at = datetime('now'), verified_by_staff_email = ? WHERE id = ? AND application_id = ?"
+  )
+    .bind(staff.email, paymentId, applicationId)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "marked_payment_paid", targetTable: "payment_requests", targetId: paymentId });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function viewPaymentProof(env, staff, applicationId, paymentId) {
+  const { results: proofs } = await env.DB.prepare(
+    "SELECT * FROM payment_proofs WHERE payment_request_id = ? ORDER BY uploaded_at DESC"
+  )
+    .bind(paymentId)
+    .all();
+  if (!proofs.length) return notFound();
+
+  const latest = proofs[0];
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "viewed_payment_proof", targetTable: "payment_proofs", targetId: latest.id });
+  return streamObject(env.CLIENT_FILES, latest.r2_key, latest.original_filename, latest.content_type);
+}

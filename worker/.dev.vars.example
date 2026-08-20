@@ -1,0 +1,4 @@
+# Copy to .dev.vars (gitignored) for local `wrangler dev` testing.
+# In production, RESEND_API_KEY is set with `wrangler secret put RESEND_API_KEY`
+# — never in this file, never committed.
+RESEND_API_KEY=re_your_dev_key_here
