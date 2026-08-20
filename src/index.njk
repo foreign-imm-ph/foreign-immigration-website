@@ -5,28 +5,24 @@ lang: en
 description: Foreign Immigration Services is a Bureau of Immigration accredited consultancy that manages the visa, extension, residency and compliance process on your behalf in the Philippines.
 ---
 {% from "partials/icons.njk" import icon %}
-{% from "partials/media-panel.njk" import mediaPanel %}
 {% include "partials/urgent-banner.njk" %}
 
-<!-- Hero headline is a provisional first draft for visual assessment, per owner instruction — not locked final brand copy. -->
 <section class="hero">
   <div class="wrap hero__grid">
-    <div class="hero__content">
-      <p class="hero__eyebrow">Philippine Immigration Consultancy</p>
-      <h1>Philippine immigration, handled.</h1>
-      <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy that manages the visa, extension, residency and compliance process on your behalf — so you're not navigating it alone.</p>
-      <div class="hero__actions">
-        <a class="btn btn-primary" href="/contact/">Send an Enquiry</a>
-        <a class="btn btn-secondary" href="/services/">Explore Our Services</a>
-      </div>
-      <p class="hero__accreditation">
-        {{ icon("accreditation", 40) }}
-        <span><strong>Bureau of Immigration Accredited Consultancy</strong> — No. {{ site.accreditation.number }}</span>
-      </p>
-    </div>
+    <p class="hero__eyebrow">Philippine Immigration Consultancy</p>
+    <h1 class="hero__headline">Philippine immigration, handled.</h1>
+    <p class="hero__lede">Foreign Immigration Services is a Bureau of Immigration accredited consultancy that manages Philippine immigration matters on your behalf, from visas, extensions and residency to corporate mobility, compliance and complex immigration concerns.</p>
     <div class="hero__visual">
-      {{ mediaPanel("visa-applications") }}
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
     </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/contact/">Send an Enquiry</a>
+      <a class="btn btn-secondary" href="/services/">Explore Our Services</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>Bureau of Immigration Accredited Consultancy</strong> — No. {{ site.accreditation.number }}</span>
+    </p>
   </div>
 </section>
 

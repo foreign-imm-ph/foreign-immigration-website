@@ -300,71 +300,187 @@ label:focus-visible {
 /* Hero */
 
 .hero {
-  padding: 5.5rem 0 4.5rem;
+  padding: clamp(2.5rem, 1.7rem + 3.2vw, 5.5rem) 0 clamp(2.25rem, 1.6rem + 2.6vw, 4.5rem);
   border-bottom: 2px solid rgba(13, 61, 37, 0.12);
   background: linear-gradient(180deg, var(--color-offwhite) 55%, var(--color-green-tint) 100%);
   overflow: hidden;
 }
 
+/* Mobile composition (base): single column, logo as a brand interlude
+   between the message and the call to action. */
 .hero__grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 2.5rem;
-  align-items: center;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "eyebrow"
+    "headline"
+    "lede"
+    "visual"
+    "actions"
+    "accreditation";
 }
 
 .hero__eyebrow {
+  grid-area: eyebrow;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  font-size: clamp(0.72rem, 0.66rem + 0.3vw, 0.82rem);
   color: var(--color-gold-text);
   font-weight: 600;
-  margin-bottom: 1.25rem;
+  margin-bottom: clamp(0.65rem, 0.4rem + 0.9vw, 1.25rem);
 }
 
-.hero h1 {
-  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
-  margin-bottom: 0.55em;
+.hero__headline {
+  grid-area: headline;
+  font-size: clamp(1.85rem, 1.4rem + 3.9vw, 2.4rem);
+  line-height: 1.16;
+  margin-bottom: 0.45em;
 }
 
 .hero__lede {
-  font-size: 1.18rem;
+  grid-area: lede;
+  font-size: clamp(0.92rem, 0.86rem + 0.45vw, 1rem);
+  line-height: 1.5;
   color: var(--color-grey);
   max-width: 42em;
+  margin-bottom: clamp(0.9rem, 0.7rem + 0.8vw, 1.3rem);
 }
 
 .hero__actions {
+  grid-area: actions;
   display: flex;
-  gap: 1rem;
+  gap: clamp(0.6rem, 0.5rem + 0.4vw, 1rem);
   flex-wrap: wrap;
-  margin: 2rem 0 1.75rem;
+  margin: 0 0 clamp(1.1rem, 0.9rem + 0.8vw, 1.5rem);
+}
+
+.hero__actions .btn {
+  padding: clamp(0.65rem, 0.58rem + 0.3vw, 0.8rem) clamp(1.1rem, 0.9rem + 0.8vw, 1.6rem);
+  font-size: clamp(0.9rem, 0.87rem + 0.15vw, 0.98rem);
 }
 
 .hero__accreditation {
+  grid-area: accreditation;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.88rem;
+  font-size: clamp(0.82rem, 0.78rem + 0.15vw, 0.88rem);
   color: var(--color-charcoal);
   background: var(--color-white);
   border: 1px solid rgba(13, 61, 37, 0.15);
   border-left: 3px solid var(--color-gold);
   border-radius: var(--radius);
-  padding: 0.6rem 0.9rem;
+  padding: clamp(0.5rem, 0.44rem + 0.3vw, 0.6rem) clamp(0.7rem, 0.62rem + 0.3vw, 0.9rem);
 }
 
 .hero__accreditation strong { color: var(--color-green); }
 
 .hero__visual {
+  grid-area: visual;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
+  margin: clamp(0.15rem, 0.05rem + 0.4vw, 0.4rem) 0 clamp(0.9rem, 0.7rem + 0.8vw, 1.3rem);
 }
 
-.hero__visual .media-panel {
-  width: 100%;
+.hero__logo {
+  display: block;
+  width: clamp(170px, 120px + 22vw, 260px);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Tablet composition: the proposition (eyebrow/H1/description) stays
+   full width for a comfortable reading measure, then a compact
+   action/brand row places the CTA group and the logo side by side
+   (tested a narrow two-column copy layout here first; it compressed
+   the paragraph too much, see report), followed by the accreditation
+   card. This replaces the mobile single-column stack once there's
+   enough width for the action/brand row to breathe. */
+@media (min-width: 640px) and (max-width: 959px) {
+  .hero__grid {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "eyebrow eyebrow"
+      "headline headline"
+      "lede lede"
+      "actions visual"
+      "accreditation accreditation";
+    column-gap: clamp(1.5rem, 0.5rem + 3vw, 2.5rem);
+    align-items: center;
+  }
+
+  .hero__headline {
+    font-size: clamp(2.375rem, 1.325rem + 2.625vw, 2.9rem);
+  }
+
+  .hero__lede {
+    font-size: clamp(1rem, 0.94rem + 0.3vw, 1.08rem);
+    margin-bottom: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem);
+  }
+
+  .hero__actions {
+    margin: 0;
+    flex-wrap: nowrap;
+  }
+
+  .hero__actions .btn {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+
+  .hero__visual {
+    margin: 0;
+    justify-content: flex-end;
+  }
+
+  .hero__logo {
+    width: clamp(225px, 154.8px + 10.97vw, 260px);
+  }
+
+  .hero__accreditation {
+    margin-top: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem);
+  }
+}
+
+/* Desktop composition: two columns, logo takes the right column and
+   spans the full height of the text block. */
+@media (min-width: 960px) {
+  .hero__grid {
+    grid-template-columns: 1fr clamp(270px, -490px + 79.17vw, 460px);
+    grid-template-areas:
+      "eyebrow visual"
+      "headline visual"
+      "lede visual"
+      "actions visual"
+      "accreditation visual";
+    column-gap: clamp(1.5rem, 0.4rem + 3vw, 2.5rem);
+    align-items: center;
+  }
+
+  .hero__headline {
+    font-size: clamp(2.625rem, 0.125rem + 4.167vw, 3.25rem);
+  }
+
+  .hero__lede {
+    font-size: clamp(1.02rem, 0.92rem + 0.4vw, 1.18rem);
+  }
+
+  .hero__actions .btn {
+    padding: 0.8rem 1.6rem;
+    font-size: 0.98rem;
+  }
+
+  .hero__visual {
+    margin: 0;
+  }
+
+  .hero__logo {
+    width: 100%;
+  }
 }
 
 /* Sections */
@@ -1101,9 +1217,6 @@ label:focus-visible {
 }
 
 @media (max-width: 900px) {
-  .hero__grid { grid-template-columns: 1fr; }
-  .hero__visual { min-height: 240px; order: -1; }
-
   .feature-split__grid { grid-template-columns: 1fr; }
   .feature-split__visual { order: -1; min-height: 160px; }
   .feature-split__visual .icon { width: 100px; height: 100px; }
