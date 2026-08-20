@@ -520,13 +520,6 @@ async function updateDocumentRequestStatus(request, env, staff, applicationId, d
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
-// Client-visible label for every staff reply — deliberately not staff.full_name
-// or staff.email. This is an institutional identity, not a personal one:
-// whichever staff member is signed in, the client sees the same "FIS Client
-// Services" sender. Internal audit attribution is unaffected — every
-// logAudit() call below still records the actual staff.email.
-const CLIENT_FACING_STAFF_LABEL = "FIS Client Services";
-
 async function sendStaffMessage(request, env, staff, applicationId) {
   const form = await request.formData();
   const body = String(form.get("body") || "").trim().slice(0, 4000);
@@ -535,7 +528,7 @@ async function sendStaffMessage(request, env, staff, applicationId) {
   await env.DB.prepare(
     "INSERT INTO messages (id, application_id, sender_type, sender_label, body) VALUES (?, ?, 'staff', ?, ?)"
   )
-    .bind(newId(), applicationId, CLIENT_FACING_STAFF_LABEL, body)
+    .bind(newId(), applicationId, staff.full_name || staff.email, body)
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_message", targetTable: "applications", targetId: applicationId });
 
