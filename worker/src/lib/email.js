@@ -132,6 +132,62 @@ ${env.PUBLIC_SITE_URL}/portal/`;
   });
 }
 
+export async function sendApplicationStatusUpdate(env, { to, fullName, applicationReference, status, note }) {
+  const statusLabel = String(status).replace(/_/g, " ");
+
+  const text = `${fullName ? `Dear ${fullName},\n\n` : ""}Your application ${applicationReference} has been updated.
+
+New status: ${statusLabel}${note ? `\n\nNote: ${note}` : ""}
+
+Please sign in to the Client Portal for full details.
+
+${env.PUBLIC_SITE_URL}/portal/`;
+
+  const html = wrap(`
+    ${fullName ? `<p>Dear ${escapeHtml(fullName)},</p>` : ""}
+    <p>Your application <strong>${escapeHtml(applicationReference)}</strong> has been updated.</p>
+    <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">New status: <strong>${escapeHtml(statusLabel)}</strong></p>
+    ${note ? `<p>${escapeHtml(note)}</p>` : ""}
+    <p>Please sign in to the Client Portal for full details.</p>
+  `);
+
+  await send(env, { to, subject: `Application update — ${applicationReference}`, text, html });
+}
+
+export async function sendClientMessageNotification(env, { to, applicationReference }) {
+  const text = `FIS Client Services has sent you a new message regarding application ${applicationReference}.
+
+Please sign in to your Client Portal to view and respond to the message.
+
+${env.PUBLIC_SITE_URL}/portal/`;
+
+  const html = wrap(`
+    <p>FIS Client Services has sent you a new message regarding application <strong>${escapeHtml(applicationReference)}</strong>.</p>
+    <p>Please sign in to your Client Portal to view and respond to the message.</p>
+  `);
+
+  await send(env, { to, subject: `New message from FIS Client Services — ${applicationReference}`, text, html });
+}
+
+export async function sendPaymentConfirmation(env, { to, applicationReference, amountPhp, description }) {
+  const text = `Foreign Immigration Services has recorded your payment for application ${applicationReference} as paid.
+
+Amount: PHP ${amountPhp.toFixed(2)}
+Description: ${description}
+
+Please sign in to the Client Portal for full details.
+
+${env.PUBLIC_SITE_URL}/portal/`;
+
+  const html = wrap(`
+    <p>Foreign Immigration Services has recorded your payment for application <strong>${escapeHtml(applicationReference)}</strong> as paid.</p>
+    <p>Amount: PHP ${amountPhp.toFixed(2)}<br>Description: ${escapeHtml(description)}</p>
+    <p>Please sign in to the Client Portal for full details.</p>
+  `);
+
+  await send(env, { to, subject: `Payment confirmed — ${applicationReference}`, text, html });
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }

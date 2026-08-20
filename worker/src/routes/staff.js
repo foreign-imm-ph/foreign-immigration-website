@@ -4,7 +4,14 @@ import { requireStaff } from "../lib/staffAuth.js";
 import { isSameSiteOrigin } from "../lib/session.js";
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
 import { streamObject } from "../lib/storage.js";
-import { sendMagicLink, sendDocumentRequestNotification, sendPaymentRequestNotification } from "../lib/email.js";
+import {
+  sendMagicLink,
+  sendDocumentRequestNotification,
+  sendPaymentRequestNotification,
+  sendApplicationStatusUpdate,
+  sendClientMessageNotification,
+  sendPaymentConfirmation,
+} from "../lib/email.js";
 
 const STATUS_OPTIONS = [
   "enquiry_received", "under_review", "documents_required", "documents_received",
@@ -483,6 +490,28 @@ async function updateStatus(request, env, staff, id) {
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_status", targetTable: "applications", targetId: id });
 
+  // application_status_history.client_visible defaults to 1 and nothing in
+  // this codebase currently sets it otherwise, so every status update is
+  // client-visible today — notify unconditionally, matching that reality.
+  const application = await env.DB.prepare(
+    "SELECT a.reference, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(id)
+    .first();
+  if (application) {
+    try {
+      await sendApplicationStatusUpdate(env, {
+        to: application.email,
+        fullName: application.full_name,
+        applicationReference: application.reference,
+        status,
+        note,
+      });
+    } catch (err) {
+      console.error("Status update email failed:", err.message);
+    }
+  }
+
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
 }
 
@@ -546,6 +575,19 @@ async function sendStaffMessage(request, env, staff, applicationId) {
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_message", targetTable: "applications", targetId: applicationId });
 
+  const application = await env.DB.prepare(
+    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(applicationId)
+    .first();
+  if (application) {
+    try {
+      await sendClientMessageNotification(env, { to: application.email, applicationReference: application.reference });
+    } catch (err) {
+      console.error("Message notification email failed:", err.message);
+    }
+  }
+
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
@@ -581,14 +623,47 @@ async function createPaymentRequest(request, env, staff, applicationId) {
 }
 
 async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
-  // Deliberately the ONLY place a payment_request can become 'paid' — a
-  // manual staff action, never automatic. See routes/payments.js.
-  await env.DB.prepare(
-    "UPDATE payment_requests SET status = 'paid', paid_at = datetime('now'), verified_by_staff_email = ? WHERE id = ? AND application_id = ?"
+  const existing = await env.DB.prepare(
+    "SELECT status, amount_php, description FROM payment_requests WHERE id = ? AND application_id = ?"
   )
-    .bind(staff.email, paymentId, applicationId)
-    .run();
-  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "marked_payment_paid", targetTable: "payment_requests", targetId: paymentId });
+    .bind(paymentId, applicationId)
+    .first();
+  if (!existing) return notFound();
+
+  if (existing.status !== "paid") {
+    // Deliberately the ONLY place a payment_request can become 'paid' — a
+    // manual staff action, never automatic. See routes/payments.js. The
+    // "status != 'paid'" guard, combined with checking meta.changes below,
+    // makes a duplicate/concurrent mark-paid submission a no-op rather than
+    // a second audit event or a second confirmation email.
+    const result = await env.DB.prepare(
+      "UPDATE payment_requests SET status = 'paid', paid_at = datetime('now'), verified_by_staff_email = ? WHERE id = ? AND application_id = ? AND status != 'paid'"
+    )
+      .bind(staff.email, paymentId, applicationId)
+      .run();
+
+    if (result.meta.changes > 0) {
+      await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "marked_payment_paid", targetTable: "payment_requests", targetId: paymentId });
+
+      const application = await env.DB.prepare(
+        "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+      )
+        .bind(applicationId)
+        .first();
+      if (application) {
+        try {
+          await sendPaymentConfirmation(env, {
+            to: application.email,
+            applicationReference: application.reference,
+            amountPhp: existing.amount_php,
+            description: existing.description,
+          });
+        } catch (err) {
+          console.error("Payment confirmation email failed:", err.message);
+        }
+      }
+    }
+  }
 
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
