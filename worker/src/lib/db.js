@@ -37,11 +37,11 @@ export async function createClient(db, { fullName, email, phone = null, national
   return getClientById(db, id);
 }
 
-export async function logAudit(db, { actorType, actorIdOrEmail, action, targetTable = null, targetId = null }) {
+export async function logAudit(db, { actorType, actorIdOrEmail, action, targetTable = null, targetId = null, metadata = null }) {
   await db
     .prepare(
-      "INSERT INTO audit_log (id, actor_type, actor_id_or_email, action, target_table, target_id) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO audit_log (id, actor_type, actor_id_or_email, action, target_table, target_id, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
-    .bind(newId(), actorType, actorIdOrEmail, action, targetTable, targetId)
+    .bind(newId(), actorType, actorIdOrEmail, action, targetTable, targetId, metadata)
     .run();
 }

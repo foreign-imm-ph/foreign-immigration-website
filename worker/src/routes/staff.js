@@ -233,7 +233,7 @@ async function deleteEnquiry(request, env, staff, id) {
     return new Response("Permanent deletion requires administrator authorization.", { status: 403 });
   }
 
-  const enquiry = await env.DB.prepare("SELECT id, archived_at FROM enquiries WHERE id = ?").bind(id).first();
+  const enquiry = await env.DB.prepare("SELECT id, reference, service_slug, created_at, archived_at FROM enquiries WHERE id = ?").bind(id).first();
   if (!enquiry) return notFound();
 
   if (!enquiry.archived_at) {
@@ -249,8 +249,22 @@ async function deleteEnquiry(request, env, staff, id) {
   }
 
   // Logged before deletion, so the audit trail still shows who deleted what
-  // and when even though the enquiry row itself is about to be gone.
-  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "permanently_deleted_enquiry", targetTable: "enquiries", targetId: id });
+  // and when even though the enquiry row itself is about to be gone. The
+  // metadata snapshot is deliberately limited to non-PII fields — never
+  // full_name, email, phone, nationality, location, language, or
+  // description, since the whole point of the deletion is to remove those.
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: "permanently_deleted_enquiry",
+    targetTable: "enquiries",
+    targetId: id,
+    metadata: JSON.stringify({
+      reference: enquiry.reference,
+      service_slug: enquiry.service_slug,
+      created_at: enquiry.created_at,
+    }),
+  });
   await env.DB.prepare("DELETE FROM enquiries WHERE id = ?").bind(id).run();
 
   return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/archived/`, 303);
