@@ -667,6 +667,15 @@ label:focus-visible {
   min-height: 110px;
 }
 
+/* Reuses .feature-split__visual--photo's img sizing (width/height/cover/
+   radius) as-is from the base component above; only the crop position is
+   overridden here, tailored to this specific photograph rather than
+   Airport VIP's, since a plain .feature-split__visual--photo img rule
+   would otherwise apply the same object-position to both photos. */
+.feature-split--compact .feature-split__visual--photo img {
+  object-position: 50% 38%;
+}
+
 .feature-split--compact .tag {
   margin-bottom: 0.3rem;
 }
