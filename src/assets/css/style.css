@@ -648,6 +648,40 @@ label:focus-visible {
   color: var(--color-white);
 }
 
+/* Compact variant for the Property Transfer featured banner only — the
+   base .feature-split rules above (used by the Airport VIP banner on this
+   page and the homepage) are untouched. Reduces section padding ~31% and
+   tightens the vertical rhythm between tag/heading/lede/body/buttons and
+   the visual side's empty space, without touching copy, links, colors or
+   the mobile stacking behavior already handled by .feature-split__grid. */
+.feature-split--compact {
+  padding: 2.75rem 0;
+}
+
+.feature-split--compact .feature-split__visual {
+  min-height: 140px;
+}
+
+.feature-split--compact .tag {
+  margin-bottom: 0.4rem;
+}
+
+.feature-split--compact h2 {
+  margin-bottom: 0.3rem;
+}
+
+.feature-split--compact .feature-split__lede {
+  margin-bottom: 0.5rem;
+}
+
+.feature-split--compact p {
+  margin-bottom: 0.7em;
+}
+
+.feature-split--compact .service-cta__actions {
+  margin: 0;
+}
+
 /* CTA banner ("Not Sure What You Need?") */
 
 .cta-banner {
