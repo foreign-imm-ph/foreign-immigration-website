@@ -33,6 +33,13 @@ export function staffPage(title, bodyHtml, staffEmail) {
   button.secondary { background: #fff; color: #0d3d25; border: 1px solid #0d3d25; }
   button.danger { background: #fff; color: #b3261e; border: 1px solid #b3261e; }
   .status { display: inline-block; font-size: 0.75rem; padding: 0.15em 0.6em; border-radius: 3px; background: #eef1ec; }
+  .priority-badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 0.15em 0.6em; border-radius: 3px; border: 1px solid transparent; }
+  .priority-badge--standard { background: #eef1ec; color: #3a4a41; border-color: #d7ded8; }
+  .priority-badge--priority { background: #fbf1dc; color: #7a5a12; border-color: #e8c876; }
+  .priority-badge--urgent { background: #f7e6e4; color: #7a1f18; border-color: #d98c85; }
+  .filter-bar { font-size: 0.85rem; margin-bottom: 1rem; }
+  .filter-bar a { color: #0d3d25; text-decoration: none; margin: 0 0.15rem; }
+  .filter-bar a.filter-active { font-weight: 700; text-decoration: underline; }
   .muted { color: #777; font-size: 0.85rem; }
 </style>
 </head>

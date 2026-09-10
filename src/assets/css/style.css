@@ -801,6 +801,18 @@ label:focus-visible {
 .service-cta p { color: var(--color-grey); }
 .service-cta p:last-child { margin-bottom: 0; }
 
+/* Placed near the top of a service page (e.g. Legal Support, Airport VIP)
+   rather than at the end, so it doesn't need the large top margin used
+   everywhere else this class appears. */
+.service-cta--top { margin-top: 1.5rem; }
+
+.service-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
 /* Restrained premium callout for the Extensions & Compliance page's
    dominant commercial proposition, the page's primary visual/
    commercial focal point given it carries no photograph. Built from

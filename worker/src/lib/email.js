@@ -63,10 +63,18 @@ Bureau of Immigration Accredited Consultancy`;
   await send(env, { to, subject: `Enquiry received — ${reference}`, text, html });
 }
 
-export async function sendStaffEnquiryNotification(env, { reference, serviceSlug, fullName, email }) {
+export async function sendStaffEnquiryNotification(env, { reference, serviceSlug, fullName, email, priority }) {
+  // priority is the value already resolved and stored server-side by
+  // resolvePriority() in routes/enquiries.js — never a raw client-supplied
+  // value — so it's safe to surface directly. Standard keeps the exact
+  // existing presentation; only urgent/priority add a prefix and one line.
+  const subjectPrefix = priority === "urgent" ? "URGENT — " : priority === "priority" ? "PRIORITY — " : "";
+  const priorityLine = priority && priority !== "standard" ? `Priority: ${priority.toUpperCase()}\n` : "";
+  const priorityHtml = priority && priority !== "standard" ? `<br>Priority: <strong>${escapeHtml(priority.toUpperCase())}</strong>` : "";
+
   const text = `New enquiry received.
 
-Reference: ${reference}
+${priorityLine}Reference: ${reference}
 Name: ${fullName}
 Email: ${email}
 Service: ${serviceSlug}
@@ -75,9 +83,9 @@ Review it in the staff portal.`;
 
   await send(env, {
     to: env.STAFF_NOTIFICATION_EMAIL,
-    subject: `New enquiry — ${reference}`,
+    subject: `${subjectPrefix}New enquiry — ${reference}`,
     text,
-    html: wrap(`<p>New enquiry received.</p><p>Reference: <strong>${escapeHtml(reference)}</strong><br>Name: ${escapeHtml(fullName)}<br>Email: ${escapeHtml(email)}<br>Service: ${escapeHtml(serviceSlug)}</p>`),
+    html: wrap(`<p>New enquiry received.</p><p>Reference: <strong>${escapeHtml(reference)}</strong><br>Name: ${escapeHtml(fullName)}<br>Email: ${escapeHtml(email)}<br>Service: ${escapeHtml(serviceSlug)}${priorityHtml}</p>`),
   });
 }
 

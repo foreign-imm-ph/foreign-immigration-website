@@ -11,8 +11,28 @@ const SERVICE_SLUGS = new Set([
   "visa-applications", "work-visas", "extensions-compliance", "residency-status",
   "family-spousal", "corporate-mobility", "status-review", "motions-blacklist",
   "legal-support", "airport-vip", "lost-passport", "acr-icard", "exit-clearance",
-  "document-verification", "complex-tailored", "other",
+  "document-verification", "complex-tailored", "property-transfer", "other",
 ]);
+
+const PRIORITY_VALUES = new Set(["standard", "priority", "urgent"]);
+
+// A client-submitted priority is never trusted directly — only these
+// service/priority combinations are ever honored. Anything else (an
+// unsupported service, or a priority not in that service's allowed set,
+// including a manipulated hidden field) is silently downgraded to
+// "standard" rather than rejected, so a generic enquiry can never become
+// urgent just by editing form data.
+const ALLOWED_PRIORITIES_BY_SERVICE = {
+  "legal-support": new Set(["standard", "urgent"]),
+  "airport-vip": new Set(["standard", "priority"]),
+};
+
+function resolvePriority(service, requestedPriority) {
+  const requested = PRIORITY_VALUES.has(requestedPriority) ? requestedPriority : "standard";
+  const allowedForService = ALLOWED_PRIORITIES_BY_SERVICE[service];
+  if (!allowedForService) return "standard";
+  return allowedForService.has(requested) ? requested : "standard";
+}
 
 export async function handleCreateEnquiry(request, env) {
   const body = await request.json().catch(() => {
@@ -31,11 +51,12 @@ export async function handleCreateEnquiry(request, env) {
 
   const id = newId();
   const reference = await insertUniqueReference(env.DB, "enquiries");
+  const priority = resolvePriority(body.service, body.priority);
 
   await env.DB.prepare(
     `INSERT INTO enquiries
-      (id, reference, full_name, email, phone, nationality, location, language, service_slug, description)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (id, reference, full_name, email, phone, nationality, location, language, service_slug, description, priority)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
@@ -47,11 +68,19 @@ export async function handleCreateEnquiry(request, env) {
       body.location ? String(body.location).trim().slice(0, 150) : null,
       body.language ? String(body.language).trim().slice(0, 40) : null,
       body.service,
-      String(body.description).trim().slice(0, 5000)
+      String(body.description).trim().slice(0, 5000),
+      priority
     )
     .run();
 
-  await logAudit(env.DB, { actorType: "system", actorIdOrEmail: "enquiry-form", action: "enquiry_created", targetTable: "enquiries", targetId: id });
+  await logAudit(env.DB, {
+    actorType: "system",
+    actorIdOrEmail: "enquiry-form",
+    action: "enquiry_created",
+    targetTable: "enquiries",
+    targetId: id,
+    metadata: JSON.stringify({ priority }),
+  });
 
   // Email failures must not fail the whole request — the enquiry is already
   // safely stored, and staff can still see it even if a notification email
@@ -62,7 +91,7 @@ export async function handleCreateEnquiry(request, env) {
     console.error("Acknowledgement email failed:", err.message);
   }
   try {
-    await sendStaffEnquiryNotification(env, { reference, serviceSlug: body.service, fullName: body.fullName, email: body.email });
+    await sendStaffEnquiryNotification(env, { reference, serviceSlug: body.service, fullName: body.fullName, email: body.email, priority });
   } catch (err) {
     console.error("Staff notification email failed:", err.message);
   }

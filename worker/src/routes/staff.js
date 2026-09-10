@@ -58,7 +58,7 @@ async function dispatch(request, env, url) {
     return new Response("Request rejected", { status: 403 });
   }
 
-  if (path === "/" || path === "/enquiries/") return listEnquiries(env, staff);
+  if (path === "/" || path === "/enquiries/") return listEnquiries(env, staff, url.searchParams.get("priority"));
   // Must be checked before the generic single-enquiry matcher below, or
   // "archived" would be parsed as an enquiry ID and 404.
   if (path === "/enquiries/archived/") return listArchivedEnquiries(env, staff);
@@ -66,6 +66,8 @@ async function dispatch(request, env, url) {
   if (enquiryMatch && method === "GET") return viewEnquiry(env, staff, enquiryMatch[1]);
   const convertMatch = path.match(/^\/enquiries\/([^/]+)\/convert$/);
   if (convertMatch && method === "POST") return convertEnquiry(request, env, staff, convertMatch[1]);
+  const priorityMatch = path.match(/^\/enquiries\/([^/]+)\/priority$/);
+  if (priorityMatch && method === "POST") return updateEnquiryPriority(request, env, staff, priorityMatch[1]);
   const archiveMatch = path.match(/^\/enquiries\/([^/]+)\/archive$/);
   if (archiveMatch && method === "POST") return archiveEnquiry(request, env, staff, archiveMatch[1]);
   const restoreMatch = path.match(/^\/enquiries\/([^/]+)\/restore$/);
@@ -104,10 +106,45 @@ async function dispatch(request, env, url) {
   return notFound();
 }
 
-async function listEnquiries(env, staff) {
-  const { results } = await env.DB.prepare(
-    "SELECT id, reference, full_name, email, service_slug, status, created_at FROM enquiries WHERE archived_at IS NULL ORDER BY created_at DESC LIMIT 100"
-  ).all();
+const PRIORITY_OPTIONS = ["standard", "priority", "urgent"];
+const PRIORITY_LABELS = { standard: "Standard", priority: "Priority", urgent: "Urgent" };
+
+function priorityBadge(priority) {
+  const label = PRIORITY_LABELS[priority] || priority;
+  return `<span class="priority-badge priority-badge--${escapeHtml(priority)}">${escapeHtml(label)}</span>`;
+}
+
+// Active enquiries were previously sorted purely newest-first. This adds a
+// priority tier ahead of that (urgent, then priority, then standard), and
+// gives urgent/priority a different within-tier direction than standard:
+// urgent and priority behave as triage queues, where the longest-waiting
+// matter should surface first (oldest first); standard behaves as an
+// incoming-lead feed, where the newest submission should stay immediately
+// visible (newest first). A single ORDER BY can't apply ASC to one tier and
+// DESC to another directly, so the second sort key is a signed epoch
+// (negative for standard, positive otherwise) that sorts ascending into
+// exactly that effect — see WITHIN_TIER_ORDER_SQL below, reused by the
+// filtered query so "?priority=standard" also sorts newest-first while
+// "?priority=urgent"/"priority" still sort oldest-first.
+const WITHIN_TIER_ORDER_SQL =
+  "CASE WHEN priority = 'standard' THEN -strftime('%s', created_at) ELSE strftime('%s', created_at) END";
+
+async function listEnquiries(env, staff, priorityFilter) {
+  const validFilter = PRIORITY_OPTIONS.includes(priorityFilter) ? priorityFilter : null;
+
+  const query = validFilter
+    ? env.DB.prepare(
+        `SELECT id, reference, full_name, email, service_slug, status, priority, created_at
+         FROM enquiries WHERE archived_at IS NULL AND priority = ?
+         ORDER BY ${WITHIN_TIER_ORDER_SQL} LIMIT 100`
+      ).bind(validFilter)
+    : env.DB.prepare(
+        `SELECT id, reference, full_name, email, service_slug, status, priority, created_at
+         FROM enquiries WHERE archived_at IS NULL
+         ORDER BY CASE priority WHEN 'urgent' THEN 0 WHEN 'priority' THEN 1 ELSE 2 END, ${WITHIN_TIER_ORDER_SQL}
+         LIMIT 100`
+      );
+  const { results } = await query.all();
 
   const rows = results
     .map(
@@ -116,6 +153,7 @@ async function listEnquiries(env, staff) {
         <td>${escapeHtml(e.full_name)}</td>
         <td>${escapeHtml(e.email)}</td>
         <td>${escapeHtml(e.service_slug)}</td>
+        <td>${priorityBadge(e.priority)}</td>
         <td><span class="status">${escapeHtml(e.status)}</span></td>
         <td class="muted">${escapeHtml(e.created_at)}</td>
         <td><form method="POST" action="/staff/enquiries/${e.id}/archive"><button class="secondary" type="submit">Archive</button></form></td>
@@ -123,12 +161,16 @@ async function listEnquiries(env, staff) {
     )
     .join("");
 
+  const filterLink = (value, label) =>
+    `<a href="/staff/enquiries/${value ? "?priority=" + value : ""}" class="${validFilter === value ? "filter-active" : ""}">${label}</a>`;
+
   return staffPage(
     "Enquiries",
     `<h1>Enquiries</h1>
+     <p class="filter-bar">${filterLink(null, "All")} · ${filterLink("urgent", "Urgent")} · ${filterLink("priority", "Priority")} · ${filterLink("standard", "Standard")}</p>
      <table>
-       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Service</th><th>Status</th><th>Received</th><th></th></tr>
-       ${rows || '<tr><td colspan="7" class="muted">No enquiries yet.</td></tr>'}
+       <tr><th>Reference</th><th>Name</th><th>Email</th><th>Service</th><th>Priority</th><th>Status</th><th>Received</th><th></th></tr>
+       ${rows || '<tr><td colspan="8" class="muted">No enquiries yet.</td></tr>'}
      </table>`,
     staff.email
   );
@@ -179,15 +221,24 @@ async function viewEnquiry(env, staff, id) {
     ? `<form method="POST" action="/staff/enquiries/${enquiry.id}/restore"><button class="secondary" type="submit">Restore from archive</button></form>`
     : `<form method="POST" action="/staff/enquiries/${enquiry.id}/archive"><button class="secondary" type="submit">Archive</button></form>`;
 
+  const priorityOptionsHtml = PRIORITY_OPTIONS.map(
+    (p) => `<option value="${p}" ${p === enquiry.priority ? "selected" : ""}>${PRIORITY_LABELS[p]}</option>`
+  ).join("");
+
   return staffPage(
     `Enquiry ${enquiry.reference}`,
-    `<h1>Enquiry ${escapeHtml(enquiry.reference)}</h1>
+    `<h1>Enquiry ${escapeHtml(enquiry.reference)} ${priorityBadge(enquiry.priority)}</h1>
      <div class="card">
        <p><strong>${escapeHtml(enquiry.full_name)}</strong> &lt;${escapeHtml(enquiry.email)}&gt;</p>
        <p class="muted">${escapeHtml(enquiry.phone || "No phone given")} · ${escapeHtml(enquiry.nationality)} · ${escapeHtml(enquiry.location || "")}</p>
        <p><strong>Service:</strong> ${escapeHtml(enquiry.service_slug)}</p>
        <p>${escapeHtml(enquiry.description).replace(/\n/g, "<br>")}</p>
        <p class="muted">Received ${escapeHtml(enquiry.created_at)}${enquiry.archived_at ? ` · Archived ${escapeHtml(enquiry.archived_at)}` : ""}</p>
+       <form method="POST" action="/staff/enquiries/${enquiry.id}/priority">
+         <label for="priority">Priority</label>
+         <select name="priority" id="priority">${priorityOptionsHtml}</select>
+         <button class="secondary" type="submit">Update priority</button>
+       </form>
      </div>
      <div class="card">
        <h2>${existingClient ? "Create application for existing client" : "Convert to client"}</h2>
@@ -203,6 +254,27 @@ async function viewEnquiry(env, staff, id) {
      </div>`,
     staff.email
   );
+}
+
+async function updateEnquiryPriority(request, env, staff, id) {
+  const form = await request.formData();
+  const priority = String(form.get("priority") || "");
+  if (!PRIORITY_OPTIONS.includes(priority)) return new Response("Invalid priority", { status: 400 });
+
+  const enquiry = await env.DB.prepare("SELECT id FROM enquiries WHERE id = ?").bind(id).first();
+  if (!enquiry) return notFound();
+
+  await env.DB.prepare("UPDATE enquiries SET priority = ? WHERE id = ?").bind(priority, id).run();
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: "updated_priority",
+    targetTable: "enquiries",
+    targetId: id,
+    metadata: JSON.stringify({ priority }),
+  });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${id}`, 303);
 }
 
 async function archiveEnquiry(request, env, staff, id) {

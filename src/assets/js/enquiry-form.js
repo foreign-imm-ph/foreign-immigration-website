@@ -22,6 +22,13 @@
     }
   }
 
+  // Carried from a service page's "Request Urgent Assistance" / "Request
+  // Priority Assistance" CTA (e.g. /contact/?service=legal-support&priority=urgent).
+  // This is only ever a hint — the Worker independently validates it against
+  // the submitted service and silently downgrades anything it doesn't
+  // recognize, so this value can't itself grant an enquiry elevated priority.
+  var requestedPriority = params.get("priority");
+
   function fieldValue(name) {
     var el = form.elements[name];
     return el ? el.value.trim() : "";
@@ -66,6 +73,7 @@
       location: fieldValue("location"),
       language: fieldValue("language"),
       service: fieldValue("service"),
+      priority: requestedPriority || "standard",
       description: fieldValue("description"),
       website: fieldValue("website"), // honeypot, real visitors never fill this
       formRenderedAt: renderedAt,
