@@ -1432,6 +1432,10 @@ summary:focus-visible {
   max-width: 46em;
 }
 
+.enquiry-form[hidden] {
+  display: none;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;
