@@ -303,6 +303,20 @@ label:focus-visible {
   color: var(--color-charcoal);
 }
 
+/* .btn-secondary's green-on-transparent styling isn't legible on the dark
+   green .feature-split background — this is the same secondary/outlined
+   treatment adapted for that one context, not a new button system. */
+.btn-outline-on-dark {
+  background: transparent;
+  color: var(--color-offwhite);
+  border-color: var(--color-offwhite);
+}
+
+.btn-outline-on-dark:hover {
+  background: var(--color-offwhite);
+  color: var(--color-green);
+}
+
 /* Hero */
 
 .hero {
