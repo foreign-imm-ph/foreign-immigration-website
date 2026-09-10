@@ -1,8 +1,44 @@
 (function () {
   "use strict";
 
+  // Visible strings only. Field names, payload keys, the endpoint and all
+  // submit/fallback logic below are identical for every locale. Falls back
+  // to English for any locale not listed here, so this never needs to be
+  // "complete" before a new locale directory can go live.
+  var MESSAGES = {
+    en: {
+      sending: "Sending your enquiry...",
+      mailtoSubject: "Enquiry from foreignimmigration.ph",
+      mailtoFallback:
+        "We couldn't reach our server just now, so your email client should open instead with your enquiry details pre-filled. Please review the message and send it to complete your enquiry.",
+      received: function (reference) {
+        return (
+          "<p><strong>Enquiry received.</strong> Your reference is <strong>" + reference + "</strong>. " +
+          "A confirmation has been sent to your email address. Our team will review your enquiry and contact you " +
+          "if further information is needed. Submitting this enquiry does not itself constitute acceptance of an engagement.</p>"
+        );
+      },
+    },
+    "zh-CN": {
+      sending: "正在发送您的咨询……",
+      mailtoSubject: "来自 foreignimmigration.ph 的咨询",
+      mailtoFallback:
+        "我们暂时无法连接到服务器，因此您的电子邮件客户端应会打开，并预先填入您的咨询内容。请核对邮件内容后发送，以完成本次咨询。",
+      received: function (reference) {
+        return (
+          "<p><strong>咨询已收到。</strong>您的参考编号为 <strong>" + reference + "</strong>。" +
+          "确认邮件已发送至您的邮箱。我们的团队将审阅您的咨询，如需进一步信息会再与您联系。" +
+          "提交本咨询本身并不构成接受委托。</p>"
+        );
+      },
+    },
+  };
+
   var form = document.getElementById("enquiry-form");
   if (!form) return;
+
+  var pageLang = document.documentElement.lang || "en";
+  var strings = MESSAGES[pageLang] || MESSAGES.en;
 
   var renderedAt = Date.now();
 
@@ -46,14 +82,13 @@
     }
     var mailto =
       "mailto:info@foreignimmigration.ph" +
-      "?subject=" + encodeURIComponent("Enquiry from foreignimmigration.ph") +
+      "?subject=" + encodeURIComponent(strings.mailtoSubject) +
       "&body=" + encodeURIComponent(lines.join("\n"));
     window.location.href = mailto;
 
     var status = document.getElementById("enquiry-form-status");
     if (status) {
-      status.textContent =
-        "We couldn't reach our server just now, so your email client should open instead with your enquiry details pre-filled. Please review the message and send it to complete your enquiry.";
+      status.textContent = strings.mailtoFallback;
     }
   }
 
@@ -63,7 +98,7 @@
     var status = document.getElementById("enquiry-form-status");
     var button = form.querySelector("button[type=submit]");
     button.disabled = true;
-    if (status) status.textContent = "Sending your enquiry...";
+    if (status) status.textContent = strings.sending;
 
     var payload = {
       fullName: fieldValue("fullName"),
@@ -89,10 +124,7 @@
         form.hidden = true;
         var confirmation = document.createElement("div");
         confirmation.className = "notice-box";
-        confirmation.innerHTML =
-          "<p><strong>Enquiry received.</strong> Your reference is <strong>" + data.reference + "</strong>. " +
-          "A confirmation has been sent to your email address. Our team will review your enquiry and contact you " +
-          "if further information is needed. Submitting this enquiry does not itself constitute acceptance of an engagement.</p>";
+        confirmation.innerHTML = strings.received(data.reference);
         form.parentNode.insertBefore(confirmation, form.nextSibling);
       })
       .catch(function () {

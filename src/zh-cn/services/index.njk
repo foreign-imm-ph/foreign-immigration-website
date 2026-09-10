@@ -1,48 +1,23 @@
 ---
 layout: layouts/base.njk
-title: 首页
-description: Foreign Immigration Services 是菲律宾移民局认证的移民咨询机构，为您处理菲律宾签证申请、延期、长期居留及合规等移民事务。
+title: 服务项目
+description: Foreign Immigration Services 提供的核心及专项移民服务，公司为获菲律宾移民局认证的移民咨询机构。
 ---
 {% from "partials/icons.njk" import icon %}
-<div class="urgent-banner">
-  <div class="wrap urgent-banner__inner">
-    <p class="urgent-banner__text">
-      <strong>在菲律宾被捕、被拘留，或面临刑事或移民程序？</strong>
-    </p>
-    <a class="urgent-banner__cta" href="/zh-cn/services/legal-support-for-foreign-nationals/#urgent-assistance">申请紧急协助</a>
-  </div>
-</div>
-
-<section class="hero">
-  <div class="wrap hero__grid">
-    <p class="hero__eyebrow">菲律宾移民咨询服务</p>
-    <h1 class="hero__headline">菲律宾移民事务，尽在掌握。</h1>
-    <p class="hero__lede">Foreign Immigration Services 是菲律宾移民局（Bureau of Immigration）认证的移民咨询机构，为您全权处理菲律宾移民相关事务，涵盖签证申请、延期与长期居留、企业人员跨境调动、合规管理，以及各类复杂移民问题。</p>
-    <div class="hero__visual">
-      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
-    </div>
-    <div class="hero__actions">
-      <a class="btn btn-primary" href="/zh-cn/contact/">发送咨询</a>
-      <a class="btn btn-secondary" href="/zh-cn/services/">浏览我们的服务</a>
-    </div>
-    <p class="hero__accreditation">
-      {{ icon("accreditation", 40) }}
-      <span><strong>移民局认证咨询机构</strong>，认证编号 {{ site.accreditation.number }}</span>
-    </p>
-  </div>
-</section>
-
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
-      <h2>核心移民服务</h2>
-      <p>我们的业务涵盖六大核心移民服务领域。</p>
+      <p class="tag">服务项目</p>
+      <h1>我们的服务</h1>
+      <p>Foreign Immigration Services 的业务涵盖六大核心移民服务领域，此外还提供一系列针对特定情况的专项服务。每一项事务均会根据具体情况单独评估，因为合适的处理方式取决于您的实际状况。</p>
     </div>
+
+    <h2>核心移民服务</h2>
     <div class="card-grid card-grid--3up">
       <div class="card">
         {{ icon("visa-applications", 44) }}
         <h3>签证与移民申请</h3>
-        <p>计划入境、工作、求学或以其他方式在菲律宾停留，但不确定适用哪种签证？</p>
+        <p>为进入菲律宾的入境签证及移民申请提供指导。</p>
         <a class="card__link" href="/zh-cn/services/visa-and-immigration-applications/">了解更多 →</a>
       </div>
       <div class="card">
@@ -54,25 +29,25 @@ description: Foreign Immigration Services 是菲律宾移民局认证的移民�
       <div class="card">
         {{ icon("extensions-compliance", 44) }}
         <h3>延期与合规</h3>
-        <p>已在菲律宾，需要延长停留期限或办理相关申报合规事宜？</p>
+        <p>为已在菲律宾的外籍人士办理停留延期及持续合规事宜。</p>
         <a class="card__link" href="/zh-cn/services/extensions-and-compliance/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("residency-status", 44) }}
         <h3>居留与长期身份</h3>
-        <p>正在考虑长期定居菲律宾？</p>
+        <p>为有意在菲律宾长期居留的外籍人士提供长期移民身份方面的支持。</p>
         <a class="card__link" href="/zh-cn/services/residency-and-long-term-status/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("family-spousal", 44) }}
         <h3>家庭与配偶签证</h3>
-        <p>与菲律宾当地人士结婚，或是其家庭成员，需要接家人团聚或保持家庭团聚？</p>
+        <p>基于婚姻或与菲律宾当地人士的家庭关系，办理长期身份事宜。</p>
         <a class="card__link" href="/zh-cn/services/family-and-spousal-visas/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("corporate-mobility", 44) }}
         <h3>企业与全球调动</h3>
-        <p>需要安排员工调派，或管理跨境员工赴菲律宾工作？</p>
+        <p>为企业及其跨境流动的员工提供移民支持。</p>
         <a class="card__link" href="/zh-cn/services/corporate-and-global-mobility/">了解更多 →</a>
       </div>
     </div>
@@ -94,59 +69,56 @@ description: Foreign Immigration Services 是菲律宾移民局认证的移民�
   </div>
 </section>
 
-<section class="section section--muted">
+<section class="section">
   <div class="wrap">
-    <div class="section__intro">
-      <h2>专项服务</h2>
-      <p>针对特定、通常具有时效性的移民情况提供的专项协助。</p>
-    </div>
+    <h2>专项服务</h2>
     <div class="card-grid card-grid--4up">
       <div class="card">
         {{ icon("status-review", 44) }}
         <h3>移民身份审查与合规协助</h3>
-        <p>不确定自己的移民身份、签证有效性，或菲律宾移民局的相关记录？</p>
+        <p>提供保密的身份审查服务，凡流程允许之处均可远程办理。</p>
         <a class="card__link" href="/zh-cn/services/immigration-status-review-and-regularisation/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("motions-blacklist", 44) }}
         <h3>移民复议、黑名单与不良记录协助</h3>
-        <p>遇到黑名单、观察名单或其他不良移民记录问题？</p>
+        <p>为复议、黑名单及不良记录相关事宜确定合适的处理程序。</p>
         <a class="card__link" href="/zh-cn/services/immigration-motions-blacklist-and-derogatory-record-assistance/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("legal-support", 44) }}
         <h3>外籍人士法律协助</h3>
-        <p>在菲律宾面临刑事或移民程序？</p>
+        <p>协调移民相关协助与独立的菲律宾法律顾问服务。</p>
         <a class="card__link" href="/zh-cn/services/legal-support-for-foreign-nationals/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("complex-tailored", 44) }}
         <h3>复杂及定制移民协助</h3>
-        <p>针对涉及多重问题、流程或要求的复杂或特殊移民情况，提供量身定制的协助。</p>
+        <p>为涉及多重问题、流程或要求的复杂或特殊移民情况提供定制支持。</p>
         <a class="card__link" href="/zh-cn/services/complex-and-tailored-immigration-assistance/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("lost-passport", 44) }}
         <h3>护照及旅行证件遗失协助</h3>
-        <p>在菲律宾期间护照或旅行证件遗失？</p>
+        <p>了解护照遗失或补办后需要办理的移民手续。</p>
         <a class="card__link" href="/zh-cn/services/lost-passport-and-travel-document-assistance/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("acr-icard", 44) }}
         <h3>ACR I-Card 协助</h3>
-        <p>需要登记、续办或补办外侨登记证（ACR I-Card）？</p>
+        <p>办理外侨登记证（ACR I-Card）的登记、续办及补办。</p>
         <a class="card__link" href="/zh-cn/services/acr-i-card-assistance/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("exit-clearance", 44) }}
         <h3>离境许可与出境要求</h3>
-        <p>长期停留后即将离开菲律宾，但不确定是否需要先办理离境许可？</p>
+        <p>确认您在长期停留后离开菲律宾前需要办理的手续。</p>
         <a class="card__link" href="/zh-cn/services/exit-clearance-and-departure/">了解更多 →</a>
       </div>
       <div class="card">
         {{ icon("document-verification", 44) }}
         <h3>签证与移民文件核实</h3>
-        <p>需要核实签证或移民文件的真实性或状态？</p>
+        <p>为核实菲律宾签证或移民文件确定合适的核实流程。</p>
         <a class="card__link" href="/zh-cn/services/visa-and-immigration-document-verification/">了解更多 →</a>
       </div>
     </div>
@@ -176,22 +148,5 @@ description: Foreign Immigration Services 是菲律宾移民局认证的移民�
     <h2>不确定需要哪项服务，或找不到您需要的内容？</h2>
     <p>您无需事先知道所需签证、申请或移民程序的具体名称。请告诉我们您的情况，我们的团队将为您审查并协助确定合适的下一步。</p>
     <p><a class="btn btn-on-dark" href="/zh-cn/contact/?service=other">告诉我们您的情况</a></p>
-  </div>
-</section>
-
-<section class="section section--muted">
-  <div class="wrap">
-    <div class="section__intro">
-      <h2>客户门户</h2>
-      <p>您的申请与服务请求、文件、消息、付款及个人资料，尽在一处集中管理。</p>
-    </div>
-    <div class="portal-preview-grid">
-      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>申请与服务</span></div>
-      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>文件</span></div>
-      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>消息</span></div>
-      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>付款</span></div>
-      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>个人资料</span></div>
-    </div>
-    <p class="mt-md"><a class="btn btn-secondary" href="/zh-cn/client-portal/">前往客户门户 →</a></p>
   </div>
 </section>

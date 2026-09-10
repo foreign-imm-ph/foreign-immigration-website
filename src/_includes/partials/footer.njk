@@ -16,9 +16,12 @@
 
       <nav class="site-footer__col" aria-label="Legal">
         <ul>
-          <li><a href="/privacy-notice/" lang="en" hreflang="en">{{ "footer.privacyNotice" | t(lang) }}</a></li>
-          <li><a href="/terms-of-use/" lang="en" hreflang="en">{{ "footer.termsOfUse" | t(lang) }}</a></li>
-          <li><a href="/accessibility/" lang="en" hreflang="en">{{ "footer.accessibility" | t(lang) }}</a></li>
+          {%- for path in ["/privacy-notice/", "/terms-of-use/", "/accessibility/"] %}
+          {%- set legalKey = { "/privacy-notice/": "footer.privacyNotice", "/terms-of-use/": "footer.termsOfUse", "/accessibility/": "footer.accessibility" }[path] %}
+          {%- set legalUrl = (collections.all | equivalentUrl(path, lang)) or path %}
+          {%- set legalLang = "en" if legalUrl == path else lang %}
+          <li><a href="{{ legalUrl }}" lang="{{ legalLang }}" hreflang="{{ legalLang }}">{{ legalKey | t(lang) }}</a></li>
+          {%- endfor %}
         </ul>
       </nav>
     </div>

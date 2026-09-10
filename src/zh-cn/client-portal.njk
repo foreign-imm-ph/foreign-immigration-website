@@ -1,0 +1,59 @@
+---
+layout: layouts/base.njk
+title: 客户门户
+description: Foreign Immigration Services 客户门户将您的申请、文件、消息、付款及个人资料集中于一处，方便管理。
+---
+{% from "partials/icons.njk" import icon %}
+<section class="section trust-section">
+  <div class="wrap">
+    <div class="trust-section__inner">
+      {{ icon("portal-applications", 52) }}
+      <div>
+        <p class="tag">客户门户</p>
+        <h1>您的移民服务，尽在一处</h1>
+        <p>通过 Foreign Immigration Services 客户门户，您可以查看申请与服务请求、安全提交所需文件、跟踪进度并管理付款。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="card-grid">
+      <div class="card">
+        {{ icon("portal-applications", 44) }}
+        <h3>申请与服务</h3>
+        <p>在同一处查看和管理您的移民申请及服务请求，每项均有对应的编号与状态。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-upload", 44) }}
+        <h3>文件</h3>
+        <p>安全提交并查看与您的申请及服务请求相关的文件。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-enquiry", 44) }}
+        <h3>消息</h3>
+        <p>就您的咨询或申请事宜，与我们的团队直接沟通。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-payments", 44) }}
+        <h3>付款</h3>
+        <p>在我们团队确认服务范围后，查看并结清相应费用。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-profile", 44) }}
+        <h3>个人资料</h3>
+        <p>随时更新您的联系方式及个人信息。</p>
+      </div>
+    </div>
+
+    <div class="service-cta">
+      <h2>开始使用</h2>
+      <p>向我们发送咨询，我们的团队将指导您完成客户门户开通的后续步骤。已是客户？请在下方登录。</p>
+      <p>
+        <a class="btn btn-primary" href="/zh-cn/contact/">发送咨询</a>
+        <a class="btn btn-secondary" href="/portal/login/">登录客户门户</a>
+      </p>
+    </div>
+  </div>
+</section>
