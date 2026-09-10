@@ -648,38 +648,46 @@ label:focus-visible {
   color: var(--color-white);
 }
 
-/* Compact variant for the Property Transfer featured banner only — the
-   base .feature-split rules above (used by the Airport VIP banner on this
-   page and the homepage) are untouched. Reduces section padding ~31% and
-   tightens the vertical rhythm between tag/heading/lede/body/buttons and
-   the visual side's empty space, without touching copy, links, colors or
-   the mobile stacking behavior already handled by .feature-split__grid. */
+/* Compact variant for the Property Transfer featured banner only (used on
+   both the Services page and the homepage) — the base .feature-split rules
+   above (used by the Airport VIP banner on both pages) are untouched.
+   Targets a ~300-340px desktop footprint via reduced padding, a shorter
+   visual-column minimum height, and tighter vertical rhythm between
+   tag/heading/lede/body/buttons — never a fixed height, so long lines or
+   narrow viewports still grow the section naturally instead of clipping.
+   Content stays vertically centered via the existing align-items: center
+   on .feature-split__grid. Not scoped out of mobile: the same tightened
+   spacing is fine there too, since nothing here caps total height — mobile
+   still stacks and grows with content exactly as the base component does. */
 .feature-split--compact {
-  padding: 2.75rem 0;
+  padding: 1.85rem 0;
 }
 
 .feature-split--compact .feature-split__visual {
-  min-height: 140px;
+  min-height: 110px;
 }
 
 .feature-split--compact .tag {
-  margin-bottom: 0.4rem;
-}
-
-.feature-split--compact h2 {
   margin-bottom: 0.3rem;
 }
 
+.feature-split--compact h2 {
+  margin-bottom: 0.25rem;
+  line-height: 1.15;
+}
+
 .feature-split--compact .feature-split__lede {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
 }
 
 .feature-split--compact p {
-  margin-bottom: 0.7em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
 }
 
 .feature-split--compact .service-cta__actions {
-  margin: 0;
+  margin: 0.2rem 0 0;
 }
 
 /* CTA banner ("Not Sure What You Need?") */
