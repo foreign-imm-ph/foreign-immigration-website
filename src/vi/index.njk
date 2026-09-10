@@ -1,0 +1,24 @@
+---
+layout: layouts/base.njk
+title: Trang chủ
+description: Foreign Immigration Services là đơn vị tư vấn được Cục Di trú Philippines công nhận, hỗ trợ các thủ tục di trú tại Philippines như xin visa, gia hạn lưu trú, thường trú dài hạn và tuân thủ quy định.
+---
+{% from "partials/icons.njk" import icon %}
+<section class="hero">
+  <div class="wrap hero__grid">
+    <p class="hero__eyebrow">Tư vấn Di trú Philippines</p>
+    <h1 class="hero__headline">Thủ tục di trú Philippines, đã có chúng tôi lo liệu.</h1>
+    <p class="hero__lede">Foreign Immigration Services là đơn vị tư vấn được Cục Di trú Philippines (Bureau of Immigration) công nhận, thay mặt quý khách xử lý các vấn đề di trú tại Philippines, từ xin visa, gia hạn lưu trú, thường trú dài hạn, đến điều chuyển nhân sự doanh nghiệp, tuân thủ quy định và các vấn đề di trú phức tạp.</p>
+    <div class="hero__visual">
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
+    </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/contact/">Gửi yêu cầu tư vấn</a>
+      <a class="btn btn-secondary" href="/services/">Xem các dịch vụ của chúng tôi</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>Đơn vị được Cục Di trú công nhận</strong> · Số chứng nhận {{ site.accreditation.number }}</span>
+    </p>
+  </div>
+</section>

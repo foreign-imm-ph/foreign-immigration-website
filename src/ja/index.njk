@@ -1,0 +1,24 @@
+---
+layout: layouts/base.njk
+title: ホーム
+description: Foreign Immigration Servicesは、フィリピン移民局認定のコンサルタンシーとして、ビザ申請や滞在延長、長期在留資格、コンプライアンスなど、フィリピンの移民手続きをサポートします。
+---
+{% from "partials/icons.njk" import icon %}
+<section class="hero">
+  <div class="wrap hero__grid">
+    <p class="hero__eyebrow">フィリピン移民コンサルティング</p>
+    <h1 class="hero__headline">フィリピンの移民手続きを、確かなサポートで。</h1>
+    <p class="hero__lede">Foreign Immigration Servicesは、フィリピン移民局（Bureau of Immigration）に認定されたコンサルタンシーとして、ビザ申請や滞在延長、長期在留資格の取得から、企業の海外赴任者対応、コンプライアンス、複雑な移民案件まで、お客様に代わって幅広くサポートいたします。</p>
+    <div class="hero__visual">
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
+    </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/contact/">お問い合わせはこちら</a>
+      <a class="btn btn-secondary" href="/services/">サービス一覧を見る</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>移民局認定コンサルタンシー</strong>・認定番号 {{ site.accreditation.number }}</span>
+    </p>
+  </div>
+</section>

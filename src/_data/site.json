@@ -10,8 +10,10 @@
   },
   "defaultLocale": "en",
   "locales": {
-    "en": { "label": "English", "path": "/", "status": "available" },
-    "zh-Hans": { "label": "简体中文", "path": "/zh-Hans/", "status": "planned" },
-    "ko": { "label": "한국어", "path": "/ko/", "status": "planned" }
+    "en": { "label": "English", "nativeLabel": "English", "prefix": "/", "status": "active" },
+    "zh-CN": { "label": "Simplified Chinese", "nativeLabel": "简体中文", "prefix": "/zh-cn/", "status": "sample" },
+    "ja": { "label": "Japanese", "nativeLabel": "日本語", "prefix": "/ja/", "status": "sample" },
+    "ko": { "label": "Korean", "nativeLabel": "한국어", "prefix": "/ko/", "status": "sample" },
+    "vi": { "label": "Vietnamese", "nativeLabel": "Tiếng Việt", "prefix": "/vi/", "status": "sample" }
   }
 }

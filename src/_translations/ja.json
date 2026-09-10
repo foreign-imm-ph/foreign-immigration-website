@@ -1,0 +1,24 @@
+{
+  "skipLink": "メインコンテンツへスキップ",
+  "nav": {
+    "home": "ホーム",
+    "about": "会社概要",
+    "services": "サービス",
+    "accreditation": "認定資格",
+    "clientPortal": "クライアントポータル",
+    "contact": "お問い合わせ"
+  },
+  "languageSwitcher": {
+    "label": "言語"
+  },
+  "header": {
+    "credential": "<strong>移民局認定コンサルタンシー</strong>・認定番号 {number}"
+  },
+  "footer": {
+    "privacyNotice": "プライバシーポリシー",
+    "termsOfUse": "利用規約",
+    "accessibility": "アクセシビリティ",
+    "rightsReserved": "無断複写・転載を禁じます。",
+    "brandLine": "移民局認定コンサルタンシー・認定番号 {number}"
+  }
+}

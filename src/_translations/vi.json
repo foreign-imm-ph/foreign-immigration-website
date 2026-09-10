@@ -1,0 +1,24 @@
+{
+  "skipLink": "Chuyển đến nội dung chính",
+  "nav": {
+    "home": "Trang chủ",
+    "about": "Giới thiệu",
+    "services": "Dịch vụ",
+    "accreditation": "Chứng nhận",
+    "clientPortal": "Cổng thông tin khách hàng",
+    "contact": "Liên hệ"
+  },
+  "languageSwitcher": {
+    "label": "Ngôn ngữ"
+  },
+  "header": {
+    "credential": "<strong>Đơn vị được Cục Di trú công nhận</strong> · Số {number}"
+  },
+  "footer": {
+    "privacyNotice": "Thông báo về quyền riêng tư",
+    "termsOfUse": "Điều khoản sử dụng",
+    "accessibility": "Khả năng tiếp cận",
+    "rightsReserved": "Bảo lưu mọi quyền.",
+    "brandLine": "Đơn vị được Cục Di trú công nhận · Số chứng nhận {number}"
+  }
+}

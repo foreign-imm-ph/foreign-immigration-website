@@ -4,7 +4,7 @@
       <a class="site-header__brand" href="/">
         <img class="site-header__logo" src="/assets/images/fis-logo.svg" alt="{{ site.name }}" width="1342" height="894">
       </a>
-      <p class="site-header__credential"><strong>BI Accredited Consultancy</strong> · No. {{ site.accreditation.number }}</p>
+      <p class="site-header__credential">{{ ("header.credential" | t(lang)) | replace("{number}", site.accreditation.number) | safe }}</p>
     </div>
 
     <input type="checkbox" id="nav-toggle" class="nav-toggle">
@@ -15,9 +15,11 @@
     <nav class="site-nav" aria-label="Primary">
       <ul>
         {%- for item in nav %}
-        <li><a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+        {%- set navUrl = (collections.all | equivalentUrl(item.url, lang)) or item.url %}
+        <li><a href="{{ navUrl }}"{% if page.url == navUrl %} aria-current="page"{% endif %}>{{ ("nav." + item.key) | t(lang) }}</a></li>
         {%- endfor %}
       </ul>
+      {% include "partials/language-switcher.njk" %}
     </nav>
   </div>
 </header>

@@ -1,0 +1,24 @@
+{
+  "skipLink": "Skip to main content",
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "accreditation": "Accreditation",
+    "clientPortal": "Client Portal",
+    "contact": "Contact"
+  },
+  "languageSwitcher": {
+    "label": "Language"
+  },
+  "header": {
+    "credential": "<strong>BI Accredited Consultancy</strong> · No. {number}"
+  },
+  "footer": {
+    "privacyNotice": "Privacy Notice",
+    "termsOfUse": "Terms of Use",
+    "accessibility": "Accessibility",
+    "rightsReserved": "All rights reserved.",
+    "brandLine": "Bureau of Immigration Accredited Consultancy · Accreditation No. {number}"
+  }
+}

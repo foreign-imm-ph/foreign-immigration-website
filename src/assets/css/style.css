@@ -11,11 +11,29 @@
   --color-white: #FFFFFF;
   --color-green-tint: #EEF2EE; /* faint green wash for layered section backgrounds */
 
+  /* Vietnamese diacritics are already fully covered by Georgia/Times New
+     Roman/Arial (Latin Extended), so --font-serif is left as-is for the
+     "en" and "vi" locales. CJK system fonts are appended to --font-sans so
+     Latin text (English, Vietnamese body copy) is unaffected — the browser
+     only reaches for these when a glyph isn't covered by the fonts before
+     them — while zh-CN/ja/ko pages gain a native-looking sans stack instead
+     of an unstyled generic fallback. See the html[lang] rule further below
+     for why CJK *headings* additionally override --font-serif: falling
+     through to the generic "serif" family there tends to land on a dated
+     system Mincho/SimSun-style face rather than anything resembling this
+     site's brand voice. */
   --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    "PingFang SC", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo",
+    "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR",
+    sans-serif;
 
   --max-width: 1120px;
   --radius: 2px;
+}
+
+html[lang="zh-CN"], html[lang="ja"], html[lang="ko"] {
+  --font-serif: var(--font-sans);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -61,7 +79,8 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-label:focus-visible {
+label:focus-visible,
+summary:focus-visible {
   outline: 3px solid var(--color-green);
   outline-offset: 2px;
 }
@@ -215,6 +234,88 @@ label:focus-visible {
 
 .nav-toggle,
 .nav-toggle__label { display: none; }
+
+/* Language switcher — native <details>/<summary>, same no-JS disclosure
+   pattern as the FAQ component. Sits inside .site-nav so it shares the
+   mobile checkbox-toggle's collapse/expand rather than needing its own. */
+
+.lang-switcher {
+  position: relative;
+  margin-left: 1.25rem;
+  font-size: 0.92rem;
+}
+
+.lang-switcher__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgba(13, 61, 37, 0.25);
+  border-radius: var(--radius);
+  color: var(--color-green);
+  list-style: none;
+  user-select: none;
+}
+
+.lang-switcher__toggle::-webkit-details-marker { display: none; }
+
+.lang-switcher__toggle::after {
+  content: "\25BE";
+  font-size: 0.75em;
+  color: var(--color-grey);
+}
+
+.lang-switcher__toggle:hover { border-color: var(--color-green); }
+
+.lang-switcher[open] .lang-switcher__toggle { border-color: var(--color-green); }
+
+.lang-switcher__list {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0.35rem 0;
+  min-width: 9.5rem;
+}
+
+.lang-switcher__list a {
+  display: block;
+  padding: 0.5rem 0.9rem;
+  color: var(--color-charcoal);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.lang-switcher__list a:hover { background: var(--color-green-tint); }
+
+.lang-switcher__list a[aria-current="true"] {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .lang-switcher__list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--color-white);
+    border: 1px solid rgba(13, 61, 37, 0.15);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    z-index: 20;
+  }
+}
+
+@media (max-width: 780px) {
+  .lang-switcher {
+    margin: 0.35rem 0 0.25rem;
+    border-top: 1px solid rgba(13, 61, 37, 0.08);
+    padding-top: 0.6rem;
+  }
+
+  .lang-switcher__toggle {
+    width: fit-content;
+  }
+}
 
 /* Urgent assistance banner */
 

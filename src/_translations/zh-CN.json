@@ -1,0 +1,24 @@
+{
+  "skipLink": "跳转至主要内容",
+  "nav": {
+    "home": "首页",
+    "about": "关于我们",
+    "services": "服务项目",
+    "accreditation": "认证资质",
+    "clientPortal": "客户门户",
+    "contact": "联系我们"
+  },
+  "languageSwitcher": {
+    "label": "语言"
+  },
+  "header": {
+    "credential": "<strong>移民局认证咨询机构</strong> · 编号 {number}"
+  },
+  "footer": {
+    "privacyNotice": "隐私声明",
+    "termsOfUse": "使用条款",
+    "accessibility": "无障碍声明",
+    "rightsReserved": "版权所有。",
+    "brandLine": "移民局认证咨询机构 · 认证编号 {number}"
+  }
+}

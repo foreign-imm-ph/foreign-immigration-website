@@ -3,10 +3,19 @@ permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-{%- for page in collections.all %}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+{%- for entry in collections.all %}
+{%- if site.locales[entry.data.lang].status == "active" %}
   <url>
-    <loc>{{ page.url | absoluteUrl(site.url) }}</loc>
+    <loc>{{ entry.url | absoluteUrl(site.url) }}</loc>
+    {%- for loc in site.locales | activeLocales %}
+    {%- set altUrl = (loc.code == entry.data.lang) and entry.url or (collections.all | equivalentUrl(entry.data.translationKey, loc.code)) %}
+    {%- if altUrl %}
+    <xhtml:link rel="alternate" hreflang="{{ loc.code }}" href="{{ altUrl | absoluteUrl(site.url) }}"/>
+    {%- endif %}
+    {%- endfor %}
+    <xhtml:link rel="alternate" hreflang="x-default" href="{{ entry.data.translationKey | absoluteUrl(site.url) }}"/>
   </url>
+{%- endif %}
 {%- endfor %}
 </urlset>

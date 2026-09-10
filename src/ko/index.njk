@@ -1,0 +1,24 @@
+---
+layout: layouts/base.njk
+title: 홈
+description: Foreign Immigration Services는 필리핀 이민국 공인 컨설팅 기관으로, 비자 신청, 체류 연장, 장기 체류, 컴플라이언스 등 필리핀 이민 업무를 지원합니다.
+---
+{% from "partials/icons.njk" import icon %}
+<section class="hero">
+  <div class="wrap hero__grid">
+    <p class="hero__eyebrow">필리핀 이민 컨설팅</p>
+    <h1 class="hero__headline">필리핀 이민 업무, 저희가 맡아 처리해 드립니다.</h1>
+    <p class="hero__lede">Foreign Immigration Services는 필리핀 이민국(Bureau of Immigration) 공인 컨설팅 기관으로, 비자 신청, 체류 연장, 장기 체류 자격은 물론 기업의 해외 파견 업무, 컴플라이언스, 복잡한 이민 사안에 이르기까지 고객을 대신하여 폭넓게 지원합니다.</p>
+    <div class="hero__visual">
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
+    </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/contact/">문의하기</a>
+      <a class="btn btn-secondary" href="/services/">서비스 살펴보기</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>이민국 공인 컨설팅 기관</strong> · 인증번호 {{ site.accreditation.number }}</span>
+    </p>
+  </div>
+</section>

@@ -6,17 +6,45 @@
   <title>{{ title }} · {{ site.name }}</title>
   <meta name="description" content="{{ description }}">
   <link rel="canonical" href="{{ page.url | absoluteUrl(site.url) }}">
+  {%- set ogLocaleMap = { "zh-CN": "zh_CN", "ja": "ja_JP", "ko": "ko_KR", "vi": "vi_VN" } %}
+  {%- if ogLocaleMap[lang] %}
+  <meta property="og:locale" content="{{ ogLocaleMap[lang] }}">
+  {%- endif %}
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:title" content="{{ title }}">
   <meta property="og:description" content="{{ description }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ page.url | absoluteUrl(site.url) }}">
+  {#- A page whose own locale is still "sample" (not yet approved for
+     production) is deliberately kept out of search results — it remains
+     fully built and reachable by its direct URL for review, but is never
+     indexable, never linked to from navigation, and never advertised via
+     hreflang, so an incomplete translation can never surface as though it
+     were a finished, live language version of the site. #}
+  {%- if site.locales[lang].status == "active" %}
   <meta name="robots" content="index, follow">
+  {#- hreflang alternates: only emitted for other locales that are BOTH
+     active AND actually have this page's equivalent built (equivalentUrl
+     returns null otherwise) — so these never point at a fallback, an
+     unrelated page, or an unlaunched sample locale. The current page's own
+     locale is always self-referencing. x-default always points at the
+     English original, since English is the site's source of truth and is
+     always active, so the English equivalent always exists. #}
+  {%- for loc in site.locales | activeLocales %}
+  {%- set altUrl = (loc.code == lang) and page.url or (collections.all | equivalentUrl(translationKey, loc.code)) %}
+  {%- if altUrl %}
+  <link rel="alternate" hreflang="{{ loc.code }}" href="{{ altUrl | absoluteUrl(site.url) }}">
+  {%- endif %}
+  {%- endfor %}
+  <link rel="alternate" hreflang="x-default" href="{{ translationKey | absoluteUrl(site.url) }}">
+  {%- else %}
+  <meta name="robots" content="noindex, nofollow">
+  {%- endif %}
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main-content">{{ "skipLink" | t(lang) }}</a>
   {% include "partials/header.njk" %}
   <main id="main-content">
 {{ content | safe }}

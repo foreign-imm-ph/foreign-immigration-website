@@ -1,0 +1,24 @@
+---
+layout: layouts/base.njk
+title: 首页
+description: Foreign Immigration Services 是菲律宾移民局认证的移民咨询机构，为您处理菲律宾签证申请、延期、长期居留及合规等移民事务。
+---
+{% from "partials/icons.njk" import icon %}
+<section class="hero">
+  <div class="wrap hero__grid">
+    <p class="hero__eyebrow">菲律宾移民咨询服务</p>
+    <h1 class="hero__headline">菲律宾移民事务，尽在掌握。</h1>
+    <p class="hero__lede">Foreign Immigration Services 是菲律宾移民局（Bureau of Immigration）认证的移民咨询机构，为您全权处理菲律宾移民相关事务，涵盖签证申请、延期与长期居留、企业人员跨境调动、合规管理，以及各类复杂移民问题。</p>
+    <div class="hero__visual">
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
+    </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/contact/">发送咨询</a>
+      <a class="btn btn-secondary" href="/services/">浏览我们的服务</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>移民局认证咨询机构</strong>，认证编号 {{ site.accreditation.number }}</span>
+    </p>
+  </div>
+</section>

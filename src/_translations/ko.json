@@ -1,0 +1,24 @@
+{
+  "skipLink": "본문 바로가기",
+  "nav": {
+    "home": "홈",
+    "about": "회사 소개",
+    "services": "서비스",
+    "accreditation": "인증 현황",
+    "clientPortal": "고객 포털",
+    "contact": "문의하기"
+  },
+  "languageSwitcher": {
+    "label": "언어"
+  },
+  "header": {
+    "credential": "<strong>이민국 공인 컨설팅 기관</strong> · 인증번호 {number}"
+  },
+  "footer": {
+    "privacyNotice": "개인정보 처리방침",
+    "termsOfUse": "이용약관",
+    "accessibility": "접근성 안내",
+    "rightsReserved": "모든 권리 보유.",
+    "brandLine": "이민국 공인 컨설팅 기관 · 인증번호 {number}"
+  }
+}

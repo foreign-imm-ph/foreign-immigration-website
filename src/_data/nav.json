@@ -1,8 +1,8 @@
 [
-  { "label": "Home", "url": "/" },
-  { "label": "About", "url": "/about/" },
-  { "label": "Services", "url": "/services/" },
-  { "label": "Accreditation", "url": "/accreditation/" },
-  { "label": "Client Portal", "url": "/client-portal/" },
-  { "label": "Contact", "url": "/contact/" }
+  { "key": "home", "url": "/" },
+  { "key": "about", "url": "/about/" },
+  { "key": "services", "url": "/services/" },
+  { "key": "accreditation", "url": "/accreditation/" },
+  { "key": "clientPortal", "url": "/client-portal/" },
+  { "key": "contact", "url": "/contact/" }
 ]
