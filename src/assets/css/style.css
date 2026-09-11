@@ -377,6 +377,14 @@ summary:focus-visible {
 
   .lang-switcher__toggle {
     width: fit-content;
+    /* .site-nav ul's own 1.5rem left padding (its content-column inset)
+       also reaches .lang-switcher__list, since that's a <ul> nested under
+       .site-nav too — so the opened dropdown already lines up with
+       "Contact" correctly. .lang-switcher itself carries no such inset,
+       so the trigger sat flush at the menu's outer edge instead. Matching
+       margin here aligns the trigger with both the nav content column and
+       the dropdown beneath it, without touching the already-correct list. */
+    margin-left: 1.5rem;
   }
 }
 
