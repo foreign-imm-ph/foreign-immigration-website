@@ -58,6 +58,19 @@
         );
       },
     },
+    ja: {
+      sending: "お問い合わせを送信しています...",
+      mailtoSubject: "foreignimmigration.ph からのお問い合わせ",
+      mailtoFallback:
+        "現在サーバーに接続できないため、代わりにメールソフトが起動し、お問い合わせ内容があらかじめ入力された状態で開きます。内容をご確認のうえ送信いただくと、お問い合わせが完了します。",
+      received: function (reference) {
+        return (
+          "<p><strong>お問い合わせを受け付けました。</strong>お客様の参照番号は <strong>" + reference + "</strong> です。" +
+          "確認メールをご登録のメールアドレスに送信いたしました。担当チームが内容を確認し、追加情報が必要な場合はご連絡いたします。" +
+          "本お問い合わせの送信は、委任契約の成立を意味するものではありません。</p>"
+        );
+      },
+    },
   };
 
   var form = document.getElementById("enquiry-form");

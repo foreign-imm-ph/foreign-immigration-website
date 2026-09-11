@@ -5,8 +5,8 @@
     "about": "会社概要",
     "services": "サービス",
     "accreditation": "認定資格",
-    "clientPortal": "クライアントポータル",
-    "contact": "お問い合わせ"
+    "clientPortal": "顧客ポータル",
+    "contact": "お問合せ"
   },
   "languageSwitcher": {
     "label": "言語"

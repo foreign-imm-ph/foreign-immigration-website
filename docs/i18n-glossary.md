@@ -65,6 +65,9 @@ familiar local institution.
   "ministry of foreign affairs" used by both Taiwan (中華民國外交部) and
   Mainland China (外交部) — without the country qualifier a reader could
   momentarily read it as one of those two, not the Philippines'.
+- ja: フィリピン外務省(Department of Foreign Affairs), always with the
+  フィリピン prefix — bare "外務省" is Japan's own Ministry of Foreign
+  Affairs' exact name.
 
 ### Bureau of Internal Revenue (BIR)
 **Handling rule:** Official Philippine tax authority; relevant mainly on
@@ -86,6 +89,10 @@ acronym clients encounter on real paperwork.
   "tax bureau" everywhere rather than borrowing Taiwan's "國稅局" framing,
   and the mandatory 菲律賓 prefix at the establishing mention removes any
   reading of it as Hong Kong's own department.
+- ja: フィリピン国税庁(Bureau of Internal Revenue, BIR), always with the
+  フィリピン prefix, "BIR" alone thereafter — bare "国税庁" is Japan's own
+  National Tax Agency's exact name, the same class of collision as BIR in
+  zh-Hant.
 
 ### Registry of Deeds
 **Handling rule:** Official land-records office. Same pairing pattern.
@@ -99,6 +106,10 @@ office") + "(Registry of Deeds)" on first mention.
   so the phrase reads as a plain description of the office's function
   rather than borrowing either jurisdiction's specific institution name.
   Keep "Registry of Deeds" visible in English at the establishing mention.
+- ja: 不動産登記機関(Registry of Deeds) — a descriptive phrase, avoiding
+  both "登記所" (the old colloquial name for Japan's own registration
+  offices) and "法務局" (the Legal Affairs Bureau, Japan's current official
+  name for the body that handles real-estate registration today).
 
 ### Department of Labor and Employment (DOLE) / PEZA / BOI
 **Handling rule:** Relevant on work-visa and corporate/global-mobility
@@ -113,6 +124,12 @@ now as part of the Traditional Chinese rollout.
   description + English name + acronym carries no comparable collision
   risk: 菲律賓經濟區署(Philippine Economic Zone Authority, PEZA) and
   菲律賓投資署(Board of Investments, BOI), acronym alone thereafter.
+- ja: フィリピン労働雇用省(Department of Labor and Employment, DOLE),
+  フィリピン prefix throughout for consistency with the other agencies
+  above (Japan's own ministry, 厚生労働省, has a different name, so this is
+  precautionary rather than a direct collision). "DOLE" alone thereafter.
+  PEZA as フィリピン経済区庁(Philippine Economic Zone Authority, PEZA) and
+  BOI as 投資委員会(Board of Investments, BOI), acronym alone thereafter.
 
 ---
 
@@ -146,6 +163,14 @@ each glossed once per page in natural Traditional Chinese — e.g. 13(a) as
 "外國人在菲律賓的登記身份證(ACR I-Card)" — never renumbered, never
 translated into a Chinese-only label that drops the identifier a client
 would need to match against their actual document.
+
+ja treatment for all four: kept in Latin script/original form in every
+mention, each glossed once per page in natural Japanese — e.g. ACR I-Card
+as "外国人登録証明カード(ACR I-Card)", 13(a) as
+"13(a) 婚姻に基づく移民ビザ(13(a) Immigrant Visa by Marriage)", eCAR as
+"電子登記承認証明書(eCAR)", ONETT as "一回限りの取引(ONETT)" — the
+identifier itself is never renumbered, transliterated into katakana, or
+dropped in favor of a Japanese-only label.
 
 ---
 
@@ -317,3 +342,68 @@ an equally natural, broadly-understood alternative existed:
   and 程序 are all natural and broadly understood; the choice on each page
   follows whichever fits that sentence, consistent with the existing rule
   against single fixed mappings for context-dependent terms.
+
+---
+
+## ja register and vocabulary decisions
+
+Target register: professional business Japanese for a consulting/services
+site — courteous and direct, not government-bureaucratic and not
+over-formal keigo. です/ます base register throughout; polite request
+forms (〜いただけます, 〜ください) used naturally, not stacked into
+excessive double honorifics. CTAs are short and direct (e.g. お問い合わせ,
+サービスを見る) rather than full ceremonial sentences.
+
+**Persistent-nav length constraint:** the top nav's desktop/mobile
+breakpoint is frozen at 1200px (see header architecture notes elsewhere in
+this repo) and is not to be redesigned for any one locale. Japanese
+full-width characters are wider per character than the Latin, Hangul or
+mixed-width strings the six nav slots were originally sized for, so a nav
+label that reads naturally in body prose can still overflow the frozen
+breakpoint purely on character count. Two nav labels were shortened for
+this reason alone (not a translation-quality judgment): クライアントポータル
+(10 characters) to 顧客ポータル (6 characters) for "client portal," and
+お問い合わせ to the equally standard, un-okurigana'd お問合せ for "contact" —
+both are ordinary, attested short forms on Japanese corporate sites, not
+invented abbreviations. Because ko/zh-CN/zh-Hant all use one identical
+term in both the nav and the body copy (never a shorter nav-only variant),
+顧客ポータル was substituted for every body-copy occurrence of the term as
+well, so ja keeps that same one-term-everywhere discipline rather than
+having the nav and body disagree.
+
+- **visa:** ビザ throughout (katakana) — the standard, universally
+  understood Japanese term; no reason to avoid it.
+- **immigration status:** 在留資格 for the formal legal-standing concept
+  (holding a valid visa / being in status). This is the same term Japan's
+  own immigration law uses for its own system, but it is a generic
+  descriptive compound (visa/period-of-stay status), not a proper
+  institution name, so using it for the Philippine system is natural and
+  carries no collision risk the way a ministry or bureau name would.
+- **residency / long-term status:** 長期在留資格.
+- **compliance:** コンプライアンス (katakana) for the general business
+  concept (corporate/global mobility pages); 遵守 / 順守 as a verb for
+  "keeping one's status/requirements in order" in ordinary immigration
+  sentences — not fixed to one word, per the general "compliance" rule
+  above.
+- **corporate mobility / global mobility:** rendered descriptively as
+  "企業の海外赴任者対応" (corporate support for internationally-assigned
+  staff) rather than a katakana "グローバル・モビリティ" jargon term, so it
+  reads as an immigration/relocation service, not generic HR buzzwords.
+- **property transfer:** 不動産譲渡 as the main service name (transfer of
+  real property); 名義変更 (change of registered title/name) for the
+  specific transfer action; 登記 for "registration" (a generic, universal
+  Japanese legal-filing word — not exclusive to Japan's own system, so no
+  collision risk the way an institution name would carry).
+- **client portal:** 顧客ポータル (kanji + katakana) throughout, used
+  identically in the persistent nav and in every body-copy mention — see
+  the persistent-nav length constraint note above for why this is shorter
+  than the katakana-only クライアントポータル a first draft used.
+- **enquiry / contact:** お問い合わせ in body copy and CTA links; お問合せ
+  specifically in the persistent nav slot only, for the same
+  character-budget reason (see above) — the two spellings are the same
+  word with/without okurigana, not different terms.
+- **katakana discipline:** katakana used where it is the natural,
+  expected term (ビザ, コンプライアンス, ポータル), not avoided for
+  ideological consistency — but not reached for by default either;
+  descriptive Japanese is preferred wherever it reads more naturally than
+  a borrowed term (corporate mobility, property transfer above).

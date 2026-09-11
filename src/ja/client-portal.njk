@@ -1,0 +1,59 @@
+---
+layout: layouts/base.njk
+title: 顧客ポータル
+description: Foreign Immigration Servicesの顧客ポータルでは、申請、書類、メッセージ、お支払い、プロフィールを一箇所にまとめて管理できます。
+---
+{% from "partials/icons.njk" import icon %}
+<section class="section trust-section">
+  <div class="wrap">
+    <div class="trust-section__inner">
+      {{ icon("portal-applications", 52) }}
+      <div>
+        <p class="tag">顧客ポータル</p>
+        <h1>移民サービスを、すべて一箇所で</h1>
+        <p>Foreign Immigration Services顧客ポータルでは、申請・サービス依頼の状況確認、必要書類の安全な提出、進捗の確認、お支払いの管理などが行えます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="card-grid">
+      <div class="card">
+        {{ icon("portal-applications", 44) }}
+        <h3>申請・サービス</h3>
+        <p>申請およびサービス依頼を、それぞれ専用の参照番号とステータスとともに、一箇所で確認・管理できます。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-upload", 44) }}
+        <h3>書類</h3>
+        <p>申請・サービス依頼に関連する書類を、安全に提出・確認できます。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-enquiry", 44) }}
+        <h3>メッセージ</h3>
+        <p>お問い合わせや申請内容について、当社チームと直接やり取りできます。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-payments", 44) }}
+        <h3>お支払い</h3>
+        <p>サービス範囲が当社チームにより確定した後、該当する料金の確認・お支払いができます。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-profile", 44) }}
+        <h3>プロフィール</h3>
+        <p>連絡先情報や個人情報を最新の状態に保てます。</p>
+      </div>
+    </div>
+
+    <div class="service-cta">
+      <h2>はじめに</h2>
+      <p>お問い合わせいただければ、当社チームが顧客ポータルへのアクセスに向けた次のステップをご案内いたします。すでにクライアントの方は、以下からログインしてください。</p>
+      <p>
+        <a class="btn btn-primary" href="/ja/contact/">お問い合わせはこちら</a>
+        <a class="btn btn-secondary" href="/portal/login/">顧客ポータルにログイン</a>
+      </p>
+    </div>
+  </div>
+</section>

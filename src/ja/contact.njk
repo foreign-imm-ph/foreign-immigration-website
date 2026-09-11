@@ -1,0 +1,107 @@
+---
+layout: layouts/base.njk
+title: お問い合わせ
+description: Foreign Immigration Servicesへのお問い合わせ、またはメールでの直接のご連絡について。
+---
+<section class="section">
+  <div class="wrap prose">
+    <p class="tag">お問い合わせ</p>
+    <h1>お問い合わせ</h1>
+    <p class="service-lede">どのようなご用件か、お聞かせください。</p>
+
+    <p>移民申請をご検討中の方、現在の在留資格に関するサポートが必要な方、従業員の方のサポートが必要な方、または緊急性の高い移民関連のご相談がある方は、以下のお問い合わせフォームからForeign Immigration Servicesまでご連絡ください。</p>
+
+    <p><strong>メール：</strong> <a href="mailto:info@foreignimmigration.ph">info@foreignimmigration.ph</a></p>
+
+    <form id="enquiry-form" class="enquiry-form">
+      <div class="form-field hp-field" aria-hidden="true">
+        <label for="website">この項目は入力しないでください</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label for="fullName">お名前 <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="fullName" name="fullName" data-field-label="お名前" autocomplete="name" required>
+      </div>
+
+      <div class="form-field">
+        <label for="email">メールアドレス <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" data-field-label="メールアドレス" autocomplete="email" required>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">電話番号／ご希望の連絡方法 <span class="hint">(任意)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="電話番号／ご希望の連絡方法" autocomplete="tel">
+      </div>
+
+      <div class="form-field">
+        <label for="nationality">国籍 <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="nationality" name="nationality" data-field-label="国籍" required>
+      </div>
+
+      <div class="form-field">
+        <label for="location">現在お住まいの国／地域 <span class="hint">(任意)</span></label>
+        <input type="text" id="location" name="location" data-field-label="現在お住まいの国／地域">
+      </div>
+
+      <div class="form-field">
+        <label for="language">希望言語 <span class="hint">(任意)</span></label>
+        <select id="language" name="language" data-field-label="希望言語">
+          <option value="" selected>選択してください</option>
+          <option value="English">英語</option>
+          <option value="Simplified Chinese">簡体字中国語 (简体中文)</option>
+          <option value="Korean">韓国語 (한국어)</option>
+          <option value="Other">その他</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="service">ご希望のサービス <span class="required-mark" aria-hidden="true">*</span></label>
+        <select id="service" name="service" data-field-label="ご希望のサービス" required>
+          <option value="" disabled selected>サービスを選択してください</option>
+          <option value="visa-applications">ビザ・移民申請</option>
+          <option value="work-visas">就労ビザ</option>
+          <option value="extensions-compliance">滞在延長・コンプライアンス</option>
+          <option value="residency-status">長期在留資格</option>
+          <option value="family-spousal">家族・配偶者ビザ</option>
+          <option value="corporate-mobility">企業・海外赴任者対応</option>
+          <option value="status-review">移民ステータス確認・是正支援</option>
+          <option value="motions-blacklist">異議申立て・ブラックリスト・不利益記録支援</option>
+          <option value="legal-support">外国人のための法的支援</option>
+          <option value="airport-vip">空港VIPお迎え・お見送りサービス</option>
+          <option value="lost-passport">パスポート・渡航書類紛失サポート</option>
+          <option value="acr-icard">ACR I-Cardサポート</option>
+          <option value="exit-clearance">出国許可・出国要件</option>
+          <option value="document-verification">ビザ・移民書類確認</option>
+          <option value="complex-tailored">複雑・個別対応が必要な移民案件支援</option>
+          <option value="property-transfer">不動産譲渡・書類作成サポート</option>
+          <option value="other">該当なし／その他の移民に関するご相談</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <div class="context-note">
+          <p>パスポートのスキャン画像やその他の機密書類は、本お問い合わせフォームからは送信しないでください。補足書類の提出が必要な場合は、安全な提出方法を別途ご案内いたします。</p>
+        </div>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="description">簡単な内容説明／どのようなご用件でしょうか？ <span class="required-mark" aria-hidden="true">*</span></label>
+        <textarea id="description" name="description" data-field-label="簡単な内容説明" required></textarea>
+      </div>
+
+      <div class="enquiry-form-actions">
+        <button type="submit" class="btn btn-primary">お問い合わせを送信</button>
+        <p id="enquiry-form-status" class="form-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <div class="service-cta">
+      <h2>今後の流れについて</h2>
+      <p>いただいた情報を当社チームが確認のうえ、上記の連絡先へご連絡いたします。お問い合わせ内容の確認にあたり追加情報や補足書類が必要な場合は、その旨をお知らせいたします。</p>
+    </div>
+  </div>
+</section>
+
+<script defer src="/assets/js/portal-config.js"></script>
+<script defer src="/assets/js/enquiry-form.js"></script>

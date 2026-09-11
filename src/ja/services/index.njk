@@ -1,48 +1,23 @@
 ---
 layout: layouts/base.njk
-title: ホーム
-description: Foreign Immigration Servicesは、フィリピン移民局認定のコンサルタンシーとして、ビザ申請や滞在延長、長期在留資格、コンプライアンスなど、フィリピンの移民手続きをサポートします。
+title: サービス
+description: フィリピンの移民局認定コンサルタンシーForeign Immigration Servicesが提供する、主要サービスおよび専門サービスのご案内。
 ---
 {% from "partials/icons.njk" import icon %}
-<div class="urgent-banner">
-  <div class="wrap urgent-banner__inner">
-    <p class="urgent-banner__text">
-      <strong>フィリピンで逮捕・拘留された、または刑事・移民関連の法的手続きに直面していますか？</strong>
-    </p>
-    <a class="urgent-banner__cta" href="/ja/services/legal-support-for-foreign-nationals/#urgent-assistance">緊急サポートを依頼する</a>
-  </div>
-</div>
-
-<section class="hero">
-  <div class="wrap hero__grid">
-    <p class="hero__eyebrow">フィリピン移民コンサルティング</p>
-    <h1 class="hero__headline">フィリピンの移民手続きを、確かなサポートで。</h1>
-    <p class="hero__lede">Foreign Immigration Servicesは、フィリピン移民局（Bureau of Immigration）に認定されたコンサルタンシーとして、ビザ申請や滞在延長、長期在留資格の取得から、企業の海外赴任者対応、コンプライアンス、複雑な移民案件まで、お客様に代わって幅広くサポートいたします。</p>
-    <div class="hero__visual">
-      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
-    </div>
-    <div class="hero__actions">
-      <a class="btn btn-primary" href="/ja/contact/">お問い合わせはこちら</a>
-      <a class="btn btn-secondary" href="/ja/services/">サービス一覧を見る</a>
-    </div>
-    <p class="hero__accreditation">
-      {{ icon("accreditation", 40) }}
-      <span><strong>移民局認定コンサルタンシー</strong>・認定番号 {{ site.accreditation.number }}</span>
-    </p>
-  </div>
-</section>
-
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
-      <h2>主要移民サービス</h2>
-      <p>当社の業務は、移民に関する6つの主要分野で構成されています。</p>
+      <p class="tag">サービス</p>
+      <h1>サービス一覧</h1>
+      <p>Foreign Immigration Servicesの業務は、移民に関する6つの主要分野を中心に構成されており、特定の状況に対応した専門サービスも数多くご用意しています。適切な対応方法はお客様ごとの状況によって異なるため、案件は個別に確認いたします。</p>
     </div>
+
+    <h2>主要移民サービス</h2>
     <div class="card-grid card-grid--3up">
       <div class="card">
         {{ icon("visa-applications", 44) }}
         <h3>ビザ・移民申請</h3>
-        <p>フィリピンへの入国、就労、就学、その他の目的での滞在を計画中で、どのビザが該当するかわからない方へ。</p>
+        <p>フィリピンへの入国ビザ・移民申請に関するご案内。</p>
         <a class="card__link" href="/ja/services/visa-and-immigration-applications/">詳しく見る →</a>
       </div>
       <div class="card">
@@ -54,25 +29,25 @@ description: Foreign Immigration Servicesは、フィリピン移民局認定の
       <div class="card">
         {{ icon("extensions-compliance", 44) }}
         <h3>滞在延長・コンプライアンス</h3>
-        <p>すでにフィリピンに滞在中で、滞在期間の延長や報告義務の履行が必要な方へ。</p>
+        <p>すでにフィリピンに滞在中の外国人向けの、滞在期間の延長および継続的なコンプライアンス対応。</p>
         <a class="card__link" href="/ja/services/extensions-and-compliance/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("residency-status", 44) }}
         <h3>長期在留資格</h3>
-        <p>フィリピンへの長期的または永住的な移住をご検討中の方へ。</p>
+        <p>フィリピンへの長期滞在を予定している外国人向けの、より長期的な在留資格。</p>
         <a class="card__link" href="/ja/services/residency-and-long-term-status/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("family-spousal", 44) }}
         <h3>家族・配偶者ビザ</h3>
-        <p>フィリピンにいる方と結婚されている、またはご家族がいらっしゃり、家族を呼び寄せたい、または一緒に暮らし続けたい方へ。</p>
+        <p>フィリピンにいる方との婚姻や家族関係に基づく長期在留資格。</p>
         <a class="card__link" href="/ja/services/family-and-spousal-visas/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("corporate-mobility", 44) }}
         <h3>企業・海外赴任者対応</h3>
-        <p>従業員の赴任や、フィリピンに移動する海外スタッフの管理を行っている企業様へ。</p>
+        <p>企業様および国際的に異動する従業員様への移民サポート。</p>
         <a class="card__link" href="/ja/services/corporate-and-global-mobility/">詳しく見る →</a>
       </div>
     </div>
@@ -94,29 +69,26 @@ description: Foreign Immigration Servicesは、フィリピン移民局認定の
   </div>
 </section>
 
-<section class="section section--muted">
+<section class="section">
   <div class="wrap">
-    <div class="section__intro">
-      <h2>専門サービス</h2>
-      <p>特定の、時に緊急性を要する移民案件に対応した専門サポートです。</p>
-    </div>
+    <h2>専門サービス</h2>
     <div class="card-grid card-grid--4up">
       <div class="card">
         {{ icon("status-review", 44) }}
         <h3>移民ステータス確認・是正支援</h3>
-        <p>ご自身の在留資格やビザの有効性、移民局の記録について不安がある方へ。</p>
+        <p>可能な限り遠隔で対応する、確認のとれたステータス審査。</p>
         <a class="card__link" href="/ja/services/immigration-status-review-and-regularisation/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("motions-blacklist", 44) }}
         <h3>異議申立て・ブラックリスト・不利益記録支援</h3>
-        <p>ブラックリストや要注意リスト、その他の不利益な移民記録でお困りの方へ。</p>
+        <p>異議申立て、ブラックリスト、不利益記録に関する適切な手続き方法の見極め。</p>
         <a class="card__link" href="/ja/services/immigration-motions-blacklist-and-derogatory-record-assistance/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("legal-support", 44) }}
         <h3>外国人のための法的支援</h3>
-        <p>フィリピンで刑事・移民関連の法的手続きに直面している方へ。</p>
+        <p>独立したフィリピンの法律顧問と連携した移民関連サポートの調整。</p>
         <a class="card__link" href="/ja/services/legal-support-for-foreign-nationals/">詳しく見る →</a>
       </div>
       <div class="card">
@@ -128,25 +100,25 @@ description: Foreign Immigration Servicesは、フィリピン移民局認定の
       <div class="card">
         {{ icon("lost-passport", 44) }}
         <h3>パスポート・渡航書類紛失サポート</h3>
-        <p>フィリピン滞在中にパスポートや渡航書類を紛失された方へ。</p>
+        <p>パスポートの紛失・再発行後に必要となる移民関連の手続きのご案内。</p>
         <a class="card__link" href="/ja/services/lost-passport-and-travel-document-assistance/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("acr-icard", 44) }}
         <h3>ACR I-Cardサポート</h3>
-        <p>外国人登録証明カード（ACR I-Card）の登録、更新、再発行が必要な方へ。</p>
+        <p>外国人登録証明カード（ACR I-Card）の登録、更新、再発行。</p>
         <a class="card__link" href="/ja/services/acr-i-card-assistance/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("exit-clearance", 44) }}
         <h3>出国許可・出国要件</h3>
-        <p>長期滞在後にフィリピンを出国する予定で、事前に出国許可が必要かご不明な方へ。</p>
+        <p>長期滞在後にフィリピンを出国する前に確認すべき事項のご案内。</p>
         <a class="card__link" href="/ja/services/exit-clearance-and-departure/">詳しく見る →</a>
       </div>
       <div class="card">
         {{ icon("document-verification", 44) }}
         <h3>ビザ・移民書類確認</h3>
-        <p>ビザや移民関連書類の真正性や有効性を確認したい方へ。</p>
+        <p>フィリピンのビザ・移民書類を確認するための適切な手続きのご案内。</p>
         <a class="card__link" href="/ja/services/visa-and-immigration-document-verification/">詳しく見る →</a>
       </div>
     </div>
@@ -176,22 +148,5 @@ description: Foreign Immigration Servicesは、フィリピン移民局認定の
     <h2>どのサービスが必要かわからない、またはお探しの情報が見つかりませんか？</h2>
     <p>必要なビザや申請、移民手続きの名称がわからなくても構いません。状況をお聞かせいただければ、当社チームが確認のうえ、適切な次のステップをご案内いたします。</p>
     <p><a class="btn btn-on-dark" href="/ja/contact/?service=other">状況をお聞かせください</a></p>
-  </div>
-</section>
-
-<section class="section section--muted">
-  <div class="wrap">
-    <div class="section__intro">
-      <h2>顧客ポータル</h2>
-      <p>申請・サービス依頼、書類、メッセージ、お支払い、プロフィールをすべて一箇所で管理できます。</p>
-    </div>
-    <div class="portal-preview-grid">
-      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>申請・サービス</span></div>
-      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>書類</span></div>
-      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>メッセージ</span></div>
-      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>お支払い</span></div>
-      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>プロフィール</span></div>
-    </div>
-    <p class="mt-md"><a class="btn btn-secondary" href="/ja/client-portal/">顧客ポータルを開く →</a></p>
   </div>
 </section>
