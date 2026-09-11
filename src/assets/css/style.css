@@ -1448,6 +1448,16 @@ summary:focus-visible {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.25s ease;
+    /* .hero__visual further down the page is also position: relative with
+       z-index: auto — an unrelated, pre-existing rule, untouched here.
+       Two same-level (z-index: auto) positioned elements paint in DOM
+       order, and <main> comes after <header>, so without this the hero
+       image was winning above the open nav panel wherever they now
+       overlap (the panel is taller since the max-height fix above) and
+       silently swallowing taps meant for the menu. A real z-index lifts
+       the whole panel into the positive stacking tier, unconditionally
+       above any z-index: auto element on the page. */
+    z-index: 30;
   }
 
   .site-nav ul {
@@ -1461,7 +1471,16 @@ summary:focus-visible {
   .site-nav a { display: block; padding: 0.85rem 0.1rem; }
 
   .nav-toggle:checked ~ .site-nav {
-    max-height: 24rem;
+    /* Six nav links plus the language switcher (trigger + both options,
+       once opened) need ~552px of real content height — well past the
+       previous 24rem (384px) cap, which silently clipped the bottom of
+       the switcher and the entire dropdown via the overflow: hidden
+       above. 90vh comfortably covers that on any phone in portrait, and
+       overflow-y: auto is a safety net: if content ever grows taller
+       than the viewport allows, the panel scrolls internally instead of
+       clipping again, rather than re-guessing a fixed pixel number. */
+    max-height: 90vh;
+    overflow-y: auto;
   }
 }
 
