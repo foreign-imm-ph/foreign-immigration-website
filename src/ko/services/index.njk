@@ -1,78 +1,53 @@
 ---
 layout: layouts/base.njk
-title: 홈
-description: Foreign Immigration Services는 필리핀 이민국 공인 컨설팅 기관으로, 비자 신청, 체류 연장, 장기 체류, 컴플라이언스 등 필리핀 이민 업무를 지원합니다.
+title: 서비스
+description: 필리핀에서 활동하는 이민국 공인 컨설팅 기관 Foreign Immigration Services가 제공하는 핵심 및 전문 이민 서비스를 소개합니다.
 ---
 {% from "partials/icons.njk" import icon %}
-<div class="urgent-banner">
-  <div class="wrap urgent-banner__inner">
-    <p class="urgent-banner__text">
-      <strong>필리핀에서 체포되거나 구금되었거나, 형사 또는 이민 절차에 직면해 계십니까?</strong>
-    </p>
-    <a class="urgent-banner__cta" href="/ko/services/legal-support-for-foreign-nationals/#urgent-assistance">긴급 지원 요청</a>
-  </div>
-</div>
-
-<section class="hero">
-  <div class="wrap hero__grid">
-    <p class="hero__eyebrow">필리핀 이민 컨설팅</p>
-    <h1 class="hero__headline">필리핀 이민 업무, 저희가 맡아 처리해 드립니다.</h1>
-    <p class="hero__lede">Foreign Immigration Services는 필리핀 이민국(Bureau of Immigration) 공인 컨설팅 기관으로, 비자 신청, 체류 연장, 장기 체류 자격은 물론 기업의 해외 파견 업무, 컴플라이언스, 복잡한 이민 사안에 이르기까지 고객을 대신하여 폭넓게 지원합니다.</p>
-    <div class="hero__visual">
-      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
-    </div>
-    <div class="hero__actions">
-      <a class="btn btn-primary" href="/ko/contact/">문의하기</a>
-      <a class="btn btn-secondary" href="/ko/services/">서비스 살펴보기</a>
-    </div>
-    <p class="hero__accreditation">
-      {{ icon("accreditation", 40) }}
-      <span><strong>이민국 공인 컨설팅 기관</strong> · 인증번호 {{ site.accreditation.number }}</span>
-    </p>
-  </div>
-</section>
-
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
-      <h2>핵심 이민 서비스</h2>
-      <p>당사의 업무는 6개의 핵심 이민 분야로 구성되어 있습니다.</p>
+      <p class="tag">서비스</p>
+      <h1>당사의 서비스</h1>
+      <p>Foreign Immigration Services는 업무를 6개의 핵심 이민 분야로 구성하는 한편, 특정 상황을 위한 다양한 전문 서비스를 제공합니다. 적합한 접근 방식은 고객마다 구체적인 상황에 따라 달라지므로, 모든 사안은 개별적으로 평가됩니다.</p>
     </div>
+
+    <h2>핵심 이민 서비스</h2>
     <div class="card-grid card-grid--3up">
       <div class="card">
         {{ icon("visa-applications", 44) }}
         <h3>비자 및 이민 신청</h3>
-        <p>필리핀 입국, 취업, 유학 또는 그 밖의 사유로 체류를 계획 중이시지만 어떤 비자가 적용되는지 확실치 않으신가요?</p>
+        <p>필리핀 입국 비자 및 이민 신청에 관한 안내를 제공합니다.</p>
         <a class="card__link" href="/ko/services/visa-and-immigration-applications/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("work-visas", 44) }}
         <h3>취업 비자</h3>
-        <p>필리핀에서 근무하는 외국인을 위한 9(g) 사전확정 취업비자 및 그 밖의 취업 관련 이민 지원 서비스입니다.</p>
+        <p>필리핀에서 근무하는 외국인을 위한 9(g) 사전확정 취업비자 및 그 밖의 취업 관련 이민 지원입니다.</p>
         <a class="card__link" href="/ko/services/work-and-employment-visas/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("extensions-compliance", 44) }}
         <h3>체류 연장 및 컴플라이언스</h3>
-        <p>이미 필리핀에 체류 중이시며 체류 기간 연장이나 정기 신고 요건 이행이 필요하신가요?</p>
+        <p>이미 필리핀에 체류 중인 외국인을 위한 체류 연장 및 지속적인 컴플라이언스 지원입니다.</p>
         <a class="card__link" href="/ko/services/extensions-and-compliance/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("residency-status", 44) }}
         <h3>장기 체류 및 영주 자격</h3>
-        <p>필리핀으로의 장기 체류 또는 영구 이주를 고려하고 계신가요?</p>
+        <p>필리핀에 계속 체류하고자 하는 외국인을 위한 장기 이민 신분입니다.</p>
         <a class="card__link" href="/ko/services/residency-and-long-term-status/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("family-spousal", 44) }}
         <h3>가족 및 배우자 비자</h3>
-        <p>필리핀 국민과 혼인 관계에 있거나 그 가족이시며, 가족을 초청하거나 함께 지내고자 하시나요?</p>
+        <p>필리핀 국민과의 혼인이나 가족 관계를 바탕으로 한 장기 체류 자격입니다.</p>
         <a class="card__link" href="/ko/services/family-and-spousal-visas/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("corporate-mobility", 44) }}
         <h3>기업 및 글로벌 인력 이동</h3>
-        <p>필리핀으로 파견되는 직원의 이주 업무나 국경을 넘나드는 인력 관리를 담당하고 계신가요?</p>
+        <p>기업 및 국제적으로 이동하는 소속 인력을 위한 이민 지원입니다.</p>
         <a class="card__link" href="/ko/services/corporate-and-global-mobility/">자세히 보기 →</a>
       </div>
     </div>
@@ -94,29 +69,26 @@ description: Foreign Immigration Services는 필리핀 이민국 공인 컨설�
   </div>
 </section>
 
-<section class="section section--muted">
+<section class="section">
   <div class="wrap">
-    <div class="section__intro">
-      <h2>전문 서비스</h2>
-      <p>특정하고 시급성을 요하는 이민 상황에 특화된 지원을 제공합니다.</p>
-    </div>
+    <h2>전문 서비스</h2>
     <div class="card-grid card-grid--4up">
       <div class="card">
         {{ icon("status-review", 44) }}
         <h3>이민 신분 검토 및 시정 지원</h3>
-        <p>본인의 이민 신분, 비자 유효성 또는 이민국 기록에 대해 확실하지 않으신가요?</p>
+        <p>절차가 허용하는 한 원격으로 진행되는 비공개 신분 검토입니다.</p>
         <a class="card__link" href="/ko/services/immigration-status-review-and-regularisation/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("motions-blacklist", 44) }}
         <h3>이민 이의신청, 블랙리스트 및 불리한 기록 지원</h3>
-        <p>블랙리스트, 감시 명단 또는 그 밖의 불리한 이민 기록 문제를 겪고 계신가요?</p>
+        <p>이의신청, 블랙리스트 및 불리한 기록 사안에 적합한 절차를 확인해 드립니다.</p>
         <a class="card__link" href="/ko/services/immigration-motions-blacklist-and-derogatory-record-assistance/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("legal-support", 44) }}
         <h3>외국인을 위한 법률 지원</h3>
-        <p>필리핀에서 형사 또는 이민 절차에 직면해 계신가요?</p>
+        <p>독립적인 필리핀 법률 자문과 함께 이민 관련 지원을 조율합니다.</p>
         <a class="card__link" href="/ko/services/legal-support-for-foreign-nationals/">자세히 보기 →</a>
       </div>
       <div class="card">
@@ -128,25 +100,25 @@ description: Foreign Immigration Services는 필리핀 이민국 공인 컨설�
       <div class="card">
         {{ icon("lost-passport", 44) }}
         <h3>여권 및 여행증명서 분실 지원</h3>
-        <p>필리핀 체류 중 여권 또는 여행증명서를 분실하셨나요?</p>
+        <p>여권 분실 또는 재발급 이후 필요한 이민 절차를 안내해 드립니다.</p>
         <a class="card__link" href="/ko/services/lost-passport-and-travel-document-assistance/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("acr-icard", 44) }}
         <h3>ACR I-Card 지원</h3>
-        <p>외국인 등록증(ACR I-Card)의 등록, 갱신 또는 재발급이 필요하신가요?</p>
+        <p>외국인 등록증(ACR I-Card)의 등록, 갱신 및 재발급을 지원합니다.</p>
         <a class="card__link" href="/ko/services/acr-i-card-assistance/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("exit-clearance", 44) }}
         <h3>출국 허가 및 출국 요건</h3>
-        <p>장기 체류 후 필리핀을 출국하실 예정이며 출국 허가가 필요한지 확실하지 않으신가요?</p>
+        <p>장기 체류 후 필리핀을 출국하기 전에 필요한 사항을 확인해 드립니다.</p>
         <a class="card__link" href="/ko/services/exit-clearance-and-departure/">자세히 보기 →</a>
       </div>
       <div class="card">
         {{ icon("document-verification", 44) }}
         <h3>비자 및 이민 서류 확인</h3>
-        <p>비자 또는 이민 관련 서류의 진위나 상태 확인이 필요하신가요?</p>
+        <p>필리핀 비자 또는 이민 서류를 확인하는 데 적합한 절차를 안내해 드립니다.</p>
         <a class="card__link" href="/ko/services/visa-and-immigration-document-verification/">자세히 보기 →</a>
       </div>
     </div>
@@ -176,22 +148,5 @@ description: Foreign Immigration Services는 필리핀 이민국 공인 컨설�
     <h2>필요한 서비스가 무엇인지 잘 모르시겠습니까?</h2>
     <p>어떤 비자나 신청, 이민 절차가 필요한지 명칭을 알지 못하셔도 괜찮습니다. 현재 상황을 말씀해 주시면 저희 팀이 이를 검토하고 적절한 다음 단계를 안내해 드립니다.</p>
     <p><a class="btn btn-on-dark" href="/ko/contact/?service=other">현재 상황 알려주기</a></p>
-  </div>
-</section>
-
-<section class="section section--muted">
-  <div class="wrap">
-    <div class="section__intro">
-      <h2>고객 포털</h2>
-      <p>신청 및 서비스 요청, 서류, 메시지, 결제, 프로필을 한곳에서 관리하세요.</p>
-    </div>
-    <div class="portal-preview-grid">
-      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>신청 및 서비스</span></div>
-      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>서류</span></div>
-      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>메시지</span></div>
-      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>결제</span></div>
-      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>프로필</span></div>
-    </div>
-    <p class="mt-md"><a class="btn btn-secondary" href="/ko/client-portal/">고객 포털 바로가기 →</a></p>
   </div>
 </section>

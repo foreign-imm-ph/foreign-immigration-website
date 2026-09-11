@@ -32,6 +32,19 @@
         );
       },
     },
+    ko: {
+      sending: "문의를 전송하고 있습니다...",
+      mailtoSubject: "foreignimmigration.ph에서 온 문의",
+      mailtoFallback:
+        "일시적으로 서버에 연결할 수 없어, 대신 이메일 클라이언트가 열리며 문의 내용이 미리 입력되어 있을 것입니다. 내용을 확인하신 후 전송하시면 문의가 완료됩니다.",
+      received: function (reference) {
+        return (
+          "<p><strong>문의가 접수되었습니다.</strong> 참조번호는 <strong>" + reference + "</strong>입니다. " +
+          "확인 이메일이 귀하의 이메일 주소로 발송되었습니다. 저희 팀이 문의 내용을 검토한 후 추가 정보가 필요한 경우 연락드리겠습니다. " +
+          "본 문의 제출 자체가 위임 수락을 의미하지는 않습니다.</p>"
+        );
+      },
+    },
   };
 
   var form = document.getElementById("enquiry-form");

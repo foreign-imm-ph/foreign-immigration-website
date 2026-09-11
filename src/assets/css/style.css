@@ -1778,3 +1778,8 @@ summary:focus-visible {
   border-radius: var(--radius);
   margin-bottom: 0.6rem;
 }
+
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
