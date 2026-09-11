@@ -14,7 +14,7 @@
     "zh-CN": { "label": "Simplified Chinese", "nativeLabel": "简体中文", "prefix": "/zh-cn/", "status": "active" },
     "zh-Hant": { "label": "Traditional Chinese", "nativeLabel": "繁體中文", "prefix": "/zh-hant/", "status": "active" },
     "ko": { "label": "Korean", "nativeLabel": "한국어", "prefix": "/ko/", "status": "active" },
-    "ja": { "label": "Japanese", "nativeLabel": "日本語", "prefix": "/ja/", "status": "sample" },
+    "ja": { "label": "Japanese", "nativeLabel": "日本語", "prefix": "/ja/", "status": "active" },
     "vi": { "label": "Vietnamese", "nativeLabel": "Tiếng Việt", "prefix": "/vi/", "status": "sample" }
   }
 }
