@@ -293,6 +293,24 @@ summary:focus-visible {
 }
 
 @media (min-width: 900px) {
+  /* .site-nav has no flex layout of its own outside this breakpoint, so its
+     two children — the link <ul> and the .lang-switcher <details> — stack
+     as ordinary blocks (nav links row, then the switcher on a row below).
+     Row-laying them out here puts the trigger beside the last nav link. */
+  .site-nav {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Flex items shrink below their content size by default, and a wrapping
+     two-word label ("Client Portal") has a much smaller min-content width
+     than its single-line width — so once .site-nav lays its children out
+     in a row, the link was free to compress down to one word per line
+     instead of the row simply using the space it needs. */
+  .site-nav a {
+    white-space: nowrap;
+  }
+
   /* Without this, the <details> stretches block-level to the full width of
      .site-nav (it stacks under the flex <ul> rather than beside it), so the
      absolutely-positioned list below anchors "right: 0" to that oversized
