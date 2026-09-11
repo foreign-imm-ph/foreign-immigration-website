@@ -541,31 +541,50 @@ language-switcher toggle (the same untouchable per-locale name string as
 own name is available) left the six nav links needing to share several
 fewer pixels than any CJK/Hangul locale ever required, since "Tiếng
 Việt" alone is wider than English, Chinese, Korean or Japanese's own
-name string. Two nav labels were shortened, in body copy as well as the
-nav where the change was a true synonym, so the site keeps one
-discipline (either "identical term everywhere" or "an established,
-recognisable chrome-only shorthand"), never an invented abbreviation:
-- **accreditation nav label:** Công nhận, not Chứng nhận, in the nav
-  slot only (the Accreditation page's own H1, body copy and title keep
-  the fuller Chứng nhận). Công nhận is not an invented shorthand — it is
-  literally the verb the site's own accreditation line already uses
-  ("Đơn vị được Cục Di trú công nhận," i.e. "accredited by the Bureau of
-  Immigration"), so reusing it as the nav noun stays recognisably tied to
-  the same concept rather than introducing a new word.
-- **client portal nav label:** Cá nhân ("Personal"/"My [area]"), in the
-  nav slot only. The page itself, its title, and every body-copy mention
-  of the feature use the fuller Cổng khách hàng (itself already shortened
-  once from a first-draft Cổng thông tin khách hàng — see below). Cá
-  nhân is the same "Personal/My Account" tab wording many Vietnamese
-  consumer apps and sites use for a personal dashboard area, not an
-  invented abbreviation, and reusing the Bureau-of-Immigration-style
-  "chrome may reference the full form already established elsewhere on
-  the site" pattern already documented above for institutional names.
-- **client portal, body copy:** Cổng khách hàng throughout (page title,
-  H1/tag, every service-page "track your transaction" mention), shortened
-  once from an initial Cổng thông tin khách hàng first draft — both are
-  natural, correct Vietnamese, but the shorter form was adopted site-wide
-  once the nav-width check showed the longer one was part of the
-  original overflow, so nav and body stay internally consistent with each
-  other even though the nav uses a separate, shorter Cá nhân specifically
-  for its own width budget.
+name string.
+
+An initial pass shortened the accreditation nav label to Công nhận and
+the client-portal nav label to Cá nhân to make the row fit. A subsequent
+pre-activation review flagged Cá nhân as too ambiguous standing alone in
+a nav bar — it reads as "Personal"/"Individual" rather than clearly
+signalling a client area, which is a real naturalness problem, not a
+stylistic quibble. That review also re-examined Công nhận on its own
+merits (independent of the space question) and concluded it is
+grammatically verb-flavoured on its own — natural inside the sentence it
+was drawn from ("Đơn vị được Cục Di trú công nhận"), but not the noun a
+reader expects a standalone nav item to be — whereas Chứng nhận is the
+standard, unambiguous noun for "accreditation/certification" and reads
+correctly as a nav label.
+
+Every alternative that keeps the literal words "khách hàng" ("client")
+was measured and does not fit at 1200px regardless of the accreditation
+label chosen: Cổng khách hàng (the body-copy term itself) overflows by
+~58px even paired with the shortest accreditation label tried; Khu vực
+khách hàng and Tài khoản khách hàng overflow further still; even bare
+Khách hàng overflows by ~19px. Tài khoản ("Account") — clearer than Cá
+nhân and a step short of the full "khách hàng" phrasing — still overflows
+by 4px next to Công nhận and by 15px next to the correct Chứng nhận, so
+it does not clear the bar either.
+
+The combination that both fits exactly at 1200px and resolves the
+ambiguity complaint reverts accreditation to the correct noun and changes
+only the client-portal nav word:
+- **accreditation nav label:** Chứng nhận (reverted from the first pass's
+  Công nhận, per the naturalness finding above). This matches the page's
+  own H1, body copy and title, which always used Chứng nhận — nav and
+  body are now fully consistent again.
+- **client portal nav label:** Hồ sơ ("file"/"case record"), nav slot
+  only. This is the ordinary Vietnamese word a client uses for "my case/
+  file" with any professional services provider (hồ sơ của tôi), so it
+  reads as pointing to a substantive client area tied to what the portal
+  actually contains (applications, documents) rather than a vague
+  "Personal" section, while being short enough to fit alongside the full
+  Chứng nhận. The page itself, its title, and every body-copy "track your
+  transaction" mention keep the fuller Cổng khách hàng (itself already
+  shortened once from an initial Cổng thông tin khách hàng first draft)
+  — nav and body intentionally diverge here because no phrasing
+  containing "khách hàng" fits the nav row, so the nav uses the
+  Bureau-of-Immigration-style "chrome may reference the full form
+  already established elsewhere on the site" pattern documented above
+  for institutional names, rather than forcing one identical string into
+  both places.
