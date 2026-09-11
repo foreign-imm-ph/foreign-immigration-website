@@ -293,10 +293,25 @@ summary:focus-visible {
 }
 
 @media (min-width: 900px) {
-  .lang-switcher__list {
+  /* Without this, the <details> stretches block-level to the full width of
+     .site-nav (it stacks under the flex <ul> rather than beside it), so the
+     absolutely-positioned list below anchors "right: 0" to that oversized
+     box instead of the visible toggle button, landing well to the right of
+     it. Shrinking the container to its content fixes the anchor. */
+  .lang-switcher {
+    width: fit-content;
+  }
+
+  /* Selector needs to out-specificity .site-nav ul's `display: flex` and
+     `margin: 0` (which otherwise force the options into a side-by-side row
+     — cramped enough here to wrap 简体中文 one character per line — and
+     cancel the base rule's top margin). */
+  .lang-switcher .lang-switcher__list {
+    display: block;
     position: absolute;
     top: 100%;
     right: 0;
+    margin-top: 0.5rem;
     background: var(--color-white);
     border: 1px solid rgba(13, 61, 37, 0.15);
     border-radius: var(--radius);
