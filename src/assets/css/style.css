@@ -176,7 +176,15 @@ summary:focus-visible {
   display: none;
 }
 
-@media (min-width: 900px) {
+/* The full desktop header (credential text + six nav links + trailing
+   language selector) needs roughly 1140px of content width to lay out on
+   one row without colliding — confirmed by measuring the actual rendered
+   width where "Home"/accreditation stop overlapping and where horizontal
+   overflow disappears. 1200px keeps a safety margin above that measured
+   point. Below it, the existing mobile/hamburger pattern (also retuned to
+   this same breakpoint further down) takes over cleanly instead of
+   forcing the desktop row into a width it doesn't fit. */
+@media (min-width: 1200px) {
   /* .site-header__inner also carries the site-wide .wrap class, which caps
      it at the same 1120px used for hero/section content everywhere else.
      Now that the language selector is a trailing nav item, the branding
@@ -311,7 +319,7 @@ summary:focus-visible {
   font-weight: 600;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   /* .site-nav has no flex layout of its own outside this breakpoint, so its
      two children — the link <ul> and the .lang-switcher <details> — stack
      as ordinary blocks (nav links row, then the switcher on a row below).
@@ -357,7 +365,10 @@ summary:focus-visible {
   }
 }
 
-@media (max-width: 780px) {
+/* Matches the 1200px desktop-header threshold above: below it, the
+   trigger sits in the collapsed mobile/tablet menu instead of the desktop
+   nav row, so this covers everything up to that cutover with no gap. */
+@media (max-width: 1199px) {
   .lang-switcher {
     margin: 0.35rem 0 0.25rem;
     border-top: 1px solid rgba(13, 61, 37, 0.08);
@@ -1384,9 +1395,11 @@ summary:focus-visible {
   color: rgba(247, 244, 239, 0.6);
 }
 
-/* Responsive nav (checkbox toggle, no JavaScript) */
+/* Responsive nav (checkbox toggle, no JavaScript). Threshold matches the
+   1200px desktop-header breakpoint above, so the collapsed menu takes
+   over at exactly the point the full desktop row stops fitting. */
 
-@media (max-width: 780px) {
+@media (max-width: 1199px) {
   .nav-toggle {
     /* Visible only to keyboard/assistive tech, not sighted users; the
        label below is the visual control. Kept out of the desktop tab
