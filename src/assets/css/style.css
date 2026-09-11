@@ -177,6 +177,25 @@ summary:focus-visible {
 }
 
 @media (min-width: 900px) {
+  /* .site-header__inner also carries the site-wide .wrap class, which caps
+     it at the same 1120px used for hero/section content everywhere else.
+     Now that the language selector is a trailing nav item, the branding
+     zone (logo + credential) and the nav zone need only a few px more than
+     that to coexist — the overlap this fixes is identical at every
+     desktop width, because it's the fixed 1120px ceiling that's too
+     narrow, not viewport-driven squeezing. Widen only the header's own
+     ceiling and guarantee a real minimum gap between the two zones; .wrap
+     itself is untouched, so every other section keeps its 1120px column. */
+  .site-header__inner {
+    max-width: 1280px;
+    gap: 2rem;
+  }
+
+  .site-header__left,
+  .site-nav {
+    flex-shrink: 0;
+  }
+
   .site-header__credential {
     display: inline-flex;
     align-items: baseline;
