@@ -1,0 +1,197 @@
+---
+layout: layouts/base.njk
+title: 首頁
+description: Foreign Immigration Services 是菲律賓移民局認證的顧問機構，為您處理簽證申請、延期、長期居留及合規等菲律賓移民事務。
+---
+{% from "partials/icons.njk" import icon %}
+<div class="urgent-banner">
+  <div class="wrap urgent-banner__inner">
+    <p class="urgent-banner__text">
+      <strong>在菲律賓被捕、被拘留，或面臨刑事或移民程序？</strong>
+    </p>
+    <a class="urgent-banner__cta" href="/zh-hant/services/legal-support-for-foreign-nationals/#urgent-assistance">申請緊急協助</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap hero__grid">
+    <p class="hero__eyebrow">菲律賓移民顧問服務</p>
+    <h1 class="hero__headline">菲律賓移民事務，交給我們處理。</h1>
+    <p class="hero__lede">Foreign Immigration Services 是菲律賓移民局(Bureau of Immigration)認證的顧問機構，為您全權處理菲律賓移民相關事務，範圍涵蓋簽證申請、延期與長期居留、企業人員跨境調動、合規事宜，以及各類複雜的移民問題。</p>
+    <div class="hero__visual">
+      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
+    </div>
+    <div class="hero__actions">
+      <a class="btn btn-primary" href="/zh-hant/contact/">立即查詢</a>
+      <a class="btn btn-secondary" href="/zh-hant/services/">瀏覽服務項目</a>
+    </div>
+    <p class="hero__accreditation">
+      {{ icon("accreditation", 40) }}
+      <span><strong>菲律賓移民局認證顧問機構</strong> · 編號 {{ site.accreditation.number }}</span>
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section__intro">
+      <h2>核心移民服務</h2>
+      <p>我們的業務涵蓋六大移民核心領域。</p>
+    </div>
+    <div class="card-grid card-grid--3up">
+      <div class="card">
+        {{ icon("visa-applications", 44) }}
+        <h3>簽證及移民申請</h3>
+        <p>計劃前往菲律賓入境、工作、就學或居留，但不確定應申請哪種簽證？</p>
+        <a class="card__link" href="/zh-hant/services/visa-and-immigration-applications/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("work-visas", 44) }}
+        <h3>工作簽證</h3>
+        <p>適用於在菲律賓工作的外籍人士的9(g)預先安排就業簽證，以及其他相關工作移民協助。</p>
+        <a class="card__link" href="/zh-hant/services/work-and-employment-visas/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("extensions-compliance", 44) }}
+        <h3>延期及合規</h3>
+        <p>已在菲律賓境內，需要延長停留期限，或持續符合申報規定？</p>
+        <a class="card__link" href="/zh-hant/services/extensions-and-compliance/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("residency-status", 44) }}
+        <h3>長期居留身分</h3>
+        <p>正考慮長期或永久移居菲律賓？</p>
+        <a class="card__link" href="/zh-hant/services/residency-and-long-term-status/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("family-spousal", 44) }}
+        <h3>家庭及配偶簽證</h3>
+        <p>與菲律賓籍人士結婚，或有家人在菲律賓，需要團聚或維繫家庭關係？</p>
+        <a class="card__link" href="/zh-hant/services/family-and-spousal-visas/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("corporate-mobility", 44) }}
+        <h3>企業及跨國人力調動</h3>
+        <p>需要調派員工，或管理跨境派駐菲律賓的員工？</p>
+        <a class="card__link" href="/zh-hant/services/corporate-and-global-mobility/">了解更多 →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-split feature-split--photo">
+  <div class="wrap feature-split__grid">
+    <div class="feature-split__content">
+      <p class="tag">特色服務</p>
+      <h2>機場VIP接待服務</h2>
+      <p class="feature-split__lede">從抵達到後續交通接駁，讓機場體驗更加順暢。</p>
+      <p>我們的機場VIP接待服務在全程遵守航空公司、機場、移民局、海關、保安及其他政府相關規定的前提下，為您提供機場全程的個人化協助。</p>
+      <p><a class="btn btn-on-dark" href="/zh-hant/services/airport-vip-meet-and-assist/">了解更多機場VIP接待服務詳情</a></p>
+    </div>
+    <div class="feature-split__visual feature-split__visual--photo">
+      <img src="/assets/images/airport-vip-feature.webp" alt="一名 Foreign Immigration Services 人員在機場入境大廳迎接旅客，並協助搬運行李。" width="1536" height="1024">
+    </div>
+  </div>
+</section>
+
+<section class="section section--muted">
+  <div class="wrap">
+    <div class="section__intro">
+      <h2>專項服務</h2>
+      <p>針對特定、且通常具時效性的移民狀況，提供專項協助。</p>
+    </div>
+    <div class="card-grid card-grid--4up">
+      <div class="card">
+        {{ icon("status-review", 44) }}
+        <h3>移民身分審查及補正協助</h3>
+        <p>對自己的移民身分、簽證效力或移民局紀錄感到不確定？</p>
+        <a class="card__link" href="/zh-hant/services/immigration-status-review-and-regularisation/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("motions-blacklist", 44) }}
+        <h3>移民異議申請、黑名單及不良紀錄協助</h3>
+        <p>遇到黑名單、監視名單，或其他不良移民紀錄問題？</p>
+        <a class="card__link" href="/zh-hant/services/immigration-motions-blacklist-and-derogatory-record-assistance/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("legal-support", 44) }}
+        <h3>外籍人士法律支援</h3>
+        <p>在菲律賓面臨刑事或移民程序？</p>
+        <a class="card__link" href="/zh-hant/services/legal-support-for-foreign-nationals/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("complex-tailored", 44) }}
+        <h3>複雜及客製化移民協助</h3>
+        <p>針對涉及多項問題、程序或規定的複雜或特殊移民狀況，提供客製化支援。</p>
+        <a class="card__link" href="/zh-hant/services/complex-and-tailored-immigration-assistance/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("lost-passport", 44) }}
+        <h3>護照及旅行證件遺失協助</h3>
+        <p>在菲律賓期間護照或旅行證件遺失？</p>
+        <a class="card__link" href="/zh-hant/services/lost-passport-and-travel-document-assistance/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("acr-icard", 44) }}
+        <h3>ACR I-Card協助</h3>
+        <p>需要登記、更新或補發您的外國人登記身份證(ACR I-Card)？</p>
+        <a class="card__link" href="/zh-hant/services/acr-i-card-assistance/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("exit-clearance", 44) }}
+        <h3>出境許可及離境規定</h3>
+        <p>長期居留後準備離開菲律賓，不確定是否需要先辦理出境許可？</p>
+        <a class="card__link" href="/zh-hant/services/exit-clearance-and-departure/">了解更多 →</a>
+      </div>
+      <div class="card">
+        {{ icon("document-verification", 44) }}
+        <h3>簽證及移民文件核實</h3>
+        <p>需要核實簽證或移民文件的真偽或效力？</p>
+        <a class="card__link" href="/zh-hant/services/visa-and-immigration-document-verification/">了解更多 →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-split feature-split--compact">
+  <div class="wrap feature-split__grid">
+    <div class="feature-split__visual feature-split__visual--photo">
+      <img src="/assets/images/property-transfer-bgc.webp" alt="馬尼拉Bonifacio Global City的高樓天際線，夕陽下前景可見一座公園。" width="1536" height="1024">
+    </div>
+    <div class="feature-split__content">
+      <p class="tag">特色服務</p>
+      <h2>房地產過戶及文件協助</h2>
+      <p class="feature-split__lede">在菲律賓買賣或過戶房地產？</p>
+      <p>FIS為房地產過戶交易提供文件及協調支援，協助辦理過戶所需文件，並與相關政府機關及專業人士進行協調。</p>
+      <p class="service-cta__actions">
+        <a class="btn btn-on-dark" href="/zh-hant/services/property-transfer-and-documentation-support/">了解更多</a>
+        <a class="btn btn-outline-on-dark" href="/zh-hant/contact/?service=property-transfer">立即查詢</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="wrap">
+    <h2>不確定需要哪項服務，或找不到您需要的內容？</h2>
+    <p>您不需要知道所需簽證、申請或移民程序的名稱。告訴我們發生了什麼狀況，我們的團隊會協助檢視您的情況，並協助確認合適的下一步。</p>
+    <p><a class="btn btn-on-dark" href="/zh-hant/contact/?service=other">告訴我們您的狀況</a></p>
+  </div>
+</section>
+
+<section class="section section--muted">
+  <div class="wrap">
+    <div class="section__intro">
+      <h2>客戶專區</h2>
+      <p>您的申請及服務請求、文件、訊息、付款及個人資料，全部集中一處管理。</p>
+    </div>
+    <div class="portal-preview-grid">
+      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>申請及服務</span></div>
+      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>文件</span></div>
+      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>訊息</span></div>
+      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>付款</span></div>
+      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>個人資料</span></div>
+    </div>
+    <p class="mt-md"><a class="btn btn-secondary" href="/zh-hant/client-portal/">前往客戶專區 →</a></p>
+  </div>
+</section>

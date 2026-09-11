@@ -1,0 +1,107 @@
+---
+layout: layouts/base.njk
+title: 聯絡我們
+description: 聯絡 Foreign Immigration Services，或直接透過電郵與我們聯繫。
+---
+<section class="section">
+  <div class="wrap prose">
+    <p class="tag">聯絡我們</p>
+    <h1>聯絡及查詢</h1>
+    <p class="service-lede">請告訴我們可以如何協助您。</p>
+
+    <p>無論您正在計劃移民申請、需要協助處理目前的身分狀況、需要為員工提供支援，或有時效性的移民相關問題，均可透過以下查詢表單聯絡 Foreign Immigration Services。</p>
+
+    <p><strong>電郵：</strong> <a href="mailto:info@foreignimmigration.ph">info@foreignimmigration.ph</a></p>
+
+    <form id="enquiry-form" class="enquiry-form">
+      <div class="form-field hp-field" aria-hidden="true">
+        <label for="website">請將此欄位留空</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label for="fullName">姓名 <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="fullName" name="fullName" data-field-label="姓名" autocomplete="name" required>
+      </div>
+
+      <div class="form-field">
+        <label for="email">電郵地址 <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" data-field-label="電郵地址" autocomplete="email" required>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">電話 / 偏好聯絡方式 <span class="hint">(選填)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="電話 / 偏好聯絡方式" autocomplete="tel">
+      </div>
+
+      <div class="form-field">
+        <label for="nationality">國籍 <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="nationality" name="nationality" data-field-label="國籍" required>
+      </div>
+
+      <div class="form-field">
+        <label for="location">目前所在國家 / 地區 <span class="hint">(選填)</span></label>
+        <input type="text" id="location" name="location" data-field-label="目前所在國家 / 地區">
+      </div>
+
+      <div class="form-field">
+        <label for="language">偏好語言 <span class="hint">(選填)</span></label>
+        <select id="language" name="language" data-field-label="偏好語言">
+          <option value="" selected>請選擇</option>
+          <option value="English">英文</option>
+          <option value="Simplified Chinese">簡體中文 (简体中文)</option>
+          <option value="Korean">韓文 (한국어)</option>
+          <option value="Other">其他</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="service">所需服務 <span class="required-mark" aria-hidden="true">*</span></label>
+        <select id="service" name="service" data-field-label="所需服務" required>
+          <option value="" disabled selected>請選擇服務項目</option>
+          <option value="visa-applications">簽證及移民申請</option>
+          <option value="work-visas">工作簽證</option>
+          <option value="extensions-compliance">延期及合規</option>
+          <option value="residency-status">長期居留身分</option>
+          <option value="family-spousal">家庭及配偶簽證</option>
+          <option value="corporate-mobility">企業及跨國人力調動</option>
+          <option value="status-review">移民身分審查及補正協助</option>
+          <option value="motions-blacklist">移民異議申請、黑名單及不良紀錄協助</option>
+          <option value="legal-support">外籍人士法律支援</option>
+          <option value="airport-vip">機場VIP接待服務</option>
+          <option value="lost-passport">護照及旅行證件遺失協助</option>
+          <option value="acr-icard">ACR I-Card協助</option>
+          <option value="exit-clearance">出境許可及離境規定</option>
+          <option value="document-verification">簽證及移民文件核實</option>
+          <option value="complex-tailored">複雜及客製化移民協助</option>
+          <option value="property-transfer">房地產過戶及文件協助</option>
+          <option value="other">不確定 / 其他移民相關事宜</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <div class="context-note">
+          <p>請勿透過本一般查詢表單提交護照掃描檔或其他敏感文件。如需提交輔助文件，我們將另行提供安全提交方式之說明。</p>
+        </div>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="description">簡要說明 / 我們可以如何協助您？ <span class="required-mark" aria-hidden="true">*</span></label>
+        <textarea id="description" name="description" data-field-label="簡要說明" required></textarea>
+      </div>
+
+      <div class="enquiry-form-actions">
+        <button type="submit" class="btn btn-primary">送出查詢</button>
+        <p id="enquiry-form-status" class="form-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <div class="service-cta">
+      <h2>接下來會如何？</h2>
+      <p>我們的團隊將審閱您所提供的資訊，並使用上述聯絡方式與您聯繫。如評估您的查詢需要進一步資訊或輔助文件，我們將另行通知您。</p>
+    </div>
+  </div>
+</section>
+
+<script defer src="/assets/js/portal-config.js"></script>
+<script defer src="/assets/js/enquiry-form.js"></script>

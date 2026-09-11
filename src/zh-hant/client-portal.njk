@@ -1,0 +1,59 @@
+---
+layout: layouts/base.njk
+title: 客戶專區
+description: Foreign Immigration Services 客戶專區，將您的申請、文件、訊息、付款及個人資料整合於同一平台。
+---
+{% from "partials/icons.njk" import icon %}
+<section class="section trust-section">
+  <div class="wrap">
+    <div class="trust-section__inner">
+      {{ icon("portal-applications", 52) }}
+      <div>
+        <p class="tag">客戶專區</p>
+        <h1>您的移民服務，集中一處管理</h1>
+        <p>透過 Foreign Immigration Services 客戶專區，您可查看申請及服務請求、安全提交所需文件、追蹤進度，並管理付款事宜。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="card-grid">
+      <div class="card">
+        {{ icon("portal-applications", 44) }}
+        <h3>申請及服務</h3>
+        <p>查看並管理您的移民申請及服務請求，每項均附有專屬參考編號及進度狀態，集中一處管理。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-upload", 44) }}
+        <h3>文件</h3>
+        <p>安全提交並查閱與您的申請及服務請求相關的文件。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-enquiry", 44) }}
+        <h3>訊息</h3>
+        <p>就您的查詢或申請事項，直接與我們的團隊溝通。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-payments", 44) }}
+        <h3>付款</h3>
+        <p>待我們團隊確認服務範圍後，查看並繳付相關費用。</p>
+      </div>
+      <div class="card">
+        {{ icon("portal-profile", 44) }}
+        <h3>個人資料</h3>
+        <p>隨時更新您的聯絡方式及個人資料。</p>
+      </div>
+    </div>
+
+    <div class="service-cta">
+      <h2>開始使用</h2>
+      <p>傳送查詢給我們，我們的團隊將指引您取得客戶專區存取權限的後續步驟。已是客戶？請於下方登入。</p>
+      <p>
+        <a class="btn btn-primary" href="/zh-hant/contact/">立即查詢</a>
+        <a class="btn btn-secondary" href="/portal/login/">登入客戶專區</a>
+      </p>
+    </div>
+  </div>
+</section>

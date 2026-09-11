@@ -1,0 +1,24 @@
+{
+  "skipLink": "跳至主要內容",
+  "nav": {
+    "home": "首頁",
+    "about": "關於我們",
+    "services": "服務項目",
+    "accreditation": "認證資格",
+    "clientPortal": "客戶專區",
+    "contact": "聯絡我們"
+  },
+  "languageSwitcher": {
+    "label": "語言"
+  },
+  "header": {
+    "credential": "<strong>菲律賓移民局認證顧問機構</strong> · 認證編號 {number}"
+  },
+  "footer": {
+    "privacyNotice": "隱私聲明",
+    "termsOfUse": "使用條款",
+    "accessibility": "無障礙聲明",
+    "rightsReserved": "版權所有。",
+    "brandLine": "菲律賓移民局認證顧問機構 · 認證編號 {number}"
+  }
+}

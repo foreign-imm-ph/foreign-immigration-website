@@ -37,6 +37,15 @@ has been established elsewhere on the site — never abbreviate to an
 invented short form like "BI" in any non-English language.
 **Per-locale guidance:**
 - zh-CN: 移民局 / 菲律宾移民局, first mention with English gloss.
+- zh-Hant: 移民局 / 菲律賓移民局, first mention with English gloss. Always
+  prefix 菲律賓 at the establishing mention (short "移民局" is fine
+  thereafter) — zh-Hant readers span multiple jurisdictions with their own
+  immigration authorities (Taiwan's 內政部移民署, Hong Kong's 入境事務處,
+  Macau's, Mainland China's 國家移民管理局), none of which is named "移民局"
+  exactly, but the generic term alone is more likely to be misread as
+  "some immigration authority" without a jurisdiction unless qualified —
+  zh-CN's single-country audience carries less of this ambiguity than
+  zh-Hant's multi-jurisdiction one.
 - ja: 移民局 / フィリピン移民局, first mention with English gloss.
 - ko: 이민국 / 필리핀 이민국, first mention with English gloss.
 - vi: Cục Di trú / Cục Di trú Philippines, first mention with English gloss.
@@ -51,6 +60,11 @@ department/ministry" naturally, with "(Department of Foreign Affairs)" on
 first mention. Do not borrow each language's own domestic ministry name as
 a stand-in — describe what the Philippine DFA is, don't localize it into a
 familiar local institution.
+- zh-Hant: 菲律賓外交部(Department of Foreign Affairs), always with the
+  菲律賓 prefix. "外交部" bare is the generic Chinese pattern name for
+  "ministry of foreign affairs" used by both Taiwan (中華民國外交部) and
+  Mainland China (外交部) — without the country qualifier a reader could
+  momentarily read it as one of those two, not the Philippines'.
 
 ### Bureau of Internal Revenue (BIR)
 **Handling rule:** Official Philippine tax authority; relevant mainly on
@@ -63,6 +77,15 @@ bureau" + "(Bureau of Internal Revenue, BIR)" on first mention; "BIR" alone
 thereafter is acceptable and expected, since it is the actual acronym used
 on the documents themselves — this is different from "BI," which is not an
 acronym clients encounter on real paperwork.
+- zh-Hant: 菲律賓稅務局(Bureau of Internal Revenue, BIR), always with the
+  菲律賓 prefix, "BIR" alone thereafter. This is the highest-collision term
+  in the glossary for zh-Hant: Taiwan's tax bureaus are commonly named
+  "國稅局," and Hong Kong's Inland Revenue Department is officially "稅務局"
+  — the exact string this entry would otherwise use bare. "稅務局" (rather
+  than "國稅局") was chosen specifically because it reads as a generic
+  "tax bureau" everywhere rather than borrowing Taiwan's "國稅局" framing,
+  and the mandatory 菲律賓 prefix at the establishing mention removes any
+  reading of it as Hong Kong's own department.
 
 ### Registry of Deeds
 **Handling rule:** Official land-records office. Same pairing pattern.
@@ -70,6 +93,26 @@ Property-transfer content should make clear this is a *government* office,
 not a private registry.
 **Per-locale guidance:** Translate the function ("land title registry
 office") + "(Registry of Deeds)" on first mention.
+- zh-Hant: 土地登記機關(Registry of Deeds) — a descriptive phrase, not an
+  invented official name. Deliberately avoids both Taiwan's "地政事務所"
+  and Hong Kong's "土地註冊處" (Land Registry's own official Chinese name)
+  so the phrase reads as a plain description of the office's function
+  rather than borrowing either jurisdiction's specific institution name.
+  Keep "Registry of Deeds" visible in English at the establishing mention.
+
+### Department of Labor and Employment (DOLE) / PEZA / BOI
+**Handling rule:** Relevant on work-visa and corporate/global-mobility
+pages. Same official-name pairing pattern as the agencies above. This
+entry was not previously documented per-locale; adding zh-Hant guidance
+now as part of the Traditional Chinese rollout.
+**Per-locale guidance:**
+- zh-Hant: 菲律賓勞動部(Department of Labor and Employment, DOLE), always
+  with the 菲律賓 prefix — "勞動部" bare is Taiwan's own ministry's exact
+  official name. "DOLE" alone thereafter, matching the BIR/acronym
+  pattern. PEZA and BOI are Philippine-specific enough that a natural
+  description + English name + acronym carries no comparable collision
+  risk: 菲律賓經濟區署(Philippine Economic Zone Authority, PEZA) and
+  菲律賓投資署(Board of Investments, BOI), acronym alone thereafter.
 
 ---
 
@@ -95,6 +138,14 @@ the same page.
   context; never transliterate.
 - **ONETT** — One-Time Transaction (a BIR classification relevant to
   property transfer). Gloss once per page in context; never transliterate.
+
+zh-Hant treatment for all four: kept exactly as above (ACR I-Card, 13(a),
+9(g), eCAR, ONETT stay in Latin script/original form in every mention),
+each glossed once per page in natural Traditional Chinese — e.g. 13(a) as
+"13(a) 婚姻移民簽證(13(a) Immigrant Visa by Marriage)" and ACR I-Card as
+"外國人在菲律賓的登記身份證(ACR I-Card)" — never renumbered, never
+translated into a Chinese-only label that drops the identifier a client
+would need to match against their actual document.
 
 ---
 
@@ -230,3 +281,39 @@ does.
 **Per-locale guidance:** Use each language's standard term for a
 foreign-national work visa; keep official classification codes (9(g), 13a,
 etc.) untranslated and unchanged wherever the English source states them.
+
+---
+
+## zh-Hant cross-regional vocabulary decisions
+
+Traditional Chinese is read natively across Taiwan, Hong Kong, Macau, and
+by overseas and Traditional-script-literate Mainland readers, several of
+whom use different everyday words for the same everyday concept. Naturalness
+still comes first (see `docs/i18n-translation-standard.md`); these are the
+recurring words where a single consistent site-wide choice was made because
+an equally natural, broadly-understood alternative existed:
+
+- **identity documents:** 身份 (not 身分). Both are the same word, same
+  pronunciation, pure orthographic variants — Hong Kong and Mainland usage
+  both write 身份; only Taiwan's own government paperwork prefers 身分, and
+  身份 remains completely natural and common in Taiwan as well, so it is
+  the broader-reaching choice with zero naturalness cost.
+- **registration (property/status filings):** 登記, not 註冊. 登記 is
+  Taiwan's and Mainland's natural word for a formal government filing
+  (地政登記, 不動產登記) and is entirely intelligible in Hong Kong too, even
+  though Hong Kong's Land Registry is itself officially named 土地註冊處.
+  註冊 is reserved for account/membership-style sign-up, which this site
+  does not describe.
+- **personal data (privacy content):** 個人資料, not 個人信息/個人數據.
+  This is the term used in Taiwan's and Hong Kong's own data-protection
+  statutes and reads naturally everywhere, including to Mainland readers.
+- **contact (verb/CTA):** 聯絡, not 聯繫. Both are natural; 聯絡 was picked
+  and used consistently for every "Contact us" / "get in touch" instance.
+- **Client Portal:** 客戶專區 throughout (nav, page title, CTAs), rather
+  than a literal "portal" rendering. 專區 ("dedicated area/zone") is a
+  well-established, natural Traditional Chinese web-UI term across regions
+  and reads as native UI copy rather than a translated technical term.
+- **process/procedure:** deliberately not fixed to one word — 手續, 流程,
+  and 程序 are all natural and broadly understood; the choice on each page
+  follows whichever fits that sentence, consistent with the existing rule
+  against single fixed mappings for context-dependent terms.

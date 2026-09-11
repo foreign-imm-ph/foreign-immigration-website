@@ -45,6 +45,19 @@
         );
       },
     },
+    "zh-Hant": {
+      sending: "正在傳送您的查詢...",
+      mailtoSubject: "來自 foreignimmigration.ph 的查詢",
+      mailtoFallback:
+        "我們暫時無法連線至伺服器，因此您的電郵客戶端應會開啟，並預先填入您的查詢內容。請核對郵件內容後傳送，以完成本次查詢。",
+      received: function (reference) {
+        return (
+          "<p><strong>查詢已收到。</strong>您的參考編號為 <strong>" + reference + "</strong>。" +
+          "確認電郵已寄送至您的電郵地址。我們的團隊將審閱您的查詢，如需進一步資訊會再與您聯繫。" +
+          "提交本查詢本身並不構成接受委任。</p>"
+        );
+      },
+    },
   };
 
   var form = document.getElementById("enquiry-form");

@@ -6,7 +6,7 @@
   <title>{{ title }} · {{ site.name }}</title>
   <meta name="description" content="{{ description }}">
   <link rel="canonical" href="{{ page.url | absoluteUrl(site.url) }}">
-  {%- set ogLocaleMap = { "zh-CN": "zh_CN", "ja": "ja_JP", "ko": "ko_KR", "vi": "vi_VN" } %}
+  {%- set ogLocaleMap = { "zh-CN": "zh_CN", "zh-Hant": "zh_Hant", "ja": "ja_JP", "ko": "ko_KR", "vi": "vi_VN" } %}
   {%- if ogLocaleMap[lang] %}
   <meta property="og:locale" content="{{ ogLocaleMap[lang] }}">
   {%- endif %}

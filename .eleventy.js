@@ -8,6 +8,7 @@
 const translations = {
   en: require("./src/_translations/en.json"),
   "zh-CN": require("./src/_translations/zh-CN.json"),
+  "zh-Hant": require("./src/_translations/zh-Hant.json"),
   ja: require("./src/_translations/ja.json"),
   ko: require("./src/_translations/ko.json"),
   vi: require("./src/_translations/vi.json"),
