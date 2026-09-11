@@ -1,0 +1,30 @@
+{#- First-visit language gateway. Included only by src/index.njk (the
+   English root homepage) — never duplicated across locale pages. The
+   <dialog> is closed by default (no "open" attribute) and is shown only
+   via language-gateway.js calling showModal(), so with JavaScript
+   disabled or failing, this is simply inert hidden markup and the normal
+   homepage renders exactly as before: same content, same canonical, same
+   hreflang, same robots meta. Six language options are generated from the
+   same activeLocales data source and insertion order the header language
+   switcher already uses, so the gateway's order and labels can never
+   drift out of sync with the approved selector. #}
+<dialog id="language-gateway" class="language-gateway" aria-labelledby="language-gateway-title" aria-describedby="language-gateway-desc">
+  <div class="language-gateway__panel">
+    <button type="button" class="language-gateway__close" aria-label="Close language selection">&times;</button>
+    <img class="language-gateway__logo" src="/assets/images/fis-logo.svg" alt="{{ site.name }}" width="1342" height="894">
+    <h2 id="language-gateway-title" class="language-gateway__title">Choose your language</h2>
+    <p id="language-gateway-desc" class="language-gateway__desc">Select your preferred language to continue. You can change this anytime.</p>
+    <div class="language-gateway__options">
+      {%- for loc in site.locales | activeLocales %}
+      {%- if loc.code == "en" %}
+      <button type="button" class="language-gateway__option" data-locale="en">{{ loc.nativeLabel }}</button>
+      {%- else %}
+      <a class="language-gateway__option" href="{{ loc.prefix }}" data-locale="{{ loc.code }}">{{ loc.nativeLabel }}</a>
+      {%- endif %}
+      {%- endfor %}
+    </div>
+    <p class="language-gateway__secondary">
+      <button type="button" class="language-gateway__continue" data-locale="en">Continue in English</button>
+    </p>
+  </div>
+</dialog>
