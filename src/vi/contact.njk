@@ -1,0 +1,107 @@
+---
+layout: layouts/base.njk
+title: Liên hệ
+description: Liên hệ với Foreign Immigration Services để gửi yêu cầu tư vấn, hoặc liên hệ trực tiếp qua email.
+---
+<section class="section">
+  <div class="wrap prose">
+    <p class="tag">Liên hệ</p>
+    <h1>Liên hệ và yêu cầu tư vấn</h1>
+    <p class="service-lede">Hãy cho chúng tôi biết chúng tôi có thể hỗ trợ gì cho quý khách.</p>
+
+    <p>Dù quý khách đang có kế hoạch xin cấp giấy tờ di trú, cần hỗ trợ về tình trạng cư trú hiện tại, cần hỗ trợ cho nhân viên, hay có vấn đề di trú cần xử lý gấp, quý khách đều có thể liên hệ Foreign Immigration Services qua biểu mẫu yêu cầu bên dưới.</p>
+
+    <p><strong>Email:</strong> <a href="mailto:info@foreignimmigration.ph">info@foreignimmigration.ph</a></p>
+
+    <form id="enquiry-form" class="enquiry-form">
+      <div class="form-field hp-field" aria-hidden="true">
+        <label for="website">Để trống trường này</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label for="fullName">Họ và tên <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="fullName" name="fullName" data-field-label="Full Name" autocomplete="name" required>
+      </div>
+
+      <div class="form-field">
+        <label for="email">Địa chỉ email <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" data-field-label="Email Address" autocomplete="email" required>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">Số điện thoại / thông tin liên hệ ưu tiên <span class="hint">(không bắt buộc)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="Phone / Preferred Contact Details" autocomplete="tel">
+      </div>
+
+      <div class="form-field">
+        <label for="nationality">Quốc tịch <span class="required-mark" aria-hidden="true">*</span></label>
+        <input type="text" id="nationality" name="nationality" data-field-label="Nationality" required>
+      </div>
+
+      <div class="form-field">
+        <label for="location">Quốc gia / nơi ở hiện tại <span class="hint">(không bắt buộc)</span></label>
+        <input type="text" id="location" name="location" data-field-label="Current Country / Location">
+      </div>
+
+      <div class="form-field">
+        <label for="language">Ngôn ngữ ưu tiên <span class="hint">(không bắt buộc)</span></label>
+        <select id="language" name="language" data-field-label="Preferred Language">
+          <option value="" selected>Chọn ngôn ngữ</option>
+          <option value="English">Tiếng Anh (English)</option>
+          <option value="Simplified Chinese">Tiếng Trung giản thể (简体中文)</option>
+          <option value="Korean">Tiếng Hàn (한국어)</option>
+          <option value="Other">Khác</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="service">Dịch vụ cần hỗ trợ <span class="required-mark" aria-hidden="true">*</span></label>
+        <select id="service" name="service" data-field-label="Service Required" required>
+          <option value="" disabled selected>Chọn dịch vụ</option>
+          <option value="visa-applications">Thị thực và xin cấp giấy tờ di trú</option>
+          <option value="work-visas">Thị thực lao động và làm việc</option>
+          <option value="extensions-compliance">Gia hạn lưu trú và tuân thủ quy định</option>
+          <option value="residency-status">Cư trú dài hạn</option>
+          <option value="family-spousal">Thị thực gia đình và vợ chồng</option>
+          <option value="corporate-mobility">Di chuyển nhân sự doanh nghiệp</option>
+          <option value="status-review">Kiểm tra và điều chỉnh tình trạng cư trú</option>
+          <option value="motions-blacklist">Kháng nghị, danh sách đen và hồ sơ bất lợi</option>
+          <option value="legal-support">Hỗ trợ pháp lý cho người nước ngoài</option>
+          <option value="airport-vip">Dịch vụ đón tiễn VIP tại sân bay</option>
+          <option value="lost-passport">Hỗ trợ mất hộ chiếu và giấy tờ đi lại</option>
+          <option value="acr-icard">Hỗ trợ làm thẻ ACR I-Card</option>
+          <option value="exit-clearance">Giấy phép và điều kiện xuất cảnh</option>
+          <option value="document-verification">Xác minh thị thực và giấy tờ di trú</option>
+          <option value="complex-tailored">Hỗ trợ di trú phức tạp theo yêu cầu riêng</option>
+          <option value="property-transfer">Hỗ trợ chuyển nhượng bất động sản và giấy tờ liên quan</option>
+          <option value="other">Chưa chắc chắn / vấn đề di trú khác</option>
+        </select>
+      </div>
+
+      <div class="form-field form-field--full">
+        <div class="context-note">
+          <p>Vui lòng không gửi ảnh chụp hộ chiếu hoặc các giấy tờ nhạy cảm khác qua biểu mẫu yêu cầu chung này. Nếu cần bổ sung giấy tờ, chúng tôi sẽ hướng dẫn cách gửi an toàn.</p>
+        </div>
+      </div>
+
+      <div class="form-field form-field--full">
+        <label for="description">Mô tả ngắn gọn / chúng tôi có thể hỗ trợ gì? <span class="required-mark" aria-hidden="true">*</span></label>
+        <textarea id="description" name="description" data-field-label="Brief Description" required></textarea>
+      </div>
+
+      <div class="enquiry-form-actions">
+        <button type="submit" class="btn btn-primary">Gửi yêu cầu</button>
+        <p id="enquiry-form-status" class="form-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <div class="service-cta">
+      <h2>Bước tiếp theo là gì?</h2>
+      <p>Đội ngũ của chúng tôi sẽ xem xét thông tin quý khách cung cấp và liên hệ lại theo thông tin nêu trên. Nếu cần thêm thông tin hoặc giấy tờ để đánh giá yêu cầu của quý khách, chúng tôi sẽ thông báo.</p>
+    </div>
+  </div>
+</section>
+
+<script defer src="/assets/js/portal-config.js"></script>
+<script defer src="/assets/js/enquiry-form.js"></script>

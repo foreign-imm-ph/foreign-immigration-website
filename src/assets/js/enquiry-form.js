@@ -71,6 +71,19 @@
         );
       },
     },
+    vi: {
+      sending: "Đang gửi yêu cầu của quý khách...",
+      mailtoSubject: "Yêu cầu từ foreignimmigration.ph",
+      mailtoFallback:
+        "Chúng tôi hiện không thể kết nối với máy chủ, do đó ứng dụng email của quý khách sẽ tự động mở với nội dung yêu cầu đã được điền sẵn. Vui lòng kiểm tra lại nội dung và gửi email để hoàn tất yêu cầu.",
+      received: function (reference) {
+        return (
+          "<p><strong>Đã nhận được yêu cầu của quý khách.</strong> Mã số tham chiếu của quý khách là <strong>" + reference + "</strong>. " +
+          "Email xác nhận đã được gửi đến địa chỉ email của quý khách. Đội ngũ của chúng tôi sẽ xem xét yêu cầu và liên hệ lại nếu cần thêm thông tin. " +
+          "Việc gửi yêu cầu này không đồng nghĩa với việc chấp nhận hợp đồng dịch vụ.</p>"
+        );
+      },
+    },
   };
 
   var form = document.getElementById("enquiry-form");

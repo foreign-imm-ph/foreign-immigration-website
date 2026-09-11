@@ -68,6 +68,9 @@ familiar local institution.
 - ja: フィリピン外務省(Department of Foreign Affairs), always with the
   フィリピン prefix — bare "外務省" is Japan's own Ministry of Foreign
   Affairs' exact name.
+- vi: Bộ Ngoại giao Philippines (Department of Foreign Affairs), always
+  with the Philippines qualifier — bare "Bộ Ngoại giao" is Vietnam's own
+  Ministry of Foreign Affairs' exact name.
 
 ### Bureau of Internal Revenue (BIR)
 **Handling rule:** Official Philippine tax authority; relevant mainly on
@@ -93,6 +96,13 @@ acronym clients encounter on real paperwork.
   フィリピン prefix, "BIR" alone thereafter — bare "国税庁" is Japan's own
   National Tax Agency's exact name, the same class of collision as BIR in
   zh-Hant.
+- vi: Cục Thuế Nội địa Philippines (Bureau of Internal Revenue, BIR),
+  always with the Philippines qualifier, "BIR" alone thereafter. Vietnam's
+  own tax authority is officially named Tổng cục Thuế (General Department
+  of Taxation), a different name, so this is precautionary rather than a
+  direct collision — but the Philippines qualifier is kept anyway since
+  "Cục Thuế" bare reads as a generic "tax department" a reader could
+  otherwise place in Vietnam.
 
 ### Registry of Deeds
 **Handling rule:** Official land-records office. Same pairing pattern.
@@ -110,6 +120,14 @@ office") + "(Registry of Deeds)" on first mention.
   both "登記所" (the old colloquial name for Japan's own registration
   offices) and "法務局" (the Legal Affairs Bureau, Japan's current official
   name for the body that handles real-estate registration today).
+- vi: cơ quan đăng ký quyền sở hữu bất động sản (Registry of Deeds) — a
+  descriptive phrase, deliberately avoiding "Văn phòng đăng ký đất đai,"
+  which is the actual, specific name of Vietnam's own real local land
+  registration offices (under each province's Sở Tài nguyên và Môi
+  trường). Using that exact Vietnamese office name for a Philippine
+  institution would misidentify the jurisdiction; the plain descriptive
+  phrase plus "(Registry of Deeds)" in English avoids the collision
+  entirely.
 
 ### Department of Labor and Employment (DOLE) / PEZA / BOI
 **Handling rule:** Relevant on work-visa and corporate/global-mobility
@@ -130,6 +148,14 @@ now as part of the Traditional Chinese rollout.
   precautionary rather than a direct collision). "DOLE" alone thereafter.
   PEZA as フィリピン経済区庁(Philippine Economic Zone Authority, PEZA) and
   BOI as 投資委員会(Board of Investments, BOI), acronym alone thereafter.
+- vi: Bộ Lao động và Việc làm Philippines (Department of Labor and
+  Employment, DOLE), Philippines qualifier throughout — Vietnam's own
+  ministry is officially Bộ Lao động - Thương binh và Xã hội, a
+  differently-worded name, so this is precautionary rather than a direct
+  collision. "DOLE" alone thereafter. PEZA as Cơ quan Khu kinh tế
+  Philippines (Philippine Economic Zone Authority, PEZA) and BOI as Ủy
+  ban Đầu tư Philippines (Board of Investments, BOI), acronym alone
+  thereafter.
 
 ---
 
@@ -171,6 +197,15 @@ as "外国人登録証明カード(ACR I-Card)", 13(a) as
 "電子登記承認証明書(eCAR)", ONETT as "一回限りの取引(ONETT)" — the
 identifier itself is never renumbered, transliterated into katakana, or
 dropped in favor of a Japanese-only label.
+
+vi treatment for all four (plus 9(g), also relevant on work-visa pages):
+kept in Latin script/original form in every mention, each glossed once
+per page in natural Vietnamese — e.g. ACR I-Card as "thẻ đăng ký công dân
+nước ngoài (ACR I-Card)", 13(a) as "thị thực diện hôn nhân 13(a) (13(a)
+Immigrant Visa by Marriage)", 9(g) as "thị thực lao động diện 9(g) (9(g)
+Pre-Arranged Employment Visa)", eCAR as "giấy chứng nhận đăng ký điện tử
+(eCAR)", ONETT as "giao dịch một lần (ONETT)" — never renumbered, never
+transliterated, never dropped in favor of a Vietnamese-only label.
 
 ---
 
@@ -407,3 +442,130 @@ having the nav and body disagree.
   ideological consistency — but not reached for by default either;
   descriptive Japanese is preferred wherever it reads more naturally than
   a borrowed term (corporate mobility, property transfer above).
+
+---
+
+## vi register and vocabulary decisions
+
+Target register: polished professional Vietnamese for a reputable
+immigration consultancy — respectful, direct, commercially credible; not
+government-bureaucratic, not archaic, not internet-casual. Pronoun use is
+kept light: "Quý khách" is used where direct address genuinely reads
+better in a sentence, but most sentences use subject-omitted or
+impersonal Vietnamese constructions rather than repeating "Quý khách" in
+every line, matching how a professional Vietnamese services site actually
+reads (heavy repetition of any second-person address term reads as stiff,
+translated prose in Vietnamese). CTAs are short, direct verb phrases
+("Gửi yêu cầu tư vấn," "Xem dịch vụ") rather than full ceremonial
+sentences. Headings use natural Vietnamese sentence-style capitalization
+(only the first word and proper nouns/identifiers capitalized), not a
+mechanical copy of English Title Case.
+
+- **visa:** thị thực throughout, as the correct formal/professional
+  register term for a consultancy site (as opposed to the casual loanword
+  "visa," which is extremely common in everyday spoken Vietnamese but
+  reads less professionally in formal service copy). "Visa" itself is
+  used only where it appears inside an official English classification
+  name that must stay verbatim (e.g. "9(g) Pre-Arranged Employment
+  Visa").
+- **immigration (institutional sense):** di trú, matching the
+  already-established "Cục Di trú" (Bureau of Immigration) and the site's
+  existing accreditation chrome ("Đơn vị được Cục Di trú công nhận"). Not
+  fixed to "xuất nhập cảnh" (entry-exit administration) except where a
+  sentence is specifically about the entry/exit/border-control function
+  itself, per the general context-dependent handling of "immigration"
+  elsewhere in this glossary.
+- **immigration status:** tình trạng cư trú for the general legal-standing
+  concept (holding a valid visa / being in status); tình trạng thị thực
+  specifically when a sentence is narrowly about visa validity itself.
+  Not fixed to one string across every context, consistent with the
+  general "immigration status" handling rule above.
+- **residency / long-term status:** cư trú dài hạn, not thường trú dài
+  hạn. "Thường trú" carries a strong permanent/naturalization-track
+  connotation in Vietnamese (household-registration permanent residence),
+  which would overstate what this service actually is (a long-term
+  Philippine visa/status category, not permanent residency or a path to
+  citizenship) — "cư trú dài hạn" (long-term residency) states the
+  concept accurately without that implication.
+- **compliance:** tuân thủ quy định (di trú) for the ongoing
+  immigration-status-maintenance sense; tuân thủ alone or "tuân thủ quy
+  định" for the general corporate/regulatory sense on corporate-mobility
+  pages — not fixed to a single string, per the general "compliance" rule
+  above.
+- **corporate / global mobility:** hỗ trợ di chuyển nhân sự doanh nghiệp
+  (corporate personnel mobility support), a descriptive phrase rather
+  than a transliterated "global mobility" HR-jargon term, so it reads as
+  an immigration/relocation service rather than generic HR buzzwords.
+- **property transfer:** chuyển nhượng bất động sản as the main service
+  name; sang tên for the specific transfer/re-titling action; đăng ký for
+  "registration" (a generic, universal Vietnamese legal-filing word, not
+  exclusive to any one Vietnamese institution, so no collision risk).
+  Property title is rendered descriptively as giấy chứng nhận quyền sở
+  hữu bất động sản rather than the Vietnam-specific colloquial "sổ đỏ" /
+  "sổ hồng" (the actual popular names of Vietnam's own land-title
+  certificates under Vietnamese land law), which would misleadingly
+  suggest the Philippine system uses Vietnam's own title instruments.
+- **client portal:** Cổng thông tin khách hàng in body copy and page
+  titles; see the persistent-nav length note below for why the nav slot
+  specifically uses a shorter form.
+- **enquiry / contact:** yêu cầu tư vấn for "enquiry" as a noun
+  (consultation request, matching the site's existing CTA "Gửi yêu cầu tư
+  vấn"); liên hệ for "contact" as a verb/CTA and nav label.
+- **legal support / urgent assistance:** hỗ trợ pháp lý / hỗ trợ khẩn cấp.
+  For the urgent-assistance messaging specifically, all four required
+  concepts (arrest, detention, criminal proceedings, immigration
+  proceedings) are stated explicitly and separately — bị bắt (arrest), bị
+  giam giữ (detention), tố tụng hình sự (criminal proceedings), thủ tục
+  tố tụng di trú (immigration proceedings) — never collapsed into a
+  single vaguer phrase.
+- **Vietnamese-specific loanword discipline:** English/Latin-script terms
+  are kept only where they are an official institutional name, an
+  official identifier, an acronym, or where the English term is genuinely
+  the standard one in professional Vietnamese usage (e.g. "visa" appears
+  only inside verbatim official classification names, never as loose
+  prose vocabulary, per the "thị thực" decision above). The site is not
+  artificially English-heavy, and Vietnamese vocabulary is not avoided
+  merely to look modern.
+
+**Persistent-nav length constraint:** the top nav's desktop/mobile
+breakpoint is frozen at 1200px and is not to be redesigned for any one
+locale (see the ja section above, where two Japanese nav labels needed
+shortening for the same reason). Vietnamese words can run longer than
+their Chinese, Korean or Japanese equivalents because Vietnamese is
+written with full Latin letters rather than compact CJK characters, so
+nav-slot width was checked specifically for Vietnamese during QA.
+
+At 1200px, adding the Vietnamese self-name "Tiếng Việt" to the closed
+language-switcher toggle (the same untouchable per-locale name string as
+日本語 or 한국어, and just as immovable — no shorter form of a language's
+own name is available) left the six nav links needing to share several
+fewer pixels than any CJK/Hangul locale ever required, since "Tiếng
+Việt" alone is wider than English, Chinese, Korean or Japanese's own
+name string. Two nav labels were shortened, in body copy as well as the
+nav where the change was a true synonym, so the site keeps one
+discipline (either "identical term everywhere" or "an established,
+recognisable chrome-only shorthand"), never an invented abbreviation:
+- **accreditation nav label:** Công nhận, not Chứng nhận, in the nav
+  slot only (the Accreditation page's own H1, body copy and title keep
+  the fuller Chứng nhận). Công nhận is not an invented shorthand — it is
+  literally the verb the site's own accreditation line already uses
+  ("Đơn vị được Cục Di trú công nhận," i.e. "accredited by the Bureau of
+  Immigration"), so reusing it as the nav noun stays recognisably tied to
+  the same concept rather than introducing a new word.
+- **client portal nav label:** Cá nhân ("Personal"/"My [area]"), in the
+  nav slot only. The page itself, its title, and every body-copy mention
+  of the feature use the fuller Cổng khách hàng (itself already shortened
+  once from a first-draft Cổng thông tin khách hàng — see below). Cá
+  nhân is the same "Personal/My Account" tab wording many Vietnamese
+  consumer apps and sites use for a personal dashboard area, not an
+  invented abbreviation, and reusing the Bureau-of-Immigration-style
+  "chrome may reference the full form already established elsewhere on
+  the site" pattern already documented above for institutional names.
+- **client portal, body copy:** Cổng khách hàng throughout (page title,
+  H1/tag, every service-page "track your transaction" mention), shortened
+  once from an initial Cổng thông tin khách hàng first draft — both are
+  natural, correct Vietnamese, but the shorter form was adopted site-wide
+  once the nav-width check showed the longer one was part of the
+  original overflow, so nav and body stay internally consistent with each
+  other even though the nav uses a separate, shorter Cá nhân specifically
+  for its own width budget.

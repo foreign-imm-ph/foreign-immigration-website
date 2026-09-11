@@ -1,48 +1,23 @@
 ---
 layout: layouts/base.njk
-title: Trang chủ
-description: Foreign Immigration Services là đơn vị tư vấn được Cục Di trú Philippines công nhận, thay mặt quý khách xử lý toàn bộ thủ tục thị thực, gia hạn lưu trú, cư trú dài hạn và tuân thủ quy định tại Philippines.
+title: Dịch vụ
+description: Các dịch vụ di trú chính và chuyên biệt do Foreign Immigration Services, đơn vị tư vấn được Cục Di trú Philippines công nhận, cung cấp.
 ---
 {% from "partials/icons.njk" import icon %}
-<div class="urgent-banner">
-  <div class="wrap urgent-banner__inner">
-    <p class="urgent-banner__text">
-      <strong>Quý khách đang bị bắt, bị giam giữ, hoặc đang phải đối mặt với tố tụng hình sự hay thủ tục di trú tại Philippines?</strong>
-    </p>
-    <a class="urgent-banner__cta" href="/vi/services/legal-support-for-foreign-nationals/#urgent-assistance">Yêu cầu hỗ trợ khẩn cấp</a>
-  </div>
-</div>
-
-<section class="hero">
-  <div class="wrap hero__grid">
-    <p class="hero__eyebrow">Tư vấn Di trú Philippines</p>
-    <h1 class="hero__headline">Thủ tục di trú Philippines, đã có chúng tôi lo liệu.</h1>
-    <p class="hero__lede">Foreign Immigration Services là đơn vị tư vấn được Cục Di trú Philippines (Bureau of Immigration) công nhận, thay mặt quý khách xử lý các vấn đề di trú tại Philippines, từ thị thực, gia hạn lưu trú, cư trú dài hạn, đến hỗ trợ di chuyển nhân sự doanh nghiệp, tuân thủ quy định và các vấn đề di trú phức tạp.</p>
-    <div class="hero__visual">
-      <img src="/assets/images/fis-logo.webp" alt="Foreign Immigration Services" width="612" height="408" class="hero__logo">
-    </div>
-    <div class="hero__actions">
-      <a class="btn btn-primary" href="/vi/contact/">Gửi yêu cầu tư vấn</a>
-      <a class="btn btn-secondary" href="/vi/services/">Xem dịch vụ của chúng tôi</a>
-    </div>
-    <p class="hero__accreditation">
-      {{ icon("accreditation", 40) }}
-      <span><strong>Đơn vị được Cục Di trú công nhận</strong>, số {{ site.accreditation.number }}</span>
-    </p>
-  </div>
-</section>
-
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
-      <h2>Dịch vụ di trú chính</h2>
-      <p>Chúng tôi tổ chức hoạt động theo sáu mảng dịch vụ di trú chính.</p>
+      <p class="tag">Dịch vụ</p>
+      <h1>Dịch vụ của chúng tôi</h1>
+      <p>Foreign Immigration Services tổ chức hoạt động theo sáu mảng dịch vụ di trú chính, cùng với nhiều dịch vụ chuyên biệt cho các tình huống cụ thể. Mỗi trường hợp đều được đánh giá riêng, vì cách tiếp cận phù hợp phụ thuộc vào hoàn cảnh cụ thể của quý khách.</p>
     </div>
+
+    <h2>Dịch vụ di trú chính</h2>
     <div class="card-grid card-grid--3up">
       <div class="card">
         {{ icon("visa-applications", 44) }}
         <h3>Thị thực và xin cấp giấy tờ di trú</h3>
-        <p>Quý khách dự định nhập cảnh, làm việc, học tập hoặc lưu trú tại Philippines nhưng chưa rõ nên xin loại thị thực nào?</p>
+        <p>Hướng dẫn về thị thực nhập cảnh và các đơn xin cấp giấy tờ di trú tại Philippines.</p>
         <a class="card__link" href="/vi/services/visa-and-immigration-applications/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
@@ -54,25 +29,25 @@ description: Foreign Immigration Services là đơn vị tư vấn được Cụ
       <div class="card">
         {{ icon("extensions-compliance", 44) }}
         <h3>Gia hạn lưu trú và tuân thủ quy định</h3>
-        <p>Quý khách đang ở Philippines và cần gia hạn thời gian lưu trú hoặc thực hiện các yêu cầu báo cáo định kỳ?</p>
+        <p>Gia hạn thời gian lưu trú và duy trì tuân thủ quy định cho người nước ngoài đang ở Philippines.</p>
         <a class="card__link" href="/vi/services/extensions-and-compliance/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("residency-status", 44) }}
         <h3>Cư trú dài hạn</h3>
-        <p>Quý khách đang cân nhắc chuyển đến sinh sống lâu dài tại Philippines?</p>
+        <p>Tình trạng cư trú dài hạn cho người nước ngoài có dự định sinh sống lâu dài tại Philippines.</p>
         <a class="card__link" href="/vi/services/residency-and-long-term-status/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("family-spousal", 44) }}
         <h3>Thị thực gia đình và vợ chồng</h3>
-        <p>Quý khách kết hôn với công dân Philippines, hoặc có người thân đang sinh sống tại đây và cần đoàn tụ hay giữ gia đình bên nhau?</p>
+        <p>Tình trạng cư trú dài hạn dựa trên quan hệ hôn nhân hoặc gia đình với người tại Philippines.</p>
         <a class="card__link" href="/vi/services/family-and-spousal-visas/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("corporate-mobility", 44) }}
         <h3>Di chuyển nhân sự doanh nghiệp</h3>
-        <p>Doanh nghiệp của quý khách đang điều chuyển nhân viên hoặc quản lý nhân sự nước ngoài đến làm việc tại Philippines?</p>
+        <p>Hỗ trợ di trú cho doanh nghiệp và nhân sự thường xuyên di chuyển quốc tế.</p>
         <a class="card__link" href="/vi/services/corporate-and-global-mobility/">Tìm hiểu thêm →</a>
       </div>
     </div>
@@ -94,29 +69,26 @@ description: Foreign Immigration Services là đơn vị tư vấn được Cụ
   </div>
 </section>
 
-<section class="section section--muted">
+<section class="section">
   <div class="wrap">
-    <div class="section__intro">
-      <h2>Dịch vụ chuyên biệt</h2>
-      <p>Hỗ trợ chuyên sâu cho các tình huống di trú cụ thể, thường mang tính cấp thiết về thời gian.</p>
-    </div>
+    <h2>Dịch vụ chuyên biệt</h2>
     <div class="card-grid card-grid--4up">
       <div class="card">
         {{ icon("status-review", 44) }}
         <h3>Kiểm tra và điều chỉnh tình trạng cư trú</h3>
-        <p>Quý khách chưa chắc chắn về tình trạng cư trú, hiệu lực thị thực, hay hồ sơ tại Cục Di trú của mình?</p>
+        <p>Kiểm tra tình trạng cư trú một cách bảo mật, xử lý từ xa trong phạm vi thủ tục cho phép.</p>
         <a class="card__link" href="/vi/services/immigration-status-review-and-regularisation/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("motions-blacklist", 44) }}
         <h3>Kháng nghị, danh sách đen và hồ sơ bất lợi</h3>
-        <p>Quý khách đang gặp vấn đề với danh sách đen, danh sách theo dõi, hoặc một hồ sơ di trú bất lợi khác?</p>
+        <p>Xác định hướng xử lý đúng quy trình cho các trường hợp kháng nghị, danh sách đen và hồ sơ bất lợi.</p>
         <a class="card__link" href="/vi/services/immigration-motions-blacklist-and-derogatory-record-assistance/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("legal-support", 44) }}
         <h3>Hỗ trợ pháp lý cho người nước ngoài</h3>
-        <p>Quý khách đang đối mặt với tố tụng hình sự hoặc thủ tục di trú tại Philippines?</p>
+        <p>Điều phối hỗ trợ về di trú song song với luật sư Philippines độc lập.</p>
         <a class="card__link" href="/vi/services/legal-support-for-foreign-nationals/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
@@ -128,25 +100,25 @@ description: Foreign Immigration Services là đơn vị tư vấn được Cụ
       <div class="card">
         {{ icon("lost-passport", 44) }}
         <h3>Hỗ trợ mất hộ chiếu và giấy tờ đi lại</h3>
-        <p>Quý khách bị mất hộ chiếu hoặc giấy tờ đi lại khi đang ở Philippines?</p>
+        <p>Tìm hiểu các bước di trú cần thực hiện sau khi mất hoặc cần cấp lại hộ chiếu.</p>
         <a class="card__link" href="/vi/services/lost-passport-and-travel-document-assistance/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("acr-icard", 44) }}
         <h3>Hỗ trợ làm thẻ ACR I-Card</h3>
-        <p>Quý khách cần đăng ký, gia hạn, hoặc cấp lại thẻ đăng ký công dân nước ngoài (ACR I-Card)?</p>
+        <p>Đăng ký, gia hạn và cấp lại thẻ đăng ký công dân nước ngoài (ACR I-Card) của quý khách.</p>
         <a class="card__link" href="/vi/services/acr-i-card-assistance/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("exit-clearance", 44) }}
         <h3>Giấy phép và điều kiện xuất cảnh</h3>
-        <p>Quý khách chuẩn bị rời Philippines sau thời gian lưu trú dài và chưa chắc có cần xin giấy phép xuất cảnh trước không?</p>
+        <p>Xác nhận những yêu cầu cần hoàn tất trước khi rời Philippines sau thời gian lưu trú dài hạn.</p>
         <a class="card__link" href="/vi/services/exit-clearance-and-departure/">Tìm hiểu thêm →</a>
       </div>
       <div class="card">
         {{ icon("document-verification", 44) }}
         <h3>Xác minh thị thực và giấy tờ di trú</h3>
-        <p>Quý khách cần xác minh tính xác thực hoặc hiệu lực của một thị thực hay giấy tờ di trú?</p>
+        <p>Xác định quy trình phù hợp để xác minh một thị thực hoặc giấy tờ di trú tại Philippines.</p>
         <a class="card__link" href="/vi/services/visa-and-immigration-document-verification/">Tìm hiểu thêm →</a>
       </div>
     </div>
@@ -176,22 +148,5 @@ description: Foreign Immigration Services là đơn vị tư vấn được Cụ
     <h2>Chưa chắc mình cần dịch vụ gì, hoặc không tìm thấy thông tin cần tìm?</h2>
     <p>Quý khách không cần biết tên chính xác của loại thị thực, đơn xin cấp hay thủ tục di trú mình cần. Hãy cho chúng tôi biết tình huống của quý khách, đội ngũ của chúng tôi sẽ xem xét và giúp xác định bước tiếp theo phù hợp.</p>
     <p><a class="btn btn-on-dark" href="/vi/contact/?service=other">Cho chúng tôi biết tình huống của bạn</a></p>
-  </div>
-</section>
-
-<section class="section section--muted">
-  <div class="wrap">
-    <div class="section__intro">
-      <h2>Cổng khách hàng</h2>
-      <p>Đơn xin cấp và yêu cầu dịch vụ, hồ sơ, tin nhắn, thanh toán và hồ sơ cá nhân của quý khách, tất cả ở một nơi.</p>
-    </div>
-    <div class="portal-preview-grid">
-      <div class="portal-preview-item">{{ icon("portal-applications", 32) }}<span>Đơn xin cấp và dịch vụ</span></div>
-      <div class="portal-preview-item">{{ icon("portal-upload", 32) }}<span>Hồ sơ, giấy tờ</span></div>
-      <div class="portal-preview-item">{{ icon("portal-enquiry", 32) }}<span>Tin nhắn</span></div>
-      <div class="portal-preview-item">{{ icon("portal-payments", 32) }}<span>Thanh toán</span></div>
-      <div class="portal-preview-item">{{ icon("portal-profile", 32) }}<span>Hồ sơ cá nhân</span></div>
-    </div>
-    <p class="mt-md"><a class="btn btn-secondary" href="/vi/client-portal/">Mở cổng thông tin khách hàng →</a></p>
   </div>
 </section>
