@@ -89,6 +89,32 @@ Review it in the staff portal.`;
   });
 }
 
+// A client sent a new message through the authenticated Client Portal.
+// Deliberately the most minimal notification in this file: no client name,
+// no application reference, no message content or translation output —
+// the secure staff portal is the only place any of that is ever shown.
+// Best-effort, like every other notification here; the caller is
+// responsible for not letting a failure here affect the client's own
+// submission.
+export async function sendStaffPortalMessageNotification(env, { applicationId } = {}) {
+  const link = applicationId
+    ? `https://api.foreignimmigration.ph/staff/applications/${applicationId}`
+    : "https://api.foreignimmigration.ph/staff/";
+
+  const text = `A client has sent a new message through the FIS Client Portal.
+
+Sign in to the FIS Staff Portal to review and respond.
+
+${link}`;
+
+  const html = wrap(`
+    <p>A client has sent a new message through the FIS Client Portal.</p>
+    <p><a href="${escapeHtml(link)}">Sign in to the FIS Staff Portal</a> to review and respond.</p>
+  `);
+
+  await send(env, { to: env.STAFF_NOTIFICATION_EMAIL, subject: "New client portal message | FIS", text, html });
+}
+
 // Staff's translated reply to a pre-conversion enquiry. Unlike every other
 // email in this file, the actual message content is the point of this
 // email — there is no portal account yet for the client to sign into, so

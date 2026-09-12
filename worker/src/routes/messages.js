@@ -10,6 +10,7 @@ import {
   updateMessageTranslation,
 } from "../lib/conversations.js";
 import { detectLanguage, translateToEnglish } from "../lib/translation.js";
+import { sendStaffPortalMessageNotification } from "../lib/email.js";
 
 async function requireClient(request, env) {
   const client = await getSessionClient(request, env);
@@ -96,6 +97,17 @@ export async function handleSendMessage(request, env, applicationId) {
     translationStatus: isEnglish ? "not_required" : "pending",
     deliveryStatus: "sent", // already fully received from FIS's perspective; nothing left to deliver
   });
+
+  // The message is now persisted — that is the event staff need to hear
+  // about, not whether translation subsequently succeeds. Fired here, before
+  // the translation attempt below, so a slow or failed translation can never
+  // suppress or delay it; best-effort, like every other notification email,
+  // so a Resend outage never fails the client's own successful submission.
+  try {
+    await sendStaffPortalMessageNotification(env, { applicationId });
+  } catch (err) {
+    console.error("Staff portal message notification failed:", err.message);
+  }
 
   if (!isEnglish) {
     const result = await translateToEnglish(env, text, sourceLanguage);
