@@ -156,6 +156,8 @@
       fullName: fieldValue("fullName"),
       email: fieldValue("email"),
       phone: fieldValue("phone"),
+      phoneCountry: fieldValue("phoneCountry"),
+      preferredContactMethod: fieldValue("preferredContactMethod"),
       nationality: fieldValue("nationality"),
       location: fieldValue("location"),
       language: fieldValue("language"),

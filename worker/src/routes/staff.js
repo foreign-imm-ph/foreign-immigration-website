@@ -24,9 +24,10 @@ import {
   updateMessageDeliveryStatus,
   linkConversationToClient,
 } from "../lib/conversations.js";
-import { translateFromEnglish, translateToEnglish, CANONICAL_LANGUAGES } from "../lib/translation.js";
+import { translateFromEnglish, translateToEnglish, CANONICAL_LANGUAGES, requiresClientTranslation } from "../lib/translation.js";
 import { normalizePhoneNumber, isSupportedMobileCountry, SUPPORTED_MOBILE_COUNTRIES } from "../lib/phone.js";
 import { getConsentStatusMap, setClientConsent, isValidConsentChannel, isValidConsentStatus, CONSENT_CHANNELS } from "../lib/consents.js";
+import { STATUS_OPTIONS, getLocalizedStatusLabel } from "../lib/clientLocaleStrings.js";
 
 // Same allowlist as the client-facing profile route (worker/src/routes/profile.js)
 // — kept duplicated rather than shared to avoid a cross-route import for a
@@ -45,11 +46,11 @@ const LANGUAGE_LABELS = {
   und: "Undetermined",
 };
 
-const STATUS_OPTIONS = [
-  "enquiry_received", "under_review", "documents_required", "documents_received",
-  "preparing_application", "submitted", "awaiting_authority_action",
-  "additional_information_required", "completed",
-];
+const CONTACT_METHOD_LABELS = {
+  email: "Email",
+  phone_call: "Phone call",
+  portal: "Client portal",
+};
 
 function notFound() {
   return new Response("Not found", { status: 404 });
@@ -120,9 +121,17 @@ async function dispatch(request, env, url) {
 
   const statusMatch = path.match(/^\/applications\/([^/]+)\/status$/);
   if (statusMatch && method === "POST") return updateStatus(request, env, staff, statusMatch[1]);
+  const statusPublishMatch = path.match(/^\/applications\/([^/]+)\/status\/([^/]+)\/publish$/);
+  if (statusPublishMatch && method === "POST") return publishStatusUpdate(request, env, staff, statusPublishMatch[1], statusPublishMatch[2]);
+  const statusRetryMatch = path.match(/^\/applications\/([^/]+)\/status\/([^/]+)\/retry-translation$/);
+  if (statusRetryMatch && method === "POST") return retryStatusTranslation(request, env, staff, statusRetryMatch[1], statusRetryMatch[2]);
 
   const docReqMatch = path.match(/^\/applications\/([^/]+)\/documents\/request$/);
   if (docReqMatch && method === "POST") return requestDocument(request, env, staff, docReqMatch[1]);
+  const docPublishMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/publish$/);
+  if (docPublishMatch && method === "POST") return publishDocumentRequest(request, env, staff, docPublishMatch[1], docPublishMatch[2]);
+  const docRetryMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/retry-translation$/);
+  if (docRetryMatch && method === "POST") return retryDocumentRequestTranslation(request, env, staff, docRetryMatch[1], docRetryMatch[2]);
 
   const docDlMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/download$/);
   if (docDlMatch && method === "GET") return downloadDocument(env, staff, docDlMatch[1], docDlMatch[2]);
@@ -147,6 +156,10 @@ async function dispatch(request, env, url) {
 
   const payPaidMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/mark-paid$/);
   if (payPaidMatch && method === "POST") return markPaymentPaid(request, env, staff, payPaidMatch[1], payPaidMatch[2]);
+  const payPublishMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/publish$/);
+  if (payPublishMatch && method === "POST") return publishPaymentRequest(request, env, staff, payPublishMatch[1], payPublishMatch[2]);
+  const payRetryMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/retry-translation$/);
+  if (payRetryMatch && method === "POST") return retryPaymentRequestTranslation(request, env, staff, payRetryMatch[1], payRetryMatch[2]);
 
   const proofMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/proof$/);
   if (proofMatch && method === "GET") return viewPaymentProof(env, staff, proofMatch[1], proofMatch[2]);
@@ -283,7 +296,8 @@ async function viewEnquiry(env, staff, id) {
     `<h1>Enquiry ${escapeHtml(enquiry.reference)} ${priorityBadge(enquiry.priority)}</h1>
      <div class="card">
        <p><strong>${escapeHtml(enquiry.full_name)}</strong> &lt;${escapeHtml(enquiry.email)}&gt;</p>
-       <p class="muted">${escapeHtml(enquiry.phone || "No phone given")} · ${escapeHtml(enquiry.nationality)} · ${escapeHtml(enquiry.location || "")}</p>
+       <p class="muted">${escapeHtml(enquiry.phone || "No phone given")}${enquiry.mobile_e164 ? ` (${escapeHtml(enquiry.mobile_e164)})` : ""} · ${escapeHtml(enquiry.nationality)} · ${escapeHtml(enquiry.location || "")}</p>
+       <p class="muted">Preferred contact: ${escapeHtml(CONTACT_METHOD_LABELS[enquiry.preferred_contact_method] || "Not specified")}</p>
        <p><strong>Service:</strong> ${escapeHtml(enquiry.service_slug)}</p>
        <p>${escapeHtml(enquiry.description).replace(/\n/g, "<br>")}</p>
        <p class="muted">Received ${escapeHtml(enquiry.created_at)}${enquiry.archived_at ? ` · Archived ${escapeHtml(enquiry.archived_at)}` : ""}</p>
@@ -767,22 +781,44 @@ async function convertEnquiry(request, env, staff, id) {
 
   let client = await getClientByEmail(env.DB, enquiry.email);
   let isNewClient = false;
+  // Phase 3.1: 'phone_call' has no equivalent in
+  // clients.preferred_communication_channel (portal/email/sms/whatsapp/
+  // telegram/wechat — see profile.js) so it is deliberately never carried
+  // over; only 'email'/'portal' map cleanly onto that enum.
+  const carryOverChannel = ["email", "portal"].includes(enquiry.preferred_contact_method)
+    ? enquiry.preferred_contact_method
+    : null;
+
   if (!client) {
-    // Opportunistic only: the public enquiry form has no country selector,
-    // so this only ever succeeds when a visitor happened to type their own
-    // number in full international format ("+..."), which the parser can
-    // resolve unambiguously without any country guess. Anything else
-    // leaves mobile_e164 null here — never inferred, never guessed. The
-    // historical free-form `phone` value is carried over unchanged either way.
-    const phoneNormalization = normalizePhoneNumber(enquiry.phone, null);
+    // enquiry.mobile_e164 was already normalized at submission time using
+    // the visitor's own selected country (see routes/enquiries.js) —
+    // nothing to re-parse or guess here.
     client = await createClient(env.DB, {
       fullName: enquiry.full_name,
       email: enquiry.email,
       phone: enquiry.phone,
       nationality: enquiry.nationality,
-      mobileE164: phoneNormalization.valid ? phoneNormalization.e164 : null,
+      mobileE164: enquiry.mobile_e164,
+      preferredCommunicationChannel: carryOverChannel,
     });
     isNewClient = true;
+  } else {
+    // Existing client: never overwrite a durable preference that's already
+    // set, whichever field it is.
+    const updates = [];
+    const binds = [];
+    if (enquiry.mobile_e164 && !client.mobile_e164) {
+      updates.push("mobile_e164 = ?");
+      binds.push(enquiry.mobile_e164);
+    }
+    if (carryOverChannel && !client.preferred_communication_channel) {
+      updates.push("preferred_communication_channel = ?");
+      binds.push(carryOverChannel);
+    }
+    if (updates.length) {
+      binds.push(client.id);
+      await env.DB.prepare(`UPDATE clients SET ${updates.join(", ")} WHERE id = ?`).bind(...binds).run();
+    }
   }
 
   const applicationId = newId();
@@ -938,6 +974,93 @@ async function recordClientConsent(request, env, staff, applicationId) {
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
+// Renders one application_status_history row for staff. A published row
+// (client_visible = 1) is purely informational — status changes are never
+// re-editable. A draft row (client_visible = 0) is the other half of the
+// gated Translate & Preview flow in updateStatus/publishStatusUpdate
+// above: staff sees the English note plus whatever the translation
+// attempt produced, and only from here can they Confirm (publish) or
+// Retry — nothing here is client-visible yet.
+function renderStatusHistoryItem(basePath, row) {
+  const statusText = escapeHtml(String(row.status).replace(/_/g, " "));
+
+  if (row.client_visible) {
+    let noteBlock = "";
+    if (row.note) {
+      noteBlock = `<p>${escapeHtml(row.note)}</p>`;
+      if (row.note_translation_status === "ready" && row.note_translated) {
+        const targetLabel = LANGUAGE_LABELS[row.note_target_language] || escapeHtml(row.note_target_language);
+        noteBlock += `<p class="muted">Sent to client in ${escapeHtml(targetLabel)}: ${escapeHtml(row.note_translated)}</p>`;
+      }
+    }
+    return `<div class="card">
+      <p class="muted">${statusText} · ${escapeHtml(row.changed_at)}${row.changed_by_staff_email ? ` · ${escapeHtml(row.changed_by_staff_email)}` : ""}</p>
+      ${noteBlock}
+    </div>`;
+  }
+
+  const targetLabel = LANGUAGE_LABELS[row.note_target_language] || escapeHtml(row.note_target_language || "");
+  let translationBlock;
+  if (row.note_translation_status === "ready") {
+    translationBlock = `<p><strong>Client-language preview (${targetLabel})</strong></p><p>${escapeHtml(row.note_translated)}</p>
+      <form method="POST" action="${basePath}/status/${row.id}/publish"><button type="submit">Confirm &amp; Update Status</button></form>`;
+  } else if (row.note_translation_status === "failed") {
+    translationBlock = `<p class="muted">Translation unavailable.</p>
+      <form method="POST" action="${basePath}/status/${row.id}/retry-translation"><button class="secondary" type="submit">Retry translation</button></form>`;
+  } else {
+    translationBlock = `<p class="muted">Translation in progress.</p>`;
+  }
+  return `<div class="card">
+    <p class="muted">Pending status update (not yet visible to client) · proposed status: <strong>${statusText}</strong></p>
+    <p><strong>English note</strong></p><p>${escapeHtml(row.note)}</p>
+    ${translationBlock}
+  </div>`;
+}
+
+// A draft (client_visible = 0) document request, mirroring the shape
+// above: English original always shown, plus whatever the translation
+// attempt produced, plus Request Document (publish) or Retry.
+function renderDraftDocumentRequest(basePath, dr) {
+  const targetLabel = LANGUAGE_LABELS[dr.label_target_language] || escapeHtml(dr.label_target_language || "");
+  let translationBlock;
+  if (dr.label_translation_status === "ready") {
+    translationBlock = `<p><strong>Client-language preview (${targetLabel})</strong></p><p>${escapeHtml(dr.label_translated)}</p>
+      <form method="POST" action="${basePath}/documents/${dr.id}/publish"><button type="submit">Request Document</button></form>`;
+  } else if (dr.label_translation_status === "failed") {
+    translationBlock = `<p class="muted">Translation unavailable.</p>
+      <form method="POST" action="${basePath}/documents/${dr.id}/retry-translation"><button class="secondary" type="submit">Retry translation</button></form>`;
+  } else {
+    translationBlock = `<p class="muted">Translation in progress.</p>`;
+  }
+  return `<div class="card">
+    <p class="muted">Pending document request (not yet visible to client)</p>
+    <p><strong>English original</strong></p><p>${escapeHtml(dr.label)}</p>
+    ${translationBlock}
+  </div>`;
+}
+
+// A draft (client_visible = 0) payment request. amount_php is always shown
+// as-is (structured data, never translated) alongside the translatable
+// description's English original + preview/failure.
+function renderDraftPaymentRequest(basePath, p) {
+  const targetLabel = LANGUAGE_LABELS[p.description_target_language] || escapeHtml(p.description_target_language || "");
+  let translationBlock;
+  if (p.description_translation_status === "ready") {
+    translationBlock = `<p><strong>Client-language preview (${targetLabel})</strong></p><p>${escapeHtml(p.description_translated)}</p>
+      <form method="POST" action="${basePath}/payments/${p.id}/publish"><button type="submit">Create Payment Request</button></form>`;
+  } else if (p.description_translation_status === "failed") {
+    translationBlock = `<p class="muted">Translation unavailable.</p>
+      <form method="POST" action="${basePath}/payments/${p.id}/retry-translation"><button class="secondary" type="submit">Retry translation</button></form>`;
+  } else {
+    translationBlock = `<p class="muted">Translation in progress.</p>`;
+  }
+  return `<div class="card">
+    <p class="muted">Pending payment request (not yet visible to client) · Amount: PHP ${p.amount_php.toFixed(2)}</p>
+    <p><strong>English description</strong></p><p>${escapeHtml(p.description)}</p>
+    ${translationBlock}
+  </div>`;
+}
+
 async function viewApplication(env, staff, id) {
   const application = await env.DB.prepare(
     `SELECT a.*, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
@@ -947,20 +1070,24 @@ async function viewApplication(env, staff, id) {
   if (!application) return notFound();
 
   const conversation = await getConversationByApplicationId(env.DB, id);
-  const [{ results: docRequests }, { results: documents }, timeline, { results: payments }, client, consents] = await Promise.all([
+  const [{ results: docRequests }, { results: documents }, timeline, { results: payments }, client, consents, { results: statusHistory }] = await Promise.all([
     env.DB.prepare("SELECT * FROM document_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     env.DB.prepare("SELECT * FROM documents WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     getMergedTimeline(env.DB, { applicationId: id, conversationId: conversation ? conversation.id : null }),
     env.DB.prepare("SELECT * FROM payment_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(application.client_id).first(),
     getConsentStatusMap(env.DB, application.client_id),
+    env.DB.prepare("SELECT * FROM application_status_history WHERE application_id = ? ORDER BY changed_at DESC").bind(id).all(),
   ]);
 
   const statusOptionsHtml = STATUS_OPTIONS.map(
     (s) => `<option value="${s}" ${s === application.status ? "selected" : ""}>${s.replace(/_/g, " ")}</option>`
   ).join("");
 
-  const docRequestRows = docRequests
+  const publishedDocRequests = docRequests.filter((dr) => dr.client_visible);
+  const draftDocRequests = docRequests.filter((dr) => !dr.client_visible);
+
+  const docRequestRows = publishedDocRequests
     .map((dr) => {
       const matchingDoc = documents.find((d) => d.document_request_id === dr.id);
       return `<tr>
@@ -972,6 +1099,7 @@ async function viewApplication(env, staff, id) {
       </tr>`;
     })
     .join("");
+  const draftDocRequestHtml = draftDocRequests.map((dr) => renderDraftDocumentRequest(`/staff/applications/${id}`, dr)).join("");
 
   const otherDocs = documents.filter((d) => !d.document_request_id);
   const otherDocRows = otherDocs
@@ -998,7 +1126,10 @@ async function viewApplication(env, staff, id) {
     .map((c) => `<tr><td>${escapeHtml(c)}</td><td>${consents[c] ? `<span class="status">${escapeHtml(consents[c])}</span>` : '<span class="muted">Not recorded</span>'}</td></tr>`)
     .join("");
 
-  const paymentRows = payments
+  const publishedPayments = payments.filter((p) => p.client_visible);
+  const draftPayments = payments.filter((p) => !p.client_visible);
+
+  const paymentRows = publishedPayments
     .map(
       (p) => `<tr>
         <td>PHP ${p.amount_php.toFixed(2)}</td>
@@ -1009,6 +1140,8 @@ async function viewApplication(env, staff, id) {
       </tr>`
     )
     .join("");
+  const draftPaymentHtml = draftPayments.map((p) => renderDraftPaymentRequest(`/staff/applications/${id}`, p)).join("");
+  const statusHistoryHtml = statusHistory.map((row) => renderStatusHistoryItem(`/staff/applications/${id}`, row)).join("") || '<p class="muted">No status history yet.</p>';
 
   return staffPage(
     `Application ${application.reference}`,
@@ -1026,48 +1159,61 @@ async function viewApplication(env, staff, id) {
      </div>
 
      <div class="card">
+       <h2>Status History</h2>
+       ${statusHistoryHtml}
+     </div>
+
+     <div class="card">
        <h2>Communication Preferences</h2>
-       <p><strong>Preferred language:</strong> ${escapeHtml(preferredLabel)}</p>
-       <p><strong>Preferred channel:</strong> ${client && client.preferred_communication_channel ? escapeHtml(client.preferred_communication_channel) : "Not specified"}</p>
-       <p><strong>Mobile number:</strong> ${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : "Not on file"}</p>
-       <table>
-         <tr><th>Channel</th><th>Consent status</th></tr>
-         ${consentRows}
-       </table>
-       <form method="POST" action="/staff/applications/${id}/communication">
-         <label for="preferredCommunicationLanguage">Preferred language</label>
-         <select name="preferredCommunicationLanguage" id="preferredCommunicationLanguage">
-           <option value="">Not specified</option>
-           ${languageOptionsHtml}
-         </select>
-         <label for="preferredCommunicationChannel">Preferred channel</label>
-         <select name="preferredCommunicationChannel" id="preferredCommunicationChannel">
-           <option value="">Not specified</option>
-           ${channelOptionsHtml}
-         </select>
-         <label for="mobileNumber">Mobile number</label>
-         <input type="text" name="mobileNumber" id="mobileNumber" value="${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : ""}" placeholder="e.g. +639171234567">
-         <label for="mobileCountry">Country (only needed if not entering full international format)</label>
-         <select name="mobileCountry" id="mobileCountry">
-           <option value="">—</option>
-           ${countryOptionsHtml}
-         </select>
-         <button type="submit">Save communication preferences</button>
-       </form>
-       <div class="card">
-         <h3>Record consent obtained outside the portal</h3>
-         <p class="muted">Only use this if the client has genuinely agreed, outside the client portal, to be contacted through this channel. This action never defaults to granted.</p>
-         <form method="POST" action="/staff/applications/${id}/communication/consent">
-           <label for="consentChannel">Channel</label>
-           <select name="channel" id="consentChannel">${consentChannelOptionsHtml}</select>
-           <label for="consentStatus">Action</label>
-           <select name="status" id="consentStatus">
-             <option value="granted">Record granted</option>
-             <option value="revoked">Record revoked</option>
+       <p><strong>Language:</strong> ${escapeHtml(preferredLabel)}</p>
+       <p><strong>Preferred contact:</strong> ${client && client.preferred_communication_channel ? escapeHtml(client.preferred_communication_channel) : "Not specified"}</p>
+       <p><strong>Mobile:</strong> ${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : "Not provided"}</p>
+
+       <details>
+         <summary>Edit preferences</summary>
+         <form method="POST" action="/staff/applications/${id}/communication">
+           <label for="preferredCommunicationLanguage">Preferred language</label>
+           <select name="preferredCommunicationLanguage" id="preferredCommunicationLanguage">
+             <option value="">Not specified</option>
+             ${languageOptionsHtml}
            </select>
-           <button type="submit">Save</button>
+           <label for="preferredCommunicationChannel">Preferred channel</label>
+           <select name="preferredCommunicationChannel" id="preferredCommunicationChannel">
+             <option value="">Not specified</option>
+             ${channelOptionsHtml}
+           </select>
+           <label for="mobileNumber">Mobile number</label>
+           <input type="text" name="mobileNumber" id="mobileNumber" value="${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : ""}" placeholder="e.g. +639171234567">
+           <label for="mobileCountry">Country (only needed if not entering full international format)</label>
+           <select name="mobileCountry" id="mobileCountry">
+             <option value="">Select if needed</option>
+             ${countryOptionsHtml}
+           </select>
+           <button type="submit">Save communication preferences</button>
          </form>
-       </div>
+       </details>
+
+       <details>
+         <summary>Manage channel permissions</summary>
+         <table>
+           <tr><th>Channel</th><th>Consent status</th></tr>
+           ${consentRows}
+         </table>
+         <div class="card">
+           <h3>Record consent obtained outside the portal</h3>
+           <p class="muted">Only use this if the client has genuinely agreed, outside the client portal, to be contacted through this channel. This action never defaults to granted.</p>
+           <form method="POST" action="/staff/applications/${id}/communication/consent">
+             <label for="consentChannel">Channel</label>
+             <select name="channel" id="consentChannel">${consentChannelOptionsHtml}</select>
+             <label for="consentStatus">Action</label>
+             <select name="status" id="consentStatus">
+               <option value="granted">Record granted</option>
+               <option value="revoked">Record revoked</option>
+             </select>
+             <button type="submit">Save</button>
+           </form>
+         </div>
+       </details>
      </div>
 
      <div class="card">
@@ -1077,6 +1223,7 @@ async function viewApplication(env, staff, id) {
          ${docRequestRows || '<tr><td colspan="4" class="muted">No documents requested yet.</td></tr>'}
          ${otherDocRows}
        </table>
+       ${draftDocRequestHtml}
        <form method="POST" action="/staff/applications/${id}/documents/request">
          <label for="label">Request a document</label>
          <input type="text" name="label" id="label" placeholder="e.g. Passport bio page" required>
@@ -1105,6 +1252,7 @@ async function viewApplication(env, staff, id) {
          <tr><th>Amount</th><th>Description</th><th>Status</th><th>Proof</th><th>Action</th></tr>
          ${paymentRows || '<tr><td colspan="5" class="muted">No payment requests yet.</td></tr>'}
        </table>
+       ${draftPaymentHtml}
        <form method="POST" action="/staff/applications/${id}/payments">
          <label for="amount">Amount due (PHP)</label>
          <input type="number" step="0.01" min="0" name="amount" id="amount" required>
@@ -1118,71 +1266,220 @@ async function viewApplication(env, staff, id) {
   );
 }
 
+// A client-visible note is arbitrary staff prose, so for a client whose
+// preferred language requires translation this does NOT update
+// applications.status directly — it creates an application_status_history
+// row with client_visible = 0 (never returned by the client-facing API,
+// which filters on client_visible = 1) and attempts translation
+// immediately, so the very next page load already shows staff the
+// preview. Nothing about the application's actual status changes, and
+// nothing becomes client-visible, until staff explicitly confirms via
+// publishStatusUpdate below — exactly the same "translate now, publish
+// only on a separate explicit action" shape already used for portal
+// message replies. A second Translate & Preview before the first is
+// confirmed replaces the still-pending draft rather than accumulating
+// abandoned ones (an application only ever has one "next status" pending).
+//
+// No note, or a note that needs no translation (English target, or a
+// client with no supported non-English preference — see
+// requiresClientTranslation), applies immediately in one step exactly as
+// before Phase 3.1 — the common case is unaffected.
 async function updateStatus(request, env, staff, id) {
   const form = await request.formData();
   const status = String(form.get("status") || "");
   const note = String(form.get("note") || "").trim().slice(0, 1000) || null;
   if (!STATUS_OPTIONS.includes(status)) return new Response("Invalid status", { status: 400 });
 
+  const client = await env.DB.prepare(
+    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(id)
+    .first();
+  if (!client) return notFound();
+
+  if (note && requiresClientTranslation(client.preferred_communication_language)) {
+    await env.DB.prepare("DELETE FROM application_status_history WHERE application_id = ? AND client_visible = 0")
+      .bind(id)
+      .run();
+    const result = await translateFromEnglish(env, note, client.preferred_communication_language);
+    await env.DB.prepare(
+      `INSERT INTO application_status_history
+        (id, application_id, status, note, client_visible, changed_by_staff_email, note_translated, note_target_language, note_translation_status)
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)`
+    )
+      .bind(newId(), id, status, note, staff.email, result.text, client.preferred_communication_language, result.status)
+      .run();
+    return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
+  }
+
   await env.DB.prepare("UPDATE applications SET status = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(status, id)
     .run();
   await env.DB.prepare(
-    "INSERT INTO application_status_history (id, application_id, status, note, changed_by_staff_email) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO application_status_history (id, application_id, status, note, client_visible, changed_by_staff_email, note_translation_status) VALUES (?, ?, ?, ?, 1, ?, ?)"
   )
-    .bind(newId(), id, status, note, staff.email)
+    .bind(newId(), id, status, note, staff.email, note ? "not_required" : null)
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_status", targetTable: "applications", targetId: id });
-
-  // application_status_history.client_visible defaults to 1 and nothing in
-  // this codebase currently sets it otherwise, so every status update is
-  // client-visible today — notify unconditionally, matching that reality.
-  const application = await env.DB.prepare(
-    "SELECT a.reference, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
-  )
-    .bind(id)
-    .first();
-  if (application) {
-    try {
-      await sendApplicationStatusUpdate(env, {
-        to: application.email,
-        fullName: application.full_name,
-        applicationReference: application.reference,
-        status,
-        note,
-      });
-    } catch (err) {
-      console.error("Status update email failed:", err.message);
-    }
-  }
+  await notifyStatusUpdate(env, id, status);
 
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
 }
 
+async function notifyStatusUpdate(env, applicationId, status) {
+  const application = await env.DB.prepare(
+    "SELECT a.reference, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(applicationId)
+    .first();
+  if (!application) return;
+  try {
+    await sendApplicationStatusUpdate(env, {
+      to: application.email,
+      fullName: application.full_name,
+      applicationReference: application.reference,
+      status,
+    });
+  } catch (err) {
+    console.error("Status update email failed:", err.message);
+  }
+}
+
+// Step 2 of the gated status-update flow: staff explicitly confirms a
+// translated (or translation-failed-but-now-ready... no: only ready/
+// not_required) draft. Only now does applications.status actually change
+// and only now does the history row become client_visible.
+async function publishStatusUpdate(request, env, staff, applicationId, historyId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM application_status_history WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(historyId, applicationId)
+    .first();
+  if (!draft) return notFound();
+  if (!["ready", "not_required"].includes(draft.note_translation_status)) {
+    return new Response("This status update has not been successfully translated yet", { status: 400 });
+  }
+
+  await env.DB.prepare("UPDATE applications SET status = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(draft.status, applicationId)
+    .run();
+  await env.DB.prepare("UPDATE application_status_history SET client_visible = 1 WHERE id = ?").bind(historyId).run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_status", targetTable: "applications", targetId: applicationId });
+  await notifyStatusUpdate(env, applicationId, draft.status);
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function retryStatusTranslation(request, env, staff, applicationId, historyId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM application_status_history WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(historyId, applicationId)
+    .first();
+  if (!draft) return notFound();
+
+  const result = await translateFromEnglish(env, draft.note, draft.note_target_language);
+  await env.DB.prepare(
+    "UPDATE application_status_history SET note_translated = ?, note_translation_status = ? WHERE id = ?"
+  )
+    .bind(result.text, result.status, historyId)
+    .run();
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+// Same gated-publish shape as updateStatus above, applied to
+// document_requests.label — the request title/instructions staff type
+// (e.g. "Passport bio page") is always non-empty client-facing prose, so
+// unlike a status note there is no "nothing to translate" shortcut; only
+// "no translation needed" (English target, or no supported non-English
+// preference) still publishes in one step. Multiple concurrent pending
+// (client_visible = 0) document requests for the same application are
+// fine — each is independent, unlike a single application status.
 async function requestDocument(request, env, staff, applicationId) {
   const form = await request.formData();
   const label = String(form.get("label") || "").trim().slice(0, 200);
   if (!label) return new Response("Label required", { status: 400 });
 
-  await env.DB.prepare(
-    "INSERT INTO document_requests (id, application_id, label, requested_by_staff_email) VALUES (?, ?, ?, ?)"
+  const client = await env.DB.prepare(
+    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
-    .bind(newId(), applicationId, label, staff.email)
+    .bind(applicationId)
+    .first();
+  if (!client) return notFound();
+
+  const targetLanguage = client.preferred_communication_language;
+
+  if (requiresClientTranslation(targetLanguage)) {
+    const result = await translateFromEnglish(env, label, targetLanguage);
+    await env.DB.prepare(
+      `INSERT INTO document_requests
+        (id, application_id, label, requested_by_staff_email, client_visible, label_translated, label_target_language, label_translation_status)
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?)`
+    )
+      .bind(newId(), applicationId, label, staff.email, result.text, targetLanguage, result.status)
+      .run();
+    return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+  }
+
+  await env.DB.prepare(
+    `INSERT INTO document_requests (id, application_id, label, requested_by_staff_email, client_visible, label_translation_status)
+     VALUES (?, ?, ?, ?, 1, ?)`
+  )
+    .bind(newId(), applicationId, label, staff.email, "not_required")
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "requested_document", targetTable: "applications", targetId: applicationId });
+  await notifyDocumentRequest(env, applicationId);
 
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function notifyDocumentRequest(env, applicationId) {
   const application = await env.DB.prepare(
     "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
-  if (application) {
-    try {
-      await sendDocumentRequestNotification(env, { to: application.email, applicationReference: application.reference, label });
-    } catch (err) {
-      console.error("Document request email failed:", err.message);
-    }
+  if (!application) return;
+  try {
+    await sendDocumentRequestNotification(env, { to: application.email, applicationReference: application.reference });
+  } catch (err) {
+    console.error("Document request email failed:", err.message);
   }
+}
+
+async function publishDocumentRequest(request, env, staff, applicationId, documentRequestId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM document_requests WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(documentRequestId, applicationId)
+    .first();
+  if (!draft) return notFound();
+  if (!["ready", "not_required"].includes(draft.label_translation_status)) {
+    return new Response("This document request has not been successfully translated yet", { status: 400 });
+  }
+
+  await env.DB.prepare("UPDATE document_requests SET client_visible = 1 WHERE id = ?").bind(documentRequestId).run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "requested_document", targetTable: "applications", targetId: applicationId });
+  await notifyDocumentRequest(env, applicationId);
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function retryDocumentRequestTranslation(request, env, staff, applicationId, documentRequestId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM document_requests WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(documentRequestId, applicationId)
+    .first();
+  if (!draft) return notFound();
+
+  const result = await translateFromEnglish(env, draft.label, draft.label_target_language);
+  await env.DB.prepare(
+    "UPDATE document_requests SET label_translated = ?, label_translation_status = ? WHERE id = ?"
+  )
+    .bind(result.text, result.status, documentRequestId)
+    .run();
 
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
@@ -1207,40 +1504,105 @@ async function updateDocumentRequestStatus(request, env, staff, applicationId, d
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
+// amount_php is structured payment data and is NEVER passed through
+// translateFromEnglish — only `description` (staff-authored prose, e.g.
+// "ACR I-Card processing fee") is translatable. Same gated-publish shape
+// as requestDocument above: for a client needing translation, the row
+// starts client_visible = 0 until staff explicitly confirms; the amount
+// itself is authoritative and identical whichever path is taken.
 async function createPaymentRequest(request, env, staff, applicationId) {
   const form = await request.formData();
   const amount = parseFloat(form.get("amount"));
   const description = String(form.get("description") || "").trim().slice(0, 300);
   if (!amount || amount <= 0 || !description) return new Response("Amount and description required", { status: 400 });
 
+  const client = await env.DB.prepare(
+    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+  )
+    .bind(applicationId)
+    .first();
+  if (!client) return notFound();
+
+  const targetLanguage = client.preferred_communication_language;
   const paymentId = newId();
 
+  if (requiresClientTranslation(targetLanguage)) {
+    const result = await translateFromEnglish(env, description, targetLanguage);
+    await env.DB.prepare(
+      `INSERT INTO payment_requests
+        (id, application_id, amount_php, description, client_visible, description_translated, description_target_language, description_translation_status)
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?)`
+    )
+      .bind(paymentId, applicationId, amount, description, result.text, targetLanguage, result.status)
+      .run();
+    return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+  }
+
   await env.DB.prepare(
-    "INSERT INTO payment_requests (id, application_id, amount_php, description) VALUES (?, ?, ?, ?)"
+    `INSERT INTO payment_requests (id, application_id, amount_php, description, client_visible, description_translation_status)
+     VALUES (?, ?, ?, ?, 1, ?)`
   )
-    .bind(paymentId, applicationId, amount, description)
+    .bind(paymentId, applicationId, amount, description, "not_required")
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_payment_request", targetTable: "payment_requests", targetId: paymentId });
+  await notifyPaymentRequest(env, applicationId, amount);
 
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function notifyPaymentRequest(env, applicationId, amount) {
   const application = await env.DB.prepare(
     "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
-  if (application) {
-    try {
-      await sendPaymentRequestNotification(env, { to: application.email, applicationReference: application.reference, amountPhp: amount, description });
-    } catch (err) {
-      console.error("Payment request email failed:", err.message);
-    }
+  if (!application) return;
+  try {
+    await sendPaymentRequestNotification(env, { to: application.email, applicationReference: application.reference, amountPhp: amount });
+  } catch (err) {
+    console.error("Payment request email failed:", err.message);
   }
+}
+
+async function publishPaymentRequest(request, env, staff, applicationId, paymentId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM payment_requests WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(paymentId, applicationId)
+    .first();
+  if (!draft) return notFound();
+  if (!["ready", "not_required"].includes(draft.description_translation_status)) {
+    return new Response("This payment request has not been successfully translated yet", { status: 400 });
+  }
+
+  await env.DB.prepare("UPDATE payment_requests SET client_visible = 1 WHERE id = ?").bind(paymentId).run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_payment_request", targetTable: "payment_requests", targetId: paymentId });
+  await notifyPaymentRequest(env, applicationId, draft.amount_php);
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+async function retryPaymentRequestTranslation(request, env, staff, applicationId, paymentId) {
+  const draft = await env.DB.prepare(
+    "SELECT * FROM payment_requests WHERE id = ? AND application_id = ? AND client_visible = 0"
+  )
+    .bind(paymentId, applicationId)
+    .first();
+  if (!draft) return notFound();
+
+  const result = await translateFromEnglish(env, draft.description, draft.description_target_language);
+  await env.DB.prepare(
+    "UPDATE payment_requests SET description_translated = ?, description_translation_status = ? WHERE id = ?"
+  )
+    .bind(result.text, result.status, paymentId)
+    .run();
 
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
 async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
   const existing = await env.DB.prepare(
-    "SELECT status, amount_php, description FROM payment_requests WHERE id = ? AND application_id = ?"
+    "SELECT status, amount_php FROM payment_requests WHERE id = ? AND application_id = ?"
   )
     .bind(paymentId, applicationId)
     .first();
@@ -1272,7 +1634,6 @@ async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
             to: application.email,
             applicationReference: application.reference,
             amountPhp: existing.amount_php,
-            description: existing.description,
           });
         } catch (err) {
           console.error("Payment confirmation email failed:", err.message);

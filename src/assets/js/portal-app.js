@@ -115,7 +115,7 @@
       var btn = node.querySelector(".portal-application-item");
       btn.querySelector(".portal-application-item__ref").textContent = application.reference;
       btn.querySelector(".portal-application-item__service").textContent = application.service_slug.replace(/-/g, " ");
-      btn.querySelector(".portal-application-item__status").textContent = statusLabel(application.status);
+      btn.querySelector(".portal-application-item__status").textContent = application.statusLabel || statusLabel(application.status);
       btn.addEventListener("click", function () { loadApplicationDetail(application.id); });
       listEl.appendChild(node);
     });
@@ -142,14 +142,38 @@
     var application = appData.application;
 
     var historyHtml = appData.history
-      .map((h) => '<li><strong>' + escapeHtml(statusLabel(h.status)) + '</strong>, ' + formatDate(h.changed_at) + (h.note ? '<br><span class="muted">' + escapeHtml(h.note) + '</span>' : '') + '</li>')
+      .map(function (h) {
+        var label = h.statusLabel || statusLabel(h.status);
+        var noteHtml = "";
+        if (h.noteTranslationStatus === "ready" && h.noteTranslated) {
+          // Bilingual-capable, but a status note is not a payment — the
+          // client sees the translated note primarily, with the English
+          // original available as a discreet disclosure (same pattern as
+          // the "Show English original" control on portal messages).
+          noteHtml =
+            '<br><span class="muted">' + escapeHtml(h.noteTranslated) + '</span>' +
+            '<details class="portal-message-original"><summary>Show English original</summary><p>' + escapeHtml(h.note) + '</p></details>';
+        } else if (h.note) {
+          noteHtml = '<br><span class="muted">' + escapeHtml(h.note) + '</span>';
+        }
+        return '<li><strong>' + escapeHtml(label) + '</strong>, ' + formatDate(h.changedAt) + noteHtml + '</li>';
+      })
       .join("");
 
     var docRequestsHtml = docsData.documentRequests
       .map(function (dr) {
         var uploaded = docsData.documents.find((d) => d.document_request_id === dr.id);
+        var labelHtml = '<span>' + escapeHtml(dr.label) + '</span>';
+        if (dr.labelTranslationStatus === "ready" && dr.labelTranslated) {
+          // Translated primary, English original as a discreet disclosure
+          // (Phase 3.1 Section 13) — not hidden entirely, but not the
+          // always-visible bilingual treatment payments get either.
+          labelHtml =
+            '<span>' + escapeHtml(dr.labelTranslated) + '</span>' +
+            '<details class="portal-message-original"><summary>Show English original</summary><p>' + escapeHtml(dr.label) + '</p></details>';
+        }
         return '<li class="portal-doc-request" data-request-id="' + dr.id + '">' +
-          '<span>' + escapeHtml(dr.label) + '</span> ' +
+          labelHtml + ' ' +
           '<span class="status-badge">' + escapeHtml(dr.status) + '</span>' +
           (uploaded
             ? '<span class="muted">: ' + escapeHtml(uploaded.original_filename) + '</span>'
@@ -187,14 +211,28 @@
         } else if (p.status === "submitted") {
           actionHtml = '<p class="muted">Proof received. Awaiting verification by our team.</p>';
         }
-        return '<li class="portal-payment"><div><strong>PHP ' + Number(p.amount_php).toFixed(2) + '</strong>: ' + escapeHtml(p.description) + ' <span class="status-badge">' + escapeHtml(p.status) + '</span></div>' + actionHtml + '</li>';
+        // Bilingual by design (Phase 3.1 Section 17): once a translation
+        // is ready, BOTH the English original and the translated
+        // description are always shown, never one hidden behind a
+        // disclosure — this is money, not a status update or a document
+        // request title.
+        var descriptionHtml;
+        if (p.descriptionTranslationStatus === "ready" && p.descriptionTranslated) {
+          descriptionHtml =
+            '<p><strong>English Description</strong><br>' + escapeHtml(p.description) + '</p>' +
+            '<p><strong>' + escapeHtml(p.descriptionHeading || "Translated Description") + '</strong><br>' + escapeHtml(p.descriptionTranslated) + '</p>' +
+            (p.discrepancyWarning ? '<p class="muted portal-payment-warning">' + escapeHtml(p.discrepancyWarning) + '</p>' : '');
+        } else {
+          descriptionHtml = '<p>' + escapeHtml(p.description) + '</p>';
+        }
+        return '<li class="portal-payment"><div><strong>PHP ' + Number(p.amountPhp).toFixed(2) + '</strong> <span class="status-badge">' + escapeHtml(p.status) + '</span></div>' + descriptionHtml + actionHtml + '</li>';
       })
       .join("") || '<li class="muted">No payments requested yet.</li>';
 
     detailEl.innerHTML =
       '<div class="card portal-detail-card">' +
       '<h2>' + escapeHtml(application.reference) + '</h2>' +
-      '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(statusLabel(application.status)) + "</span></p>" +
+      '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(application.statusLabel || statusLabel(application.status)) + "</span></p>" +
       (historyHtml ? '<h3>Status History</h3><ul class="portal-history">' + historyHtml + "</ul>" : "") +
       '<h3>Documents</h3><ul class="portal-doc-requests">' + docRequestsHtml + "</ul>" +
       '<h3>Messages</h3><div class="portal-messages">' + messagesHtml + '</div>' +

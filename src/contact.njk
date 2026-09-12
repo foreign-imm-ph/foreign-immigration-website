@@ -31,8 +31,35 @@ description: Contact Foreign Immigration Services with your enquiry, or reach us
       </div>
 
       <div class="form-field">
-        <label for="phone">Phone / Preferred Contact Details <span class="hint">(optional)</span></label>
-        <input type="text" id="phone" name="phone" data-field-label="Phone / Preferred Contact Details" autocomplete="tel">
+        <label for="phoneCountry">Country / Region <span class="hint">(optional)</span></label>
+        <select id="phoneCountry" name="phoneCountry" data-field-label="Country / Region">
+          <option value="" selected>Select if entering a local number</option>
+          <option value="PH">Philippines</option>
+          <option value="AU">Australia</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="CN">China</option>
+          <option value="KR">South Korea</option>
+          <option value="JP">Japan</option>
+          <option value="VN">Vietnam</option>
+          <option value="SG">Singapore</option>
+          <option value="CA">Canada</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">Mobile / Phone Number <span class="hint">(optional)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="Mobile / Phone Number" autocomplete="tel" placeholder="e.g. 0917 123 4567 or +63 917 123 4567">
+      </div>
+
+      <div class="form-field">
+        <label for="preferredContactMethod">Preferred Contact Method <span class="hint">(optional)</span></label>
+        <select id="preferredContactMethod" name="preferredContactMethod" data-field-label="Preferred Contact Method">
+          <option value="" selected>No preference</option>
+          <option value="email">Email</option>
+          <option value="phone_call">Phone Call</option>
+          <option value="portal">Client Portal</option>
+        </select>
       </div>
 
       <div class="form-field">

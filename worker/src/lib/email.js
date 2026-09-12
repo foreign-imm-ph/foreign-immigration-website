@@ -45,7 +45,7 @@ Thank you for your enquiry to Foreign Immigration Services. We have received it 
 
 Reference: ${reference}
 
-Please keep this reference for your records. Submitting this enquiry does not itself constitute acceptance of an engagement — our team will review the details you provided and may request further information before confirming next steps.
+Please keep this reference for your records. Submitting this enquiry does not itself constitute acceptance of an engagement - our team will review the details you provided and may request further information before confirming next steps.
 
 If you have any questions in the meantime, reply to this email or contact us at ${env.EMAIL_REPLY_TO}.
 
@@ -56,11 +56,11 @@ Bureau of Immigration Accredited Consultancy`;
     <p>Dear ${escapeHtml(fullName)},</p>
     <p>Thank you for your enquiry to Foreign Immigration Services. We have received it and it is being reviewed.</p>
     <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">Reference: <strong>${escapeHtml(reference)}</strong></p>
-    <p>Please keep this reference for your records. Submitting this enquiry does not itself constitute acceptance of an engagement — our team will review the details you provided and may request further information before confirming next steps.</p>
+    <p>Please keep this reference for your records. Submitting this enquiry does not itself constitute acceptance of an engagement - our team will review the details you provided and may request further information before confirming next steps.</p>
     <p>If you have any questions in the meantime, reply to this email.</p>
   `);
 
-  await send(env, { to, subject: `Enquiry received — ${reference}`, text, html });
+  await send(env, { to, subject: `Enquiry received - ${reference}`, text, html });
 }
 
 export async function sendStaffEnquiryNotification(env, { reference, serviceSlug, fullName, email, priority }) {
@@ -68,7 +68,7 @@ export async function sendStaffEnquiryNotification(env, { reference, serviceSlug
   // resolvePriority() in routes/enquiries.js — never a raw client-supplied
   // value — so it's safe to surface directly. Standard keeps the exact
   // existing presentation; only urgent/priority add a prefix and one line.
-  const subjectPrefix = priority === "urgent" ? "URGENT — " : priority === "priority" ? "PRIORITY — " : "";
+  const subjectPrefix = priority === "urgent" ? "URGENT - " : priority === "priority" ? "PRIORITY - " : "";
   const priorityLine = priority && priority !== "standard" ? `Priority: ${priority.toUpperCase()}\n` : "";
   const priorityHtml = priority && priority !== "standard" ? `<br>Priority: <strong>${escapeHtml(priority.toUpperCase())}</strong>` : "";
 
@@ -83,7 +83,7 @@ Review it in the staff portal.`;
 
   await send(env, {
     to: env.STAFF_NOTIFICATION_EMAIL,
-    subject: `${subjectPrefix}New enquiry — ${reference}`,
+    subject: `${subjectPrefix}New enquiry - ${reference}`,
     text,
     html: wrap(`<p>New enquiry received.</p><p>Reference: <strong>${escapeHtml(reference)}</strong><br>Name: ${escapeHtml(fullName)}<br>Email: ${escapeHtml(email)}<br>Service: ${escapeHtml(serviceSlug)}${priorityHtml}</p>`),
   });
@@ -141,7 +141,7 @@ Bureau of Immigration Accredited Consultancy`;
     <p>If you have any questions, reply to this email.</p>
   `);
 
-  await send(env, { to, subject: `Re: Your enquiry — ${reference}`, text, html });
+  await send(env, { to, subject: `Re: Your enquiry - ${reference}`, text, html });
 }
 
 export async function sendMagicLink(env, { to, url }) {
@@ -162,26 +162,36 @@ If you did not request this, you can safely ignore this email.`;
   await send(env, { to, subject: "Sign in to your Client Portal", text, html });
 }
 
-export async function sendDocumentRequestNotification(env, { to, applicationReference, label }) {
-  const text = `A document has been requested for your application ${applicationReference}: ${label}.
+// Phase 3.1: deliberately minimal, matching sendClientMessageNotification/
+// sendStaffPortalMessageNotification's existing pattern — a generic notice
+// and a portal link, no staff-authored prose (a document request's label,
+// a payment's description, a status note). Two reasons: (1) that content
+// may now require translation before it is client-visible at all, and an
+// email is not part of the Translate & Preview / publish workflow, so it
+// must never leak an untranslated (or even translated) copy out-of-band;
+// (2) the portal remains the single secure source of truth for case
+// content. The status itself is a deterministic, non-prose code, so its
+// plain-English label is kept here — the email channel is not localized
+// (the portal is), by design, consistent with the rest of this file.
+export async function sendDocumentRequestNotification(env, { to, applicationReference }) {
+  const text = `A document has been requested for your application ${applicationReference}.
 
-Please sign in to the Client Portal to upload it.
+Please sign in to the Client Portal to view the request and upload it.
 
 ${env.PUBLIC_SITE_URL}/portal/`;
 
   await send(env, {
     to,
-    subject: `Document requested — ${applicationReference}`,
+    subject: `Document requested - ${applicationReference}`,
     text,
-    html: wrap(`<p>A document has been requested for your application <strong>${escapeHtml(applicationReference)}</strong>: ${escapeHtml(label)}.</p><p>Please sign in to the Client Portal to upload it.</p>`),
+    html: wrap(`<p>A document has been requested for your application <strong>${escapeHtml(applicationReference)}</strong>.</p><p>Please sign in to the Client Portal to view the request and upload it.</p>`),
   });
 }
 
-export async function sendPaymentRequestNotification(env, { to, applicationReference, amountPhp, description }) {
+export async function sendPaymentRequestNotification(env, { to, applicationReference, amountPhp }) {
   const text = `A payment is required for your application ${applicationReference}.
 
 Amount: PHP ${amountPhp.toFixed(2)}
-Description: ${description}
 
 Please sign in to the Client Portal for payment instructions.
 
@@ -189,18 +199,18 @@ ${env.PUBLIC_SITE_URL}/portal/`;
 
   await send(env, {
     to,
-    subject: `Payment requested — ${applicationReference}`,
+    subject: `Payment requested - ${applicationReference}`,
     text,
-    html: wrap(`<p>A payment is required for your application <strong>${escapeHtml(applicationReference)}</strong>.</p><p>Amount: PHP ${amountPhp.toFixed(2)}<br>Description: ${escapeHtml(description)}</p><p>Please sign in to the Client Portal for payment instructions.</p>`),
+    html: wrap(`<p>A payment is required for your application <strong>${escapeHtml(applicationReference)}</strong>.</p><p>Amount: PHP ${amountPhp.toFixed(2)}</p><p>Please sign in to the Client Portal for payment instructions.</p>`),
   });
 }
 
-export async function sendApplicationStatusUpdate(env, { to, fullName, applicationReference, status, note }) {
+export async function sendApplicationStatusUpdate(env, { to, fullName, applicationReference, status }) {
   const statusLabel = String(status).replace(/_/g, " ");
 
   const text = `${fullName ? `Dear ${fullName},\n\n` : ""}Your application ${applicationReference} has been updated.
 
-New status: ${statusLabel}${note ? `\n\nNote: ${note}` : ""}
+New status: ${statusLabel}
 
 Please sign in to the Client Portal for full details.
 
@@ -210,11 +220,10 @@ ${env.PUBLIC_SITE_URL}/portal/`;
     ${fullName ? `<p>Dear ${escapeHtml(fullName)},</p>` : ""}
     <p>Your application <strong>${escapeHtml(applicationReference)}</strong> has been updated.</p>
     <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">New status: <strong>${escapeHtml(statusLabel)}</strong></p>
-    ${note ? `<p>${escapeHtml(note)}</p>` : ""}
     <p>Please sign in to the Client Portal for full details.</p>
   `);
 
-  await send(env, { to, subject: `Application update — ${applicationReference}`, text, html });
+  await send(env, { to, subject: `Application update - ${applicationReference}`, text, html });
 }
 
 export async function sendClientMessageNotification(env, { to, applicationReference }) {
@@ -229,14 +238,13 @@ ${env.PUBLIC_SITE_URL}/portal/`;
     <p>Please sign in to your Client Portal to view and respond to the message.</p>
   `);
 
-  await send(env, { to, subject: `New message from FIS Client Services — ${applicationReference}`, text, html });
+  await send(env, { to, subject: `New message from FIS Client Services - ${applicationReference}`, text, html });
 }
 
-export async function sendPaymentConfirmation(env, { to, applicationReference, amountPhp, description }) {
+export async function sendPaymentConfirmation(env, { to, applicationReference, amountPhp }) {
   const text = `Foreign Immigration Services has recorded your payment for application ${applicationReference} as paid.
 
 Amount: PHP ${amountPhp.toFixed(2)}
-Description: ${description}
 
 Please sign in to the Client Portal for full details.
 
@@ -244,11 +252,11 @@ ${env.PUBLIC_SITE_URL}/portal/`;
 
   const html = wrap(`
     <p>Foreign Immigration Services has recorded your payment for application <strong>${escapeHtml(applicationReference)}</strong> as paid.</p>
-    <p>Amount: PHP ${amountPhp.toFixed(2)}<br>Description: ${escapeHtml(description)}</p>
+    <p>Amount: PHP ${amountPhp.toFixed(2)}</p>
     <p>Please sign in to the Client Portal for full details.</p>
   `);
 
-  await send(env, { to, subject: `Payment confirmed — ${applicationReference}`, text, html });
+  await send(env, { to, subject: `Payment confirmed - ${applicationReference}`, text, html });
 }
 
 function escapeHtml(str) {

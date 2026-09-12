@@ -26,13 +26,13 @@ export async function getClientById(db, id) {
   return db.prepare("SELECT * FROM clients WHERE id = ?").bind(id).first();
 }
 
-export async function createClient(db, { fullName, email, phone = null, nationality = null, mobileE164 = null }) {
+export async function createClient(db, { fullName, email, phone = null, nationality = null, mobileE164 = null, preferredCommunicationChannel = null }) {
   const id = newId();
   await db
     .prepare(
-      "INSERT INTO clients (id, full_name, email, phone, nationality, mobile_e164) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO clients (id, full_name, email, phone, nationality, mobile_e164, preferred_communication_channel) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
-    .bind(id, fullName, email.toLowerCase(), phone, nationality, mobileE164)
+    .bind(id, fullName, email.toLowerCase(), phone, nationality, mobileE164, preferredCommunicationChannel)
     .run();
   return getClientById(db, id);
 }

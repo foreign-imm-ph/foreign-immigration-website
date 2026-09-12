@@ -30,8 +30,35 @@ description: Foreign Immigration Servicesへのお問い合わせ、またはメ
       </div>
 
       <div class="form-field">
-        <label for="phone">電話番号／ご希望の連絡方法 <span class="hint">(任意)</span></label>
-        <input type="text" id="phone" name="phone" data-field-label="電話番号／ご希望の連絡方法" autocomplete="tel">
+        <label for="phoneCountry">国／地域 <span class="hint">(任意)</span></label>
+        <select id="phoneCountry" name="phoneCountry" data-field-label="国／地域">
+          <option value="" selected>国内番号を入力する場合に選択してください</option>
+          <option value="PH">フィリピン</option>
+          <option value="AU">オーストラリア</option>
+          <option value="US">アメリカ合衆国</option>
+          <option value="GB">イギリス</option>
+          <option value="CN">中国</option>
+          <option value="KR">韓国</option>
+          <option value="JP">日本</option>
+          <option value="VN">ベトナム</option>
+          <option value="SG">シンガポール</option>
+          <option value="CA">カナダ</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">携帯電話／電話番号 <span class="hint">(任意)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="携帯電話／電話番号" autocomplete="tel" placeholder="例: 0917 123 4567 または +63 917 123 4567">
+      </div>
+
+      <div class="form-field">
+        <label for="preferredContactMethod">ご希望の連絡方法 <span class="hint">(任意)</span></label>
+        <select id="preferredContactMethod" name="preferredContactMethod" data-field-label="ご希望の連絡方法">
+          <option value="" selected>特にご希望はありません</option>
+          <option value="email">メール</option>
+          <option value="phone_call">電話</option>
+          <option value="portal">クライアントポータル</option>
+        </select>
       </div>
 
       <div class="form-field">

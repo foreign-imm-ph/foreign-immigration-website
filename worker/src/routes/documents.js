@@ -14,11 +14,25 @@ export async function handleListDocumentRequests(request, env, applicationId) {
   const client = await requireClient(request, env);
   await requireOwnedApplication(env, client, applicationId);
 
-  const { results: requests } = await env.DB.prepare(
-    "SELECT id, label, status, note, created_at FROM document_requests WHERE application_id = ? ORDER BY created_at DESC"
+  // client_visible = 1 excludes a request still awaiting staff's explicit
+  // Translate & Preview confirmation (see worker/src/routes/staff.js
+  // requestDocument/publishDocumentRequest) — a client never sees a
+  // document request whose title has not yet been successfully translated
+  // (or determined not to need translation).
+  const { results: rawRequests } = await env.DB.prepare(
+    `SELECT id, label, label_translated, label_target_language, label_translation_status, status, note, created_at
+     FROM document_requests WHERE application_id = ? AND client_visible = 1 ORDER BY created_at DESC`
   )
     .bind(applicationId)
     .all();
+  const requests = rawRequests.map((r) => ({
+    id: r.id,
+    label: r.label,
+    labelTranslated: r.label_translated,
+    labelTranslationStatus: r.label_translation_status,
+    status: r.status,
+    createdAt: r.created_at,
+  }));
 
   const { results: documents } = await env.DB.prepare(
     "SELECT id, document_request_id, original_filename, uploaded_by, created_at FROM documents WHERE application_id = ? ORDER BY created_at DESC"

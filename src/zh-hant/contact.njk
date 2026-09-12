@@ -30,8 +30,35 @@ description: 聯絡 Foreign Immigration Services，或直接透過電郵與我�
       </div>
 
       <div class="form-field">
-        <label for="phone">電話 / 偏好聯絡方式 <span class="hint">(選填)</span></label>
-        <input type="text" id="phone" name="phone" data-field-label="電話 / 偏好聯絡方式" autocomplete="tel">
+        <label for="phoneCountry">國家 / 地區 <span class="hint">(選填)</span></label>
+        <select id="phoneCountry" name="phoneCountry" data-field-label="國家 / 地區">
+          <option value="" selected>如填寫本地號碼請選擇</option>
+          <option value="PH">菲律賓</option>
+          <option value="AU">澳洲</option>
+          <option value="US">美國</option>
+          <option value="GB">英國</option>
+          <option value="CN">中國</option>
+          <option value="KR">韓國</option>
+          <option value="JP">日本</option>
+          <option value="VN">越南</option>
+          <option value="SG">新加坡</option>
+          <option value="CA">加拿大</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">手機 / 電話號碼 <span class="hint">(選填)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="手機 / 電話號碼" autocomplete="tel" placeholder="例如 0917 123 4567 或 +63 917 123 4567">
+      </div>
+
+      <div class="form-field">
+        <label for="preferredContactMethod">偏好聯絡方式 <span class="hint">(選填)</span></label>
+        <select id="preferredContactMethod" name="preferredContactMethod" data-field-label="偏好聯絡方式">
+          <option value="" selected>沒有特別偏好</option>
+          <option value="email">電郵</option>
+          <option value="phone_call">電話</option>
+          <option value="portal">客戶入口網站</option>
+        </select>
       </div>
 
       <div class="form-field">

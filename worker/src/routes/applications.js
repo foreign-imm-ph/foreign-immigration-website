@@ -1,6 +1,7 @@
 import { getSessionClient } from "../lib/session.js";
 import { json } from "../lib/http.js";
 import { HttpError } from "../lib/storage.js";
+import { getLocalizedStatusLabel } from "../lib/clientLocaleStrings.js";
 
 // The invariant this whole file exists to enforce: every query that
 // touches an application (or anything hanging off one) includes
@@ -33,18 +34,39 @@ export async function handleListApplications(request, env) {
   )
     .bind(client.id)
     .all();
-  return json({ applications: results });
+  const language = client.preferred_communication_language || "en";
+  const applications = results.map((a) => ({ ...a, statusLabel: getLocalizedStatusLabel(a.status, language) }));
+  return json({ applications });
 }
 
 export async function handleGetApplication(request, env, applicationId) {
   const client = await requireClient(request, env);
   const application = await requireOwnedApplication(env, client, applicationId);
 
-  const { results: history } = await env.DB.prepare(
-    "SELECT status, note, changed_at FROM application_status_history WHERE application_id = ? AND client_visible = 1 ORDER BY changed_at DESC"
+  // client_visible = 1 excludes any status update still awaiting staff's
+  // explicit Translate & Preview confirmation (see worker/src/routes/
+  // staff.js updateStatus/publishStatusUpdate) — a client never sees a
+  // status change whose note has not yet been successfully translated
+  // (or determined not to need translation).
+  const { results: rawHistory } = await env.DB.prepare(
+    `SELECT status, note, note_translated, note_target_language, note_translation_status, changed_at
+     FROM application_status_history WHERE application_id = ? AND client_visible = 1 ORDER BY changed_at DESC`
   )
     .bind(applicationId)
     .all();
 
-  return json({ application, history });
+  const language = client.preferred_communication_language || "en";
+  const history = rawHistory.map((row) => ({
+    status: row.status,
+    statusLabel: getLocalizedStatusLabel(row.status, language),
+    note: row.note,
+    noteTranslated: row.note_translated,
+    noteTranslationStatus: row.note_translation_status,
+    changedAt: row.changed_at,
+  }));
+
+  return json({
+    application: { ...application, statusLabel: getLocalizedStatusLabel(application.status, language) },
+    history,
+  });
 }

@@ -30,8 +30,35 @@ description: Liên hệ với Foreign Immigration Services để gửi yêu cầ
       </div>
 
       <div class="form-field">
-        <label for="phone">Số điện thoại / thông tin liên hệ ưu tiên <span class="hint">(không bắt buộc)</span></label>
-        <input type="text" id="phone" name="phone" data-field-label="Phone / Preferred Contact Details" autocomplete="tel">
+        <label for="phoneCountry">Quốc gia / khu vực <span class="hint">(không bắt buộc)</span></label>
+        <select id="phoneCountry" name="phoneCountry" data-field-label="Quốc gia / khu vực">
+          <option value="" selected>Chọn nếu nhập số điện thoại nội địa</option>
+          <option value="PH">Philippines</option>
+          <option value="AU">Úc</option>
+          <option value="US">Hoa Kỳ</option>
+          <option value="GB">Vương quốc Anh</option>
+          <option value="CN">Trung Quốc</option>
+          <option value="KR">Hàn Quốc</option>
+          <option value="JP">Nhật Bản</option>
+          <option value="VN">Việt Nam</option>
+          <option value="SG">Singapore</option>
+          <option value="CA">Canada</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">Số điện thoại di động <span class="hint">(không bắt buộc)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="Số điện thoại di động" autocomplete="tel" placeholder="Ví dụ 0917 123 4567 hoặc +63 917 123 4567">
+      </div>
+
+      <div class="form-field">
+        <label for="preferredContactMethod">Phương thức liên hệ ưu tiên <span class="hint">(không bắt buộc)</span></label>
+        <select id="preferredContactMethod" name="preferredContactMethod" data-field-label="Phương thức liên hệ ưu tiên">
+          <option value="" selected>Không có ưu tiên cụ thể</option>
+          <option value="email">Email</option>
+          <option value="phone_call">Gọi điện thoại</option>
+          <option value="portal">Cổng thông tin khách hàng</option>
+        </select>
       </div>
 
       <div class="form-field">

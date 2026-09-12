@@ -30,8 +30,35 @@ description: Foreign Immigration Services에 문의사항을 보내시거나, �
       </div>
 
       <div class="form-field">
-        <label for="phone">전화번호 / 기타 연락 방법 <span class="hint">(선택)</span></label>
-        <input type="text" id="phone" name="phone" data-field-label="전화번호 / 기타 연락 방법" autocomplete="tel">
+        <label for="phoneCountry">국가 / 지역 <span class="hint">(선택)</span></label>
+        <select id="phoneCountry" name="phoneCountry" data-field-label="국가 / 지역">
+          <option value="" selected>현지 번호를 입력하는 경우 선택하세요</option>
+          <option value="PH">필리핀</option>
+          <option value="AU">호주</option>
+          <option value="US">미국</option>
+          <option value="GB">영국</option>
+          <option value="CN">중국</option>
+          <option value="KR">대한민국</option>
+          <option value="JP">일본</option>
+          <option value="VN">베트남</option>
+          <option value="SG">싱가포르</option>
+          <option value="CA">캐나다</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="phone">휴대전화 / 전화번호 <span class="hint">(선택)</span></label>
+        <input type="text" id="phone" name="phone" data-field-label="휴대전화 / 전화번호" autocomplete="tel" placeholder="예: 0917 123 4567 또는 +63 917 123 4567">
+      </div>
+
+      <div class="form-field">
+        <label for="preferredContactMethod">선호 연락 방법 <span class="hint">(선택)</span></label>
+        <select id="preferredContactMethod" name="preferredContactMethod" data-field-label="선호 연락 방법">
+          <option value="" selected>특별히 선호하는 방법 없음</option>
+          <option value="email">이메일</option>
+          <option value="phone_call">전화 통화</option>
+          <option value="portal">고객 포털</option>
+        </select>
       </div>
 
       <div class="form-field">

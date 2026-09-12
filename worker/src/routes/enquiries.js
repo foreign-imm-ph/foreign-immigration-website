@@ -6,6 +6,14 @@ import { HttpError } from "../lib/storage.js";
 import { sendEnquiryAcknowledgement, sendStaffEnquiryNotification } from "../lib/email.js";
 import { createConversation, insertCommunicationMessage, updateMessageTranslation } from "../lib/conversations.js";
 import { normalizeCommunicationLanguage, detectLanguage, translateToEnglish } from "../lib/translation.js";
+import { normalizePhoneNumber, isSupportedMobileCountry } from "../lib/phone.js";
+
+// Phase 3.1: contact methods FIS actually operates today. Deliberately
+// does NOT include whatsapp/sms/telegram/wechat — those channels are
+// future-ready internally (see clients.preferred_communication_channel)
+// but nothing sends a message through them yet, so the public form must
+// never present them as available.
+const CONTACT_METHODS = ["email", "phone_call", "portal"];
 
 // Matches the 16 service slugs in src/contact.njk — kept in sync manually,
 // same as the original docs/backend-requirements.md contract.
@@ -62,6 +70,29 @@ export async function handleCreateEnquiry(request, env) {
     throw new HttpError(400, "Invalid communication language selection");
   }
 
+  // Phase 3.1: the phone field is now specifically a phone number (paired
+  // with an optional country selector), not a free-form "preferred contact
+  // details" field — but the historical `phone` column is still just
+  // whatever text the visitor entered, completely unmodified by
+  // normalization succeeding or failing. `mobile_e164`/`phone_country` are
+  // new, separate, additive facts, exactly like clients.phone vs
+  // clients.mobile_e164 in Phase 3. An ambiguous number with no country
+  // context is never guessed at — mobile_e164 simply stays null.
+  const phoneCountry = body.phoneCountry ? String(body.phoneCountry).trim().toUpperCase() : null;
+  if (phoneCountry && !isSupportedMobileCountry(phoneCountry)) {
+    throw new HttpError(400, "Unsupported phone number country");
+  }
+  let mobileE164 = null;
+  if (body.phone) {
+    const normalization = normalizePhoneNumber(String(body.phone), phoneCountry);
+    if (normalization.valid) mobileE164 = normalization.e164;
+  }
+
+  const preferredContactMethod = body.preferredContactMethod ? String(body.preferredContactMethod).trim() : null;
+  if (preferredContactMethod && !CONTACT_METHODS.includes(preferredContactMethod)) {
+    throw new HttpError(400, "Invalid preferred contact method selection");
+  }
+
   const id = newId();
   const reference = await insertUniqueReference(env.DB, "enquiries");
   const priority = resolvePriority(body.service, body.priority);
@@ -69,8 +100,9 @@ export async function handleCreateEnquiry(request, env) {
 
   await env.DB.prepare(
     `INSERT INTO enquiries
-      (id, reference, full_name, email, phone, nationality, location, language, service_slug, description, priority)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (id, reference, full_name, email, phone, nationality, location, language, service_slug, description, priority,
+       phone_country, mobile_e164, preferred_contact_method)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
@@ -83,7 +115,10 @@ export async function handleCreateEnquiry(request, env) {
       preferredLanguage,
       body.service,
       description,
-      priority
+      priority,
+      phoneCountry,
+      mobileE164,
+      preferredContactMethod
     )
     .run();
 
