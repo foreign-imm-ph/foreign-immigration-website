@@ -89,6 +89,35 @@ Review it in the staff portal.`;
   });
 }
 
+// Staff's translated reply to a pre-conversion enquiry. Unlike every other
+// email in this file, the actual message content is the point of this
+// email — there is no portal account yet for the client to sign into, so
+// the translated reply itself must be the email body. Never mentions
+// translation or AI involvement, and never includes the English original
+// unless targetLanguage is itself English (i.e. there is no separate
+// original to withhold).
+export async function sendEnquiryReplyEmail(env, { to, fullName, reference, replyText }) {
+  const text = `Dear ${fullName},
+
+${replyText}
+
+Reference: ${reference}
+
+If you have any questions, reply to this email or contact us at ${env.EMAIL_REPLY_TO}.
+
+Foreign Immigration Services
+Bureau of Immigration Accredited Consultancy`;
+
+  const html = wrap(`
+    <p>Dear ${escapeHtml(fullName)},</p>
+    <p>${escapeHtml(replyText).replace(/\n/g, "<br>")}</p>
+    <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">Reference: <strong>${escapeHtml(reference)}</strong></p>
+    <p>If you have any questions, reply to this email.</p>
+  `);
+
+  await send(env, { to, subject: `Re: Your enquiry — ${reference}`, text, html });
+}
+
 export async function sendMagicLink(env, { to, url }) {
   const text = `Sign in to your Foreign Immigration Services Client Portal.
 

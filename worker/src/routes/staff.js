@@ -11,7 +11,29 @@ import {
   sendApplicationStatusUpdate,
   sendClientMessageNotification,
   sendPaymentConfirmation,
+  sendEnquiryReplyEmail,
 } from "../lib/email.js";
+import {
+  getConversationByEnquiryId,
+  listConversationMessages,
+  getMessageById,
+  insertCommunicationMessage,
+  updateMessageTranslation,
+  updateMessageDeliveryStatus,
+  linkConversationToClient,
+} from "../lib/conversations.js";
+import { translateFromEnglish, translateToEnglish } from "../lib/translation.js";
+
+const LANGUAGE_LABELS = {
+  en: "English",
+  "zh-CN": "Simplified Chinese",
+  "zh-Hant": "Traditional Chinese",
+  ko: "Korean",
+  ja: "Japanese",
+  vi: "Vietnamese",
+  other: "Other",
+  und: "Undetermined",
+};
 
 const STATUS_OPTIONS = [
   "enquiry_received", "under_review", "documents_required", "documents_received",
@@ -74,6 +96,13 @@ async function dispatch(request, env, url) {
   if (restoreMatch && method === "POST") return restoreEnquiry(request, env, staff, restoreMatch[1]);
   const deleteMatch = path.match(/^\/enquiries\/([^/]+)\/delete$/);
   if (deleteMatch && method === "POST") return deleteEnquiry(request, env, staff, deleteMatch[1]);
+
+  const translateReplyMatch = path.match(/^\/enquiries\/([^/]+)\/reply\/translate$/);
+  if (translateReplyMatch && method === "POST") return translateReply(request, env, staff, translateReplyMatch[1]);
+  const sendReplyMatch = path.match(/^\/enquiries\/([^/]+)\/reply\/([^/]+)\/send$/);
+  if (sendReplyMatch && method === "POST") return sendReply(request, env, staff, sendReplyMatch[1], sendReplyMatch[2]);
+  const retryMatch = path.match(/^\/enquiries\/([^/]+)\/messages\/([^/]+)\/retry-translation$/);
+  if (retryMatch && method === "POST") return retryTranslation(request, env, staff, retryMatch[1], retryMatch[2]);
 
   if (path === "/applications/") return listApplications(env, staff);
   const appMatch = path.match(/^\/applications\/([^/]+)\/?$/);
@@ -225,6 +254,11 @@ async function viewEnquiry(env, staff, id) {
     (p) => `<option value="${p}" ${p === enquiry.priority ? "selected" : ""}>${PRIORITY_LABELS[p]}</option>`
   ).join("");
 
+  const conversation = await getConversationByEnquiryId(env.DB, enquiry.id);
+  const communicationsHtml = conversation
+    ? await renderCommunicationsCard(env, enquiry, conversation)
+    : "";
+
   return staffPage(
     `Enquiry ${enquiry.reference}`,
     `<h1>Enquiry ${escapeHtml(enquiry.reference)} ${priorityBadge(enquiry.priority)}</h1>
@@ -240,6 +274,7 @@ async function viewEnquiry(env, staff, id) {
          <button class="secondary" type="submit">Update priority</button>
        </form>
      </div>
+     ${communicationsHtml}
      <div class="card">
        <h2>${existingClient ? "Create application for existing client" : "Convert to client"}</h2>
        <p class="muted">${existingClient ? `${escapeHtml(existingClient.full_name)} is already a client — this creates a new application linked to their existing account.` : "Creates a client account (a magic-link welcome email is sent) and opens a linked application."}</p>
@@ -254,6 +289,223 @@ async function viewEnquiry(env, staff, id) {
      </div>`,
     staff.email
   );
+}
+
+// Renders the original-language + English translation for one inbound
+// client message, and the English original + client-language content for
+// one outbound staff message. All text is escaped — original client text,
+// translated text, and staff-authored text are all untrusted input as far
+// as HTML rendering is concerned.
+function renderMessage(enquiryId, message) {
+  const nl2br = (text) => escapeHtml(text).replace(/\n/g, "<br>");
+  const retryForm = `<form method="POST" action="/staff/enquiries/${enquiryId}/messages/${message.id}/retry-translation" style="display:inline"><button class="secondary" type="submit">Retry translation</button></form>`;
+
+  if (message.sender_type === "client") {
+    const sourceLabel = LANGUAGE_LABELS[message.source_language] || escapeHtml(message.source_language);
+    let translationBlock;
+    if (message.translation_status === "not_required") {
+      translationBlock = `<p class="muted">English translation: not required (already in English).</p>`;
+    } else if (message.translation_status === "ready") {
+      translationBlock = `<p><strong>English translation</strong></p><p>${nl2br(message.target_text)}</p>`;
+    } else if (message.translation_status === "failed") {
+      translationBlock = `<p class="muted">Translation unavailable.</p>${retryForm}`;
+    } else {
+      translationBlock = `<p class="muted">Translation in progress.</p>`;
+    }
+    return `<div class="card">
+      <p class="muted">Client message · ${escapeHtml(sourceLabel)} · ${escapeHtml(message.created_at)}</p>
+      <p><strong>Client original</strong></p>
+      <p>${nl2br(message.source_text)}</p>
+      ${translationBlock}
+    </div>`;
+  }
+
+  // Staff-authored outbound message.
+  const targetLabel = LANGUAGE_LABELS[message.target_language] || escapeHtml(message.target_language);
+  let clientFacingBlock;
+  if (message.translation_status === "not_required") {
+    clientFacingBlock = `<p class="muted">Sent as English (client requested English communication).</p>`;
+  } else if (message.translation_status === "ready") {
+    clientFacingBlock = `<p><strong>Client-language preview (${escapeHtml(targetLabel)})</strong></p><p>${nl2br(message.target_text)}</p>`;
+  } else if (message.translation_status === "unsupported_target") {
+    clientFacingBlock = `<p class="muted">Automatic translation is unavailable for the selected communication language. This draft has not been sent.</p>`;
+  } else if (message.translation_status === "failed") {
+    clientFacingBlock = `<p class="muted">Translation unavailable.</p>${retryForm}`;
+  } else {
+    clientFacingBlock = `<p class="muted">Translation in progress.</p>`;
+  }
+
+  let deliveryBlock;
+  const canSend = message.delivery_status !== "sent" && ["ready", "not_required"].includes(message.translation_status);
+  if (message.delivery_status === "sent") {
+    deliveryBlock = `<p class="muted">Sent.</p>`;
+  } else if (message.delivery_status === "failed") {
+    deliveryBlock = `<p class="muted">Email delivery failed.</p>`;
+  } else {
+    deliveryBlock = "";
+  }
+  const sendForm = canSend
+    ? `<form method="POST" action="/staff/enquiries/${enquiryId}/reply/${message.id}/send"><button type="submit">Send Reply</button></form>`
+    : "";
+
+  return `<div class="card">
+    <p class="muted">Staff reply · ${escapeHtml(message.created_at)}</p>
+    <p><strong>English original</strong></p>
+    <p>${nl2br(message.source_text)}</p>
+    ${clientFacingBlock}
+    ${deliveryBlock}
+    ${sendForm}
+  </div>`;
+}
+
+async function renderCommunicationsCard(env, enquiry, conversation) {
+  const messages = await listConversationMessages(env.DB, conversation.id);
+  const preferredLabel = conversation.preferred_language
+    ? LANGUAGE_LABELS[conversation.preferred_language] || escapeHtml(conversation.preferred_language)
+    : "Not specified";
+
+  const messagesHtml = messages.map((m) => renderMessage(enquiry.id, m)).join("");
+
+  return `<div class="card">
+    <h2>Communications</h2>
+    <p class="muted">Preferred communication language: <strong>${escapeHtml(preferredLabel)}</strong></p>
+  </div>
+  ${messagesHtml}
+  <div class="card">
+    <h2>Write a reply</h2>
+    <p class="muted">Write in English. You will preview the translated version before anything is sent.</p>
+    <form method="POST" action="/staff/enquiries/${enquiry.id}/reply/translate">
+      <label for="englishText">English reply</label>
+      <textarea name="englishText" id="englishText" required></textarea>
+      <button type="submit">Translate &amp; Preview</button>
+    </form>
+  </div>`;
+}
+
+// Step 1 of the reply workflow: staff submits English text. The draft
+// message row is created here, at this deliberate action point — not on
+// every keystroke, not automatically. Translation is attempted immediately
+// so the very next page load already shows the preview; nothing is sent
+// yet regardless of the outcome.
+async function translateReply(request, env, staff, enquiryId) {
+  const enquiry = await env.DB.prepare("SELECT id FROM enquiries WHERE id = ?").bind(enquiryId).first();
+  if (!enquiry) return notFound();
+  const conversation = await getConversationByEnquiryId(env.DB, enquiryId);
+  if (!conversation) return notFound();
+
+  const form = await request.formData();
+  const englishText = String(form.get("englishText") || "").trim().slice(0, 5000);
+  if (!englishText) return new Response("Reply text required", { status: 400 });
+
+  const target = conversation.preferred_language;
+
+  let messageId;
+  if (!target || target === "other") {
+    // Never guess a target for an unsupported/unspecified preference — the
+    // draft is created so the English text isn't lost, but no translation
+    // is attempted and no send action becomes available for it.
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "email",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: target || "other",
+      translationStatus: "unsupported_target",
+      deliveryStatus: "draft",
+    });
+  } else if (target === "en") {
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "email",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: "en",
+      targetText: englishText,
+      translationStatus: "not_required",
+      deliveryStatus: "draft",
+    });
+  } else {
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "email",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: target,
+      translationStatus: "pending",
+      deliveryStatus: "draft",
+    });
+    const result = await translateFromEnglish(env, englishText, target);
+    await updateMessageTranslation(env.DB, {
+      id: messageId,
+      targetText: result.text,
+      translationStatus: result.status,
+      translationProvider: result.provider,
+    });
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${enquiryId}`, 303);
+}
+
+// Step 2: staff explicitly confirms send after reviewing the preview.
+async function sendReply(request, env, staff, enquiryId, messageId) {
+  const enquiry = await env.DB.prepare("SELECT * FROM enquiries WHERE id = ?").bind(enquiryId).first();
+  if (!enquiry) return notFound();
+  const message = await getMessageById(env.DB, messageId);
+  if (!message || message.sender_type !== "staff") return notFound();
+  if (!["ready", "not_required"].includes(message.translation_status)) {
+    return new Response("This reply has not been translated yet", { status: 400 });
+  }
+  if (message.delivery_status === "sent") {
+    return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${enquiryId}`, 303);
+  }
+
+  const replyText = message.target_text || message.source_text;
+  try {
+    await sendEnquiryReplyEmail(env, {
+      to: enquiry.email,
+      fullName: enquiry.full_name,
+      reference: enquiry.reference,
+      replyText,
+    });
+    await updateMessageDeliveryStatus(env.DB, { id: messageId, deliveryStatus: "sent" });
+    await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_enquiry_reply", targetTable: "communication_messages", targetId: messageId });
+  } catch (err) {
+    console.error("Enquiry reply email failed:", err.message);
+    await updateMessageDeliveryStatus(env.DB, { id: messageId, deliveryStatus: "failed" });
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${enquiryId}`, 303);
+}
+
+// Re-attempts translation for one message that previously failed. Only
+// touches translation fields, never delivery_status, so retrying can never
+// cause a duplicate send.
+async function retryTranslation(request, env, staff, enquiryId, messageId) {
+  const message = await getMessageById(env.DB, messageId);
+  if (!message) return notFound();
+
+  if (message.sender_type === "client") {
+    const result = await translateToEnglish(env, message.source_text, message.source_language);
+    await updateMessageTranslation(env.DB, {
+      id: messageId,
+      targetText: result.text,
+      translationStatus: result.status,
+      translationProvider: result.provider,
+    });
+  } else if (message.sender_type === "staff" && message.target_language && message.target_language !== "other") {
+    const result = await translateFromEnglish(env, message.source_text, message.target_language);
+    await updateMessageTranslation(env.DB, {
+      id: messageId,
+      targetText: result.text,
+      translationStatus: result.status,
+      translationProvider: result.provider,
+    });
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${enquiryId}`, 303);
 }
 
 async function updateEnquiryPriority(request, env, staff, id) {
@@ -381,6 +633,21 @@ async function convertEnquiry(request, env, staff, id) {
 
   await env.DB.prepare("UPDATE enquiries SET status = 'converted' WHERE id = ?").bind(enquiry.id).run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "converted_enquiry", targetTable: "applications", targetId: applicationId });
+
+  // Multilingual communications (Phase 1): the conversation created at
+  // enquiry time continues — never a new one — now linked to the resulting
+  // client/application. The client's durable preference is backfilled only
+  // if they don't already have one (a returning client's existing stated
+  // preference is never overwritten by whatever this particular enquiry said).
+  const conversation = await getConversationByEnquiryId(env.DB, enquiry.id);
+  if (conversation) {
+    await linkConversationToClient(env.DB, { conversationId: conversation.id, clientId: client.id, applicationId });
+    if (!client.preferred_communication_language && conversation.preferred_language) {
+      await env.DB.prepare("UPDATE clients SET preferred_communication_language = ? WHERE id = ?")
+        .bind(conversation.preferred_language, client.id)
+        .run();
+    }
+  }
 
   if (isNewClient) {
     // Welcome email doubles as the client's first magic link.

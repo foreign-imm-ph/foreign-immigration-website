@@ -19,6 +19,12 @@ database_id = "85d16e91-9dba-45da-b8e4-b12c0592f779"
 binding = "CLIENT_FILES"
 bucket_name = "fis-client-files"
 
+[ai]
+binding = "AI"
+# Workers AI, used only for the multilingual-communications translation
+# provider (worker/src/lib/translation.js). No separate account/API key —
+# this binding is the entire integration surface.
+
 [vars]
 # Non-secret configuration. Secrets (RESEND_API_KEY) are set via
 # `wrangler secret put` and must never appear in this file.
