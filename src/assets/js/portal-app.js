@@ -158,7 +158,15 @@
       .join("") || '<li class="muted">No documents requested yet.</li>';
 
     var messagesHtml = msgData.messages
-      .map((m) => '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span><p>' + escapeHtml(m.body) + '</p></div>')
+      .map(function (m) {
+        // english_original is present only for a translated staff reply
+        // (never for the client's own messages) — a native <details>
+        // disclosure keeps the toggle simple, accessible, and JS-free.
+        var originalHtml = m.english_original
+          ? '<details class="portal-message-original"><summary>Show English original</summary><p>' + escapeHtml(m.english_original) + '</p></details>'
+          : '';
+        return '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span><p>' + escapeHtml(m.body) + '</p>' + originalHtml + '</div>';
+      })
       .join("") || '<p class="muted">No messages yet.</p>';
 
     var paymentsHtml = payData.payments

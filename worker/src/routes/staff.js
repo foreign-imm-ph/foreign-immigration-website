@@ -15,7 +15,9 @@ import {
 } from "../lib/email.js";
 import {
   getConversationByEnquiryId,
-  listConversationMessages,
+  getConversationByApplicationId,
+  getOrCreateConversationForApplication,
+  getMergedTimeline,
   getMessageById,
   insertCommunicationMessage,
   updateMessageTranslation,
@@ -120,8 +122,12 @@ async function dispatch(request, env, url) {
   const docStatusMatch = path.match(/^\/applications\/([^/]+)\/documents\/([^/]+)\/status$/);
   if (docStatusMatch && method === "POST") return updateDocumentRequestStatus(request, env, staff, docStatusMatch[1], docStatusMatch[2]);
 
-  const msgMatch = path.match(/^\/applications\/([^/]+)\/messages$/);
-  if (msgMatch && method === "POST") return sendStaffMessage(request, env, staff, msgMatch[1]);
+  const portalTranslateMatch = path.match(/^\/applications\/([^/]+)\/reply\/translate$/);
+  if (portalTranslateMatch && method === "POST") return translatePortalReply(request, env, staff, portalTranslateMatch[1]);
+  const portalSendMatch = path.match(/^\/applications\/([^/]+)\/reply\/([^/]+)\/send$/);
+  if (portalSendMatch && method === "POST") return sendPortalReply(request, env, staff, portalSendMatch[1], portalSendMatch[2]);
+  const portalRetryMatch = path.match(/^\/applications\/([^/]+)\/messages\/([^/]+)\/retry-translation$/);
+  if (portalRetryMatch && method === "POST") return retryPortalMessageTranslation(request, env, staff, portalRetryMatch[1], portalRetryMatch[2]);
 
   const payMatch = path.match(/^\/applications\/([^/]+)\/payments$/);
   if (payMatch && method === "POST") return createPaymentRequest(request, env, staff, payMatch[1]);
@@ -296,75 +302,98 @@ async function viewEnquiry(env, staff, id) {
 // one outbound staff message. All text is escaped — original client text,
 // translated text, and staff-authored text are all untrusted input as far
 // as HTML rendering is concerned.
-function renderMessage(enquiryId, message) {
+// basePath is e.g. "/staff/enquiries/<id>" or "/staff/applications/<id>" —
+// the two contexts render an identical card shape for a generalized
+// message, differing only in which resource's reply/retry routes they
+// point at.
+// message is a normalized timeline item (see conversations.js
+// normalizeGeneralizedMessage/getMergedTimeline) — never a raw DB row.
+function renderMessage(basePath, message) {
   const nl2br = (text) => escapeHtml(text).replace(/\n/g, "<br>");
-  const retryForm = `<form method="POST" action="/staff/enquiries/${enquiryId}/messages/${message.id}/retry-translation" style="display:inline"><button class="secondary" type="submit">Retry translation</button></form>`;
+  const retryForm = `<form method="POST" action="${basePath}/messages/${message.id}/retry-translation" style="display:inline"><button class="secondary" type="submit">Retry translation</button></form>`;
 
-  if (message.sender_type === "client") {
-    const sourceLabel = LANGUAGE_LABELS[message.source_language] || escapeHtml(message.source_language);
+  if (message.senderType === "client") {
+    const sourceLabel = LANGUAGE_LABELS[message.originalLanguage] || escapeHtml(message.originalLanguage);
     let translationBlock;
-    if (message.translation_status === "not_required") {
+    if (message.translationStatus === "not_required") {
       translationBlock = `<p class="muted">English translation: not required (already in English).</p>`;
-    } else if (message.translation_status === "ready") {
-      translationBlock = `<p><strong>English translation</strong></p><p>${nl2br(message.target_text)}</p>`;
-    } else if (message.translation_status === "failed") {
+    } else if (message.translationStatus === "ready") {
+      translationBlock = `<p><strong>English translation</strong></p><p>${nl2br(message.translationText)}</p>`;
+    } else if (message.translationStatus === "failed") {
       translationBlock = `<p class="muted">Translation unavailable.</p>${retryForm}`;
     } else {
       translationBlock = `<p class="muted">Translation in progress.</p>`;
     }
     return `<div class="card">
-      <p class="muted">Client message · ${escapeHtml(sourceLabel)} · ${escapeHtml(message.created_at)}</p>
+      <p class="muted">Client message · ${escapeHtml(sourceLabel)} · ${escapeHtml(message.createdAt)}</p>
       <p><strong>Client original</strong></p>
-      <p>${nl2br(message.source_text)}</p>
+      <p>${nl2br(message.originalText)}</p>
       ${translationBlock}
     </div>`;
   }
 
   // Staff-authored outbound message.
-  const targetLabel = LANGUAGE_LABELS[message.target_language] || escapeHtml(message.target_language);
+  const targetLabel = LANGUAGE_LABELS[message.translationLanguage] || escapeHtml(message.translationLanguage);
   let clientFacingBlock;
-  if (message.translation_status === "not_required") {
+  if (message.translationStatus === "not_required") {
     clientFacingBlock = `<p class="muted">Sent as English (client requested English communication).</p>`;
-  } else if (message.translation_status === "ready") {
-    clientFacingBlock = `<p><strong>Client-language preview (${escapeHtml(targetLabel)})</strong></p><p>${nl2br(message.target_text)}</p>`;
-  } else if (message.translation_status === "unsupported_target") {
+  } else if (message.translationStatus === "ready") {
+    clientFacingBlock = `<p><strong>Client-language preview (${escapeHtml(targetLabel)})</strong></p><p>${nl2br(message.translationText)}</p>`;
+  } else if (message.translationStatus === "unsupported_target") {
     clientFacingBlock = `<p class="muted">Automatic translation is unavailable for the selected communication language. This draft has not been sent.</p>`;
-  } else if (message.translation_status === "failed") {
+  } else if (message.translationStatus === "failed") {
     clientFacingBlock = `<p class="muted">Translation unavailable.</p>${retryForm}`;
   } else {
     clientFacingBlock = `<p class="muted">Translation in progress.</p>`;
   }
 
   let deliveryBlock;
-  const canSend = message.delivery_status !== "sent" && ["ready", "not_required"].includes(message.translation_status);
-  if (message.delivery_status === "sent") {
+  const canSend = message.deliveryStatus !== "sent" && ["ready", "not_required"].includes(message.translationStatus);
+  if (message.deliveryStatus === "sent") {
     deliveryBlock = `<p class="muted">Sent.</p>`;
-  } else if (message.delivery_status === "failed") {
-    deliveryBlock = `<p class="muted">Email delivery failed.</p>`;
+  } else if (message.deliveryStatus === "failed") {
+    deliveryBlock = `<p class="muted">Delivery failed.</p>`;
   } else {
     deliveryBlock = "";
   }
   const sendForm = canSend
-    ? `<form method="POST" action="/staff/enquiries/${enquiryId}/reply/${message.id}/send"><button type="submit">Send Reply</button></form>`
+    ? `<form method="POST" action="${basePath}/reply/${message.id}/send"><button type="submit">Send Reply</button></form>`
     : "";
 
   return `<div class="card">
-    <p class="muted">Staff reply · ${escapeHtml(message.created_at)}</p>
+    <p class="muted">Staff reply · ${escapeHtml(message.createdAt)}</p>
     <p><strong>English original</strong></p>
-    <p>${nl2br(message.source_text)}</p>
+    <p>${nl2br(message.originalText)}</p>
     ${clientFacingBlock}
     ${deliveryBlock}
     ${sendForm}
   </div>`;
 }
 
+// A historical legacy `messages` row, rendered in its existing simple form
+// (no translation concept applies to it) — never mutated, never migrated.
+function renderLegacyMessage(message) {
+  const nl2br = (text) => escapeHtml(text).replace(/\n/g, "<br>");
+  return `<div class="card">
+    <p class="muted">${escapeHtml(message.senderLabel)} · ${escapeHtml(message.createdAt)}</p>
+    <p>${nl2br(message.originalText)}</p>
+  </div>`;
+}
+
+function renderTimelineItem(basePath, item) {
+  return item.source === "legacy" ? renderLegacyMessage(item) : renderMessage(basePath, item);
+}
+
 async function renderCommunicationsCard(env, enquiry, conversation) {
-  const messages = await listConversationMessages(env.DB, conversation.id);
+  // applicationId: null — an enquiry-stage conversation never has legacy
+  // `messages` rows (those only ever exist for a converted application).
+  const timeline = await getMergedTimeline(env.DB, { applicationId: null, conversationId: conversation.id });
   const preferredLabel = conversation.preferred_language
     ? LANGUAGE_LABELS[conversation.preferred_language] || escapeHtml(conversation.preferred_language)
     : "Not specified";
 
-  const messagesHtml = messages.map((m) => renderMessage(enquiry.id, m)).join("");
+  const basePath = `/staff/enquiries/${enquiry.id}`;
+  const messagesHtml = timeline.map((item) => renderTimelineItem(basePath, item)).join("");
 
   return `<div class="card">
     <h2>Communications</h2>
@@ -482,8 +511,9 @@ async function sendReply(request, env, staff, enquiryId, messageId) {
 
 // Re-attempts translation for one message that previously failed. Only
 // touches translation fields, never delivery_status, so retrying can never
-// cause a duplicate send.
-async function retryTranslation(request, env, staff, enquiryId, messageId) {
+// cause a duplicate send. Shared by the enquiry and application/portal
+// contexts — identical logic, differing only in where it redirects back to.
+async function retryMessageTranslation(request, env, messageId, redirectPath) {
   const message = await getMessageById(env.DB, messageId);
   if (!message) return notFound();
 
@@ -505,7 +535,124 @@ async function retryTranslation(request, env, staff, enquiryId, messageId) {
     });
   }
 
-  return Response.redirect(`${new URL(request.url).origin}/staff/enquiries/${enquiryId}`, 303);
+  return Response.redirect(`${new URL(request.url).origin}${redirectPath}`, 303);
+}
+
+async function retryTranslation(request, env, staff, enquiryId, messageId) {
+  return retryMessageTranslation(request, env, messageId, `/staff/enquiries/${enquiryId}`);
+}
+
+async function retryPortalMessageTranslation(request, env, staff, applicationId, messageId) {
+  return retryMessageTranslation(request, env, messageId, `/staff/applications/${applicationId}`);
+}
+
+// Step 1 of the portal reply workflow (mirrors translateReply above for
+// enquiries): staff submits English text for an application. Resolves or
+// lazily creates the generalized conversation for this application, then
+// creates the draft and attempts translation immediately.
+async function translatePortalReply(request, env, staff, applicationId) {
+  const application = await env.DB.prepare("SELECT * FROM applications WHERE id = ?").bind(applicationId).first();
+  if (!application) return notFound();
+
+  const form = await request.formData();
+  const englishText = String(form.get("englishText") || "").trim().slice(0, 5000);
+  if (!englishText) return new Response("Reply text required", { status: 400 });
+
+  const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(application.client_id).first();
+  const conversation = await getOrCreateConversationForApplication(env.DB, {
+    applicationId,
+    clientId: application.client_id,
+    preferredLanguage: client ? client.preferred_communication_language : null,
+  });
+
+  // The client's current durable preference takes priority over the
+  // conversation's own (possibly stale) snapshot — a client may have
+  // updated their preference since the conversation was first created.
+  const target = (client && client.preferred_communication_language) || conversation.preferred_language;
+
+  let messageId;
+  if (!target || target === "other") {
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "portal",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: target || "other",
+      translationStatus: "unsupported_target",
+      deliveryStatus: "draft",
+    });
+  } else if (target === "en") {
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "portal",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: "en",
+      targetText: englishText,
+      translationStatus: "not_required",
+      deliveryStatus: "draft",
+    });
+  } else {
+    messageId = await insertCommunicationMessage(env.DB, {
+      conversationId: conversation.id,
+      senderType: "staff",
+      channel: "portal",
+      sourceLanguage: "en",
+      sourceText: englishText,
+      targetLanguage: target,
+      translationStatus: "pending",
+      deliveryStatus: "draft",
+    });
+    const result = await translateFromEnglish(env, englishText, target);
+    await updateMessageTranslation(env.DB, {
+      id: messageId,
+      targetText: result.text,
+      translationStatus: result.status,
+      translationProvider: result.provider,
+    });
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+// Step 2: staff explicitly confirms send. For the portal channel, "sent"
+// means persisted and now visible to the client in their portal — there is
+// no external service call here (Resend is never used for portal
+// messages), so unlike the enquiry-email path there is no realistic
+// external failure mode to model; a genuine database error surfaces as the
+// route's normal 500, the same as any other unexpected failure in this file.
+async function sendPortalReply(request, env, staff, applicationId, messageId) {
+  const application = await env.DB.prepare(
+    `SELECT a.*, c.email, c.full_name FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
+  )
+    .bind(applicationId)
+    .first();
+  if (!application) return notFound();
+  const message = await getMessageById(env.DB, messageId);
+  if (!message || message.sender_type !== "staff") return notFound();
+  if (!["ready", "not_required"].includes(message.translation_status)) {
+    return new Response("This reply has not been translated yet", { status: 400 });
+  }
+  if (message.delivery_status === "sent") {
+    return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+  }
+
+  await updateMessageDeliveryStatus(env.DB, { id: messageId, deliveryStatus: "sent" });
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_portal_reply", targetTable: "communication_messages", targetId: messageId });
+
+  // Same generic "you have a new message, sign in to view" notification
+  // already used by the legacy messaging path — reused unchanged, and
+  // fired exactly once per actual send (the old plain-message route this
+  // replaces is removed, so there is no second path that could double it).
+  try {
+    await sendClientMessageNotification(env, { to: application.email, applicationReference: application.reference });
+  } catch (err) {
+    console.error("Portal message notification email failed:", err.message);
+  }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
 async function updateEnquiryPriority(request, env, staff, id) {
@@ -705,11 +852,13 @@ async function viewApplication(env, staff, id) {
     .first();
   if (!application) return notFound();
 
-  const [{ results: docRequests }, { results: documents }, { results: messages }, { results: payments }] = await Promise.all([
+  const conversation = await getConversationByApplicationId(env.DB, id);
+  const [{ results: docRequests }, { results: documents }, timeline, { results: payments }, client] = await Promise.all([
     env.DB.prepare("SELECT * FROM document_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     env.DB.prepare("SELECT * FROM documents WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
-    env.DB.prepare("SELECT * FROM messages WHERE application_id = ? ORDER BY created_at ASC").bind(id).all(),
+    getMergedTimeline(env.DB, { applicationId: id, conversationId: conversation ? conversation.id : null }),
     env.DB.prepare("SELECT * FROM payment_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
+    env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(application.client_id).first(),
   ]);
 
   const statusOptionsHtml = STATUS_OPTIONS.map(
@@ -734,14 +883,13 @@ async function viewApplication(env, staff, id) {
     .map((d) => `<tr><td colspan="3"><a href="/staff/applications/${id}/documents/${d.id}/download">${escapeHtml(d.original_filename)}</a> <span class="muted">(${escapeHtml(d.uploaded_by)})</span></td></tr>`)
     .join("");
 
-  const messageRows = messages
-    .map(
-      (m) => `<div style="margin-bottom:0.8rem;">
-        <strong>${escapeHtml(m.sender_label)}</strong> <span class="muted">${escapeHtml(m.created_at)}</span>
-        <p style="margin:0.2rem 0 0;">${escapeHtml(m.body)}</p>
-      </div>`
-    )
-    .join("") || '<p class="muted">No messages yet.</p>';
+  const basePath = `/staff/applications/${id}`;
+  const messageRows = timeline.map((item) => renderTimelineItem(basePath, item)).join("") || '<p class="muted">No messages yet.</p>';
+  const preferredLabel = client && client.preferred_communication_language
+    ? LANGUAGE_LABELS[client.preferred_communication_language] || escapeHtml(client.preferred_communication_language)
+    : conversation && conversation.preferred_language
+      ? LANGUAGE_LABELS[conversation.preferred_language] || escapeHtml(conversation.preferred_language)
+      : "Not specified";
 
   const paymentRows = payments
     .map(
@@ -786,12 +934,17 @@ async function viewApplication(env, staff, id) {
 
      <div class="card">
        <h2>Messages</h2>
+       <p class="muted">Preferred communication language: <strong>${escapeHtml(preferredLabel)}</strong></p>
        ${messageRows}
-       <form method="POST" action="/staff/applications/${id}/messages">
-         <label for="body">Reply</label>
-         <textarea name="body" id="body" rows="3" required></textarea>
-         <button type="submit">Send</button>
-       </form>
+       <div class="card">
+         <h3>Write a reply</h3>
+         <p class="muted">Write in English. You will preview the translated version before anything is sent.</p>
+         <form method="POST" action="/staff/applications/${id}/reply/translate">
+           <label for="englishText">English reply</label>
+           <textarea name="englishText" id="englishText" rows="3" required></textarea>
+           <button type="submit">Translate &amp; Preview</button>
+         </form>
+       </div>
      </div>
 
      <div class="card">
@@ -899,34 +1052,6 @@ async function updateDocumentRequestStatus(request, env, staff, applicationId, d
     .bind(status, documentRequestId, applicationId)
     .run();
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "document_request_" + status, targetTable: "document_requests", targetId: documentRequestId });
-  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
-}
-
-async function sendStaffMessage(request, env, staff, applicationId) {
-  const form = await request.formData();
-  const body = String(form.get("body") || "").trim().slice(0, 4000);
-  if (!body) return new Response("Message required", { status: 400 });
-
-  await env.DB.prepare(
-    "INSERT INTO messages (id, application_id, sender_type, sender_label, body) VALUES (?, ?, 'staff', ?, ?)"
-  )
-    .bind(newId(), applicationId, staff.full_name || staff.email, body)
-    .run();
-  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_message", targetTable: "applications", targetId: applicationId });
-
-  const application = await env.DB.prepare(
-    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
-  )
-    .bind(applicationId)
-    .first();
-  if (application) {
-    try {
-      await sendClientMessageNotification(env, { to: application.email, applicationReference: application.reference });
-    } catch (err) {
-      console.error("Message notification email failed:", err.message);
-    }
-  }
-
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }
 
