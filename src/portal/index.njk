@@ -46,11 +46,69 @@ description: Your Foreign Immigration Services applications, documents, messages
             <label for="profile-nationality">Nationality</label>
             <input type="text" id="profile-nationality" name="nationality">
           </div>
+          <div class="form-field">
+            <label for="profile-preferredLanguage">Preferred Communication Language</label>
+            <select id="profile-preferredLanguage" name="preferredCommunicationLanguage">
+              <option value="">Not specified</option>
+              <option value="en">English</option>
+              <option value="zh-CN">Simplified Chinese</option>
+              <option value="zh-Hant">Traditional Chinese</option>
+              <option value="ko">Korean</option>
+              <option value="ja">Japanese</option>
+              <option value="vi">Vietnamese</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="profile-preferredChannel">Preferred Contact Channel</label>
+            <select id="profile-preferredChannel" name="preferredCommunicationChannel">
+              <option value="">Not specified</option>
+              <option value="portal">Client Portal</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="telegram">Telegram</option>
+              <option value="wechat">WeChat</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="profile-mobileNumber">Mobile Number</label>
+            <input type="text" id="profile-mobileNumber" name="mobileNumber" placeholder="e.g. +63 917 123 4567">
+            <span class="hint">Used only for SMS/WhatsApp/Telegram/WeChat if you enable them below. Separate from the Phone field above.</span>
+          </div>
+          <div class="form-field">
+            <label for="profile-mobileCountry">Mobile Number Country</label>
+            <select id="profile-mobileCountry" name="mobileCountry">
+              <option value="">Not needed if you typed a "+" country code</option>
+              <option value="PH">Philippines</option>
+              <option value="AU">Australia</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="CN">China</option>
+              <option value="KR">South Korea</option>
+              <option value="JP">Japan</option>
+              <option value="VN">Vietnam</option>
+              <option value="SG">Singapore</option>
+              <option value="CA">Canada</option>
+            </select>
+          </div>
           <div class="enquiry-form-actions">
             <button type="submit" class="btn btn-primary">Save Changes</button>
             <p id="portal-profile-status" class="form-status" aria-live="polite"></p>
           </div>
         </form>
+
+        <div class="portal-form--consents">
+          <h2>Future Messaging Permissions</h2>
+          <p class="muted">Allow Foreign Immigration Services to contact you through the channels below regarding your enquiry, application, documents, appointments, and service updates. Each channel is independent, optional, and can be changed at any time.</p>
+          <div class="form-field form-field--full">
+            <label><input type="checkbox" id="consent-sms" data-channel="sms"> SMS</label>
+            <label><input type="checkbox" id="consent-whatsapp" data-channel="whatsapp"> WhatsApp</label>
+            <label><input type="checkbox" id="consent-telegram" data-channel="telegram"> Telegram</label>
+            <label><input type="checkbox" id="consent-wechat" data-channel="wechat"> WeChat</label>
+          </div>
+          <p id="portal-consent-status" class="form-status" aria-live="polite"></p>
+        </div>
       </div>
     </div>
   </div>

@@ -7,7 +7,7 @@ import { handleListApplications, handleGetApplication } from "./routes/applicati
 import { handleListDocumentRequests, handleUploadDocument, handleDownloadDocument } from "./routes/documents.js";
 import { handleListMessages, handleSendMessage } from "./routes/messages.js";
 import { handleListPayments, handleGetQrPhImage, handleUploadPaymentProof } from "./routes/payments.js";
-import { handleGetProfile, handleUpdateProfile } from "./routes/profile.js";
+import { handleGetProfile, handleUpdateProfile, handleSetOwnConsent } from "./routes/profile.js";
 import { handleStaffRequest } from "./routes/staff.js";
 
 // Requests that change state must come from our own site — checked once,
@@ -82,6 +82,7 @@ async function route(request, env, path, method) {
 
   if (path === "/api/profile" && method === "GET") return handleGetProfile(request, env);
   if (path === "/api/profile" && method === "PATCH") return handleUpdateProfile(request, env);
+  if (path === "/api/consents" && method === "POST") return handleSetOwnConsent(request, env);
 
   return null;
 }

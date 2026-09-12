@@ -24,7 +24,15 @@ import {
   updateMessageDeliveryStatus,
   linkConversationToClient,
 } from "../lib/conversations.js";
-import { translateFromEnglish, translateToEnglish } from "../lib/translation.js";
+import { translateFromEnglish, translateToEnglish, CANONICAL_LANGUAGES } from "../lib/translation.js";
+import { normalizePhoneNumber, isSupportedMobileCountry, SUPPORTED_MOBILE_COUNTRIES } from "../lib/phone.js";
+import { getConsentStatusMap, setClientConsent, isValidConsentChannel, isValidConsentStatus, CONSENT_CHANNELS } from "../lib/consents.js";
+
+// Same allowlist as the client-facing profile route (worker/src/routes/profile.js)
+// — kept duplicated rather than shared to avoid a cross-route import for a
+// four-line constant; 'portal' and 'email' are always-available defaults,
+// the rest are future external channels with no active integration.
+const COMMUNICATION_CHANNELS = ["portal", "email", "sms", "whatsapp", "telegram", "wechat"];
 
 const LANGUAGE_LABELS = {
   en: "English",
@@ -128,6 +136,11 @@ async function dispatch(request, env, url) {
   if (portalSendMatch && method === "POST") return sendPortalReply(request, env, staff, portalSendMatch[1], portalSendMatch[2]);
   const portalRetryMatch = path.match(/^\/applications\/([^/]+)\/messages\/([^/]+)\/retry-translation$/);
   if (portalRetryMatch && method === "POST") return retryPortalMessageTranslation(request, env, staff, portalRetryMatch[1], portalRetryMatch[2]);
+
+  const commsUpdateMatch = path.match(/^\/applications\/([^/]+)\/communication$/);
+  if (commsUpdateMatch && method === "POST") return updateClientCommunicationPreferences(request, env, staff, commsUpdateMatch[1]);
+  const consentMatch = path.match(/^\/applications\/([^/]+)\/communication\/consent$/);
+  if (consentMatch && method === "POST") return recordClientConsent(request, env, staff, consentMatch[1]);
 
   const payMatch = path.match(/^\/applications\/([^/]+)\/payments$/);
   if (payMatch && method === "POST") return createPaymentRequest(request, env, staff, payMatch[1]);
@@ -755,11 +768,19 @@ async function convertEnquiry(request, env, staff, id) {
   let client = await getClientByEmail(env.DB, enquiry.email);
   let isNewClient = false;
   if (!client) {
+    // Opportunistic only: the public enquiry form has no country selector,
+    // so this only ever succeeds when a visitor happened to type their own
+    // number in full international format ("+..."), which the parser can
+    // resolve unambiguously without any country guess. Anything else
+    // leaves mobile_e164 null here — never inferred, never guessed. The
+    // historical free-form `phone` value is carried over unchanged either way.
+    const phoneNormalization = normalizePhoneNumber(enquiry.phone, null);
     client = await createClient(env.DB, {
       fullName: enquiry.full_name,
       email: enquiry.email,
       phone: enquiry.phone,
       nationality: enquiry.nationality,
+      mobileE164: phoneNormalization.valid ? phoneNormalization.e164 : null,
     });
     isNewClient = true;
   }
@@ -844,6 +865,79 @@ async function listApplications(env, staff) {
   );
 }
 
+// Staff correcting a client's communication preferences — language,
+// channel, and the normalized mobile number. This never touches the
+// client's existing free-form `phone` field, and never creates or changes
+// any consent row (that's the separate, explicit recordClientConsent
+// action below).
+async function updateClientCommunicationPreferences(request, env, staff, applicationId) {
+  const application = await env.DB.prepare("SELECT client_id FROM applications WHERE id = ?").bind(applicationId).first();
+  if (!application) return notFound();
+
+  const form = await request.formData();
+  const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(application.client_id).first();
+  if (!client) return notFound();
+
+  const languageValue = String(form.get("preferredCommunicationLanguage") || "").trim();
+  if (languageValue && !CANONICAL_LANGUAGES.includes(languageValue) && languageValue !== "other") {
+    return new Response("Invalid preferred communication language", { status: 400 });
+  }
+  const preferredCommunicationLanguage = languageValue || null;
+
+  const channelValue = String(form.get("preferredCommunicationChannel") || "").trim();
+  if (channelValue && !COMMUNICATION_CHANNELS.includes(channelValue)) {
+    return new Response("Invalid preferred communication channel", { status: 400 });
+  }
+  const preferredCommunicationChannel = channelValue || null;
+
+  let mobileE164 = client.mobile_e164;
+  const rawMobile = String(form.get("mobileNumber") || "").trim();
+  if (!rawMobile) {
+    mobileE164 = null;
+  } else {
+    const country = String(form.get("mobileCountry") || "").trim().toUpperCase() || null;
+    if (country && !isSupportedMobileCountry(country)) {
+      return new Response("Unsupported mobile number country", { status: 400 });
+    }
+    const result = normalizePhoneNumber(rawMobile, country);
+    if (!result.valid) {
+      return new Response("Could not recognize that as a valid mobile number. Select a country, or enter it in full international format (e.g. +639171234567).", { status: 400 });
+    }
+    mobileE164 = result.e164;
+  }
+
+  await env.DB.prepare(
+    `UPDATE clients SET preferred_communication_language = ?, preferred_communication_channel = ?, mobile_e164 = ?
+     WHERE id = ?`
+  )
+    .bind(preferredCommunicationLanguage, preferredCommunicationChannel, mobileE164, client.id)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_communication_preferences", targetTable: "clients", targetId: client.id });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+// Staff explicitly recording that a client granted or revoked consent for
+// an external channel outside the portal (e.g. over the phone, in person).
+// This is a deliberate, separate action from updateClientCommunicationPreferences
+// above — it never runs implicitly, and the source is always 'staff_recorded',
+// never defaulted to 'granted'.
+async function recordClientConsent(request, env, staff, applicationId) {
+  const application = await env.DB.prepare("SELECT client_id FROM applications WHERE id = ?").bind(applicationId).first();
+  if (!application) return notFound();
+
+  const form = await request.formData();
+  const channel = String(form.get("channel") || "").trim();
+  const status = String(form.get("status") || "").trim();
+  if (!isValidConsentChannel(channel)) return new Response("Invalid consent channel", { status: 400 });
+  if (!isValidConsentStatus(status)) return new Response("Invalid consent status", { status: 400 });
+
+  await setClientConsent(env.DB, { clientId: application.client_id, channel, status, source: "staff_recorded" });
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: `staff_recorded_consent_${status}`, targetTable: "client_channel_consents", targetId: application.client_id });
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
 async function viewApplication(env, staff, id) {
   const application = await env.DB.prepare(
     `SELECT a.*, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
@@ -853,12 +947,13 @@ async function viewApplication(env, staff, id) {
   if (!application) return notFound();
 
   const conversation = await getConversationByApplicationId(env.DB, id);
-  const [{ results: docRequests }, { results: documents }, timeline, { results: payments }, client] = await Promise.all([
+  const [{ results: docRequests }, { results: documents }, timeline, { results: payments }, client, consents] = await Promise.all([
     env.DB.prepare("SELECT * FROM document_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     env.DB.prepare("SELECT * FROM documents WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     getMergedTimeline(env.DB, { applicationId: id, conversationId: conversation ? conversation.id : null }),
     env.DB.prepare("SELECT * FROM payment_requests WHERE application_id = ? ORDER BY created_at DESC").bind(id).all(),
     env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(application.client_id).first(),
+    getConsentStatusMap(env.DB, application.client_id),
   ]);
 
   const statusOptionsHtml = STATUS_OPTIONS.map(
@@ -891,6 +986,18 @@ async function viewApplication(env, staff, id) {
       ? LANGUAGE_LABELS[conversation.preferred_language] || escapeHtml(conversation.preferred_language)
       : "Not specified";
 
+  const languageOptionsHtml = [...CANONICAL_LANGUAGES, "other"]
+    .map((code) => `<option value="${code}" ${client && client.preferred_communication_language === code ? "selected" : ""}>${escapeHtml(LANGUAGE_LABELS[code] || code)}</option>`)
+    .join("");
+  const channelOptionsHtml = COMMUNICATION_CHANNELS
+    .map((c) => `<option value="${c}" ${client && client.preferred_communication_channel === c ? "selected" : ""}>${escapeHtml(c)}</option>`)
+    .join("");
+  const countryOptionsHtml = SUPPORTED_MOBILE_COUNTRIES.map((c) => `<option value="${c}">${c}</option>`).join("");
+  const consentChannelOptionsHtml = CONSENT_CHANNELS.map((c) => `<option value="${c}">${escapeHtml(c)}</option>`).join("");
+  const consentRows = CONSENT_CHANNELS
+    .map((c) => `<tr><td>${escapeHtml(c)}</td><td>${consents[c] ? `<span class="status">${escapeHtml(consents[c])}</span>` : '<span class="muted">Not recorded</span>'}</td></tr>`)
+    .join("");
+
   const paymentRows = payments
     .map(
       (p) => `<tr>
@@ -916,6 +1023,51 @@ async function viewApplication(env, staff, id) {
          <textarea name="note" id="note" rows="2" placeholder="Optional note shown to the client with this status change"></textarea>
          <button type="submit">Update status</button>
        </form>
+     </div>
+
+     <div class="card">
+       <h2>Communication Preferences</h2>
+       <p><strong>Preferred language:</strong> ${escapeHtml(preferredLabel)}</p>
+       <p><strong>Preferred channel:</strong> ${client && client.preferred_communication_channel ? escapeHtml(client.preferred_communication_channel) : "Not specified"}</p>
+       <p><strong>Mobile number:</strong> ${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : "Not on file"}</p>
+       <table>
+         <tr><th>Channel</th><th>Consent status</th></tr>
+         ${consentRows}
+       </table>
+       <form method="POST" action="/staff/applications/${id}/communication">
+         <label for="preferredCommunicationLanguage">Preferred language</label>
+         <select name="preferredCommunicationLanguage" id="preferredCommunicationLanguage">
+           <option value="">Not specified</option>
+           ${languageOptionsHtml}
+         </select>
+         <label for="preferredCommunicationChannel">Preferred channel</label>
+         <select name="preferredCommunicationChannel" id="preferredCommunicationChannel">
+           <option value="">Not specified</option>
+           ${channelOptionsHtml}
+         </select>
+         <label for="mobileNumber">Mobile number</label>
+         <input type="text" name="mobileNumber" id="mobileNumber" value="${client && client.mobile_e164 ? escapeHtml(client.mobile_e164) : ""}" placeholder="e.g. +639171234567">
+         <label for="mobileCountry">Country (only needed if not entering full international format)</label>
+         <select name="mobileCountry" id="mobileCountry">
+           <option value="">—</option>
+           ${countryOptionsHtml}
+         </select>
+         <button type="submit">Save communication preferences</button>
+       </form>
+       <div class="card">
+         <h3>Record consent obtained outside the portal</h3>
+         <p class="muted">Only use this if the client has genuinely agreed, outside the client portal, to be contacted through this channel. This action never defaults to granted.</p>
+         <form method="POST" action="/staff/applications/${id}/communication/consent">
+           <label for="consentChannel">Channel</label>
+           <select name="channel" id="consentChannel">${consentChannelOptionsHtml}</select>
+           <label for="consentStatus">Action</label>
+           <select name="status" id="consentStatus">
+             <option value="granted">Record granted</option>
+             <option value="revoked">Record revoked</option>
+           </select>
+           <button type="submit">Save</button>
+         </form>
+       </div>
      </div>
 
      <div class="card">

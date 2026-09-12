@@ -61,6 +61,7 @@
       loadApplications();
       setupTabs();
       setupProfileForm();
+      setupConsentToggles();
       setupLogout();
     })
     .catch(function () {
@@ -264,6 +265,8 @@
 
   // ---- Profile ----
 
+  var CONSENT_CHANNELS = ["sms", "whatsapp", "telegram", "wechat"];
+
   function loadProfile() {
     window
       .portalFetch("/api/profile")
@@ -273,6 +276,16 @@
         document.getElementById("profile-email").value = data.email || "";
         document.getElementById("profile-phone").value = data.phone || "";
         document.getElementById("profile-nationality").value = data.nationality || "";
+        document.getElementById("profile-preferredLanguage").value = data.preferredCommunicationLanguage || "";
+        document.getElementById("profile-preferredChannel").value = data.preferredCommunicationChannel || "";
+        document.getElementById("profile-mobileNumber").value = data.mobileE164 || "";
+        document.getElementById("profile-mobileCountry").value = "";
+
+        var consents = data.consents || {};
+        CONSENT_CHANNELS.forEach(function (channel) {
+          var box = document.getElementById("consent-" + channel);
+          if (box) box.checked = consents[channel] === "granted";
+        });
       });
   }
 
@@ -289,11 +302,51 @@
             fullName: document.getElementById("profile-fullName").value,
             phone: document.getElementById("profile-phone").value,
             nationality: document.getElementById("profile-nationality").value,
+            preferredCommunicationLanguage: document.getElementById("profile-preferredLanguage").value,
+            preferredCommunicationChannel: document.getElementById("profile-preferredChannel").value,
+            mobileNumber: document.getElementById("profile-mobileNumber").value,
+            mobileCountry: document.getElementById("profile-mobileCountry").value,
           }),
         })
         .then(function (resp) {
-          status.textContent = resp.ok ? "Saved." : "Something went wrong. Please try again.";
+          if (resp.ok) {
+            status.textContent = "Saved.";
+            return;
+          }
+          resp
+            .json()
+            .then(function (data) {
+              status.textContent = (data && data.error) || "Something went wrong. Please try again.";
+            })
+            .catch(function () {
+              status.textContent = "Something went wrong. Please try again.";
+            });
         });
+    });
+  }
+
+  function setupConsentToggles() {
+    var status = document.getElementById("portal-consent-status");
+    CONSENT_CHANNELS.forEach(function (channel) {
+      var box = document.getElementById("consent-" + channel);
+      if (!box) return;
+      box.addEventListener("change", function () {
+        var desiredStatus = box.checked ? "granted" : "revoked";
+        status.textContent = "Saving...";
+        window
+          .portalFetch("/api/consents", {
+            method: "POST",
+            body: JSON.stringify({ channel: channel, status: desiredStatus }),
+          })
+          .then(function (resp) {
+            if (resp.ok) {
+              status.textContent = "Saved.";
+            } else {
+              box.checked = !box.checked;
+              status.textContent = "Something went wrong. Please try again.";
+            }
+          });
+      });
     });
   }
 })();
