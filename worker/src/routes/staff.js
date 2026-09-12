@@ -24,16 +24,21 @@ import {
   updateMessageDeliveryStatus,
   linkConversationToClient,
 } from "../lib/conversations.js";
-import { translateFromEnglish, translateToEnglish, CANONICAL_LANGUAGES, requiresClientTranslation } from "../lib/translation.js";
+import { translateFromEnglish, translateToEnglish, CANONICAL_LANGUAGES } from "../lib/translation.js";
 import { normalizePhoneNumber, isSupportedMobileCountry, SUPPORTED_MOBILE_COUNTRIES } from "../lib/phone.js";
 import { getConsentStatusMap, setClientConsent, isValidConsentChannel, isValidConsentStatus, CONSENT_CHANNELS } from "../lib/consents.js";
 import { STATUS_OPTIONS, getLocalizedStatusLabel } from "../lib/clientLocaleStrings.js";
+import { LANGUAGE_MODE, resolvePublicationMode, resolveClientCommunicationLanguage, blockedPublicationMessage } from "../lib/languageResolution.js";
 
-// Same allowlist as the client-facing profile route (worker/src/routes/profile.js)
-// — kept duplicated rather than shared to avoid a cross-route import for a
-// four-line constant; 'portal' and 'email' are always-available defaults,
-// the rest are future external channels with no active integration.
-const COMMUNICATION_CHANNELS = ["portal", "email", "sms", "whatsapp", "telegram", "wechat"];
+// Channels FIS can actually use today for a client's durable Preferred
+// Contact Channel (Phase 3.1 correction, Section 20-24). Same allowlist as
+// the client-facing profile route (worker/src/routes/profile.js) — kept
+// duplicated rather than shared to avoid a cross-route import for a
+// two-line constant. This governs staff's active Preferred Contact
+// Channel editor only; sms/whatsapp/telegram/wechat remain valid
+// elsewhere (CONSENT_CHANNELS below, external identity records, and any
+// value already stored on an existing client from before this correction).
+const ACTIVE_COMMUNICATION_CHANNELS = ["portal", "email"];
 
 const LANGUAGE_LABELS = {
   en: "English",
@@ -781,11 +786,10 @@ async function convertEnquiry(request, env, staff, id) {
 
   let client = await getClientByEmail(env.DB, enquiry.email);
   let isNewClient = false;
-  // Phase 3.1: 'phone_call' has no equivalent in
-  // clients.preferred_communication_channel (portal/email/sms/whatsapp/
-  // telegram/wechat — see profile.js) so it is deliberately never carried
-  // over; only 'email'/'portal' map cleanly onto that enum.
-  const carryOverChannel = ["email", "portal"].includes(enquiry.preferred_contact_method)
+  // Phase 3.1: 'phone_call' has no equivalent among the currently active
+  // durable channels and is deliberately never carried over; only
+  // 'email'/'portal' map onto ACTIVE_COMMUNICATION_CHANNELS.
+  const carryOverChannel = ACTIVE_COMMUNICATION_CHANNELS.includes(enquiry.preferred_contact_method)
     ? enquiry.preferred_contact_method
     : null;
 
@@ -921,7 +925,9 @@ async function updateClientCommunicationPreferences(request, env, staff, applica
   const preferredCommunicationLanguage = languageValue || null;
 
   const channelValue = String(form.get("preferredCommunicationChannel") || "").trim();
-  if (channelValue && !COMMUNICATION_CHANNELS.includes(channelValue)) {
+  // Only a genuinely NEW selection is restricted to the active set — see
+  // the matching note in profile.js (Phase 3.1 correction, Section 37).
+  if (channelValue && channelValue !== client.preferred_communication_channel && !ACTIVE_COMMUNICATION_CHANNELS.includes(channelValue)) {
     return new Response("Invalid preferred communication channel", { status: 400 });
   }
   const preferredCommunicationChannel = channelValue || null;
@@ -1117,9 +1123,17 @@ async function viewApplication(env, staff, id) {
   const languageOptionsHtml = [...CANONICAL_LANGUAGES, "other"]
     .map((code) => `<option value="${code}" ${client && client.preferred_communication_language === code ? "selected" : ""}>${escapeHtml(LANGUAGE_LABELS[code] || code)}</option>`)
     .join("");
-  const channelOptionsHtml = COMMUNICATION_CHANNELS
-    .map((c) => `<option value="${c}" ${client && client.preferred_communication_channel === c ? "selected" : ""}>${escapeHtml(c)}</option>`)
-    .join("");
+  // Phase 3.1 correction: only Email/Client Portal are offered as new
+  // active-channel selections, but an existing client may already have an
+  // inactive value on file from before this correction — represented
+  // honestly as an extra, still-selected option rather than silently
+  // showing no selection or a different channel as selected.
+  const currentChannel = client && client.preferred_communication_channel;
+  const channelOptionsHtml = ACTIVE_COMMUNICATION_CHANNELS
+    .map((c) => `<option value="${c}" ${currentChannel === c ? "selected" : ""}>${escapeHtml(c)}</option>`)
+    .join("") + (currentChannel && !ACTIVE_COMMUNICATION_CHANNELS.includes(currentChannel)
+    ? `<option value="${escapeHtml(currentChannel)}" selected>${escapeHtml(currentChannel)} (not currently active)</option>`
+    : "");
   const countryOptionsHtml = SUPPORTED_MOBILE_COUNTRIES.map((c) => `<option value="${c}">${c}</option>`).join("");
   const consentChannelOptionsHtml = CONSENT_CHANNELS.map((c) => `<option value="${c}">${escapeHtml(c)}</option>`).join("");
   const consentRows = CONSENT_CHANNELS
@@ -1266,24 +1280,25 @@ async function viewApplication(env, staff, id) {
   );
 }
 
-// A client-visible note is arbitrary staff prose, so for a client whose
-// preferred language requires translation this does NOT update
-// applications.status directly — it creates an application_status_history
-// row with client_visible = 0 (never returned by the client-facing API,
-// which filters on client_visible = 1) and attempts translation
-// immediately, so the very next page load already shows staff the
-// preview. Nothing about the application's actual status changes, and
-// nothing becomes client-visible, until staff explicitly confirms via
-// publishStatusUpdate below — exactly the same "translate now, publish
-// only on a separate explicit action" shape already used for portal
-// message replies. A second Translate & Preview before the first is
-// confirmed replaces the still-pending draft rather than accumulating
-// abandoned ones (an application only ever has one "next status" pending).
-//
-// No note, or a note that needs no translation (English target, or a
-// client with no supported non-English preference — see
-// requiresClientTranslation), applies immediately in one step exactly as
-// before Phase 3.1 — the common case is unaffected.
+// A client-visible note is arbitrary staff prose. Its publication mode is
+// resolved via resolveClientCommunicationLanguage/resolvePublicationMode
+// (Phase 3.1 correction — see lib/languageResolution.js):
+//   - ENGLISH or no note at all: applies immediately in one step, exactly
+//     as before — the common case is unaffected, and no AI call is ever
+//     made merely to publish a structured status with no custom note.
+//   - SUPPORTED_TRANSLATION: creates an application_status_history row
+//     with client_visible = 0 (never returned by the client-facing API,
+//     which filters on client_visible = 1) and attempts translation
+//     immediately. Nothing about the application's actual status changes,
+//     and nothing becomes client-visible, until staff explicitly confirms
+//     via publishStatusUpdate below. A second Translate & Preview before
+//     the first is confirmed replaces the still-pending draft rather than
+//     accumulating abandoned ones.
+//   - MISSING or UNSUPPORTED: the ENTIRE action is blocked — neither the
+//     note nor the structured status itself is applied — until staff
+//     either removes the note or resolves the client's communication
+//     language. NULL/'other' must never fall through to an English
+//     publish merely because no non-English target exists.
 async function updateStatus(request, env, staff, id) {
   const form = await request.formData();
   const status = String(form.get("status") || "");
@@ -1291,25 +1306,38 @@ async function updateStatus(request, env, staff, id) {
   if (!STATUS_OPTIONS.includes(status)) return new Response("Invalid status", { status: 400 });
 
   const client = await env.DB.prepare(
-    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT c.id AS client_id, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(id)
     .first();
   if (!client) return notFound();
 
-  if (note && requiresClientTranslation(client.preferred_communication_language)) {
-    await env.DB.prepare("DELETE FROM application_status_history WHERE application_id = ? AND client_visible = 0")
-      .bind(id)
-      .run();
-    const result = await translateFromEnglish(env, note, client.preferred_communication_language);
-    await env.DB.prepare(
-      `INSERT INTO application_status_history
-        (id, application_id, status, note, client_visible, changed_by_staff_email, note_translated, note_target_language, note_translation_status)
-       VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)`
-    )
-      .bind(newId(), id, status, note, staff.email, result.text, client.preferred_communication_language, result.status)
-      .run();
-    return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
+  if (note) {
+    const resolved = await resolveClientCommunicationLanguage(env.DB, {
+      client: { id: client.client_id, preferred_communication_language: client.preferred_communication_language },
+      applicationId: id,
+    });
+    const mode = resolvePublicationMode(resolved.language);
+
+    if (mode === LANGUAGE_MODE.MISSING || mode === LANGUAGE_MODE.UNSUPPORTED) {
+      return new Response(blockedPublicationMessage(mode), { status: 400 });
+    }
+
+    if (mode === LANGUAGE_MODE.SUPPORTED_TRANSLATION) {
+      await env.DB.prepare("DELETE FROM application_status_history WHERE application_id = ? AND client_visible = 0")
+        .bind(id)
+        .run();
+      const result = await translateFromEnglish(env, note, resolved.language);
+      await env.DB.prepare(
+        `INSERT INTO application_status_history
+          (id, application_id, status, note, client_visible, changed_by_staff_email, note_translated, note_target_language, note_translation_status)
+         VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?)`
+      )
+        .bind(newId(), id, status, note, staff.email, result.text, resolved.language, result.status)
+        .run();
+      return Response.redirect(`${new URL(request.url).origin}/staff/applications/${id}`, 303);
+    }
+    // mode === ENGLISH falls through to the single-step publish below.
   }
 
   await env.DB.prepare("UPDATE applications SET status = ?, updated_at = datetime('now') WHERE id = ?")
@@ -1391,9 +1419,9 @@ async function retryStatusTranslation(request, env, staff, applicationId, histor
 // Same gated-publish shape as updateStatus above, applied to
 // document_requests.label — the request title/instructions staff type
 // (e.g. "Passport bio page") is always non-empty client-facing prose, so
-// unlike a status note there is no "nothing to translate" shortcut; only
-// "no translation needed" (English target, or no supported non-English
-// preference) still publishes in one step. Multiple concurrent pending
+// unlike a status note there is no "nothing to translate" shortcut: MISSING
+// or UNSUPPORTED blocks the request outright (nothing is created), never
+// falling through to an English publish. Multiple concurrent pending
 // (client_visible = 0) document requests for the same application are
 // fine — each is independent, unlike a single application status.
 async function requestDocument(request, env, staff, applicationId) {
@@ -1402,26 +1430,35 @@ async function requestDocument(request, env, staff, applicationId) {
   if (!label) return new Response("Label required", { status: 400 });
 
   const client = await env.DB.prepare(
-    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT c.id AS client_id, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
   if (!client) return notFound();
 
-  const targetLanguage = client.preferred_communication_language;
+  const resolved = await resolveClientCommunicationLanguage(env.DB, {
+    client: { id: client.client_id, preferred_communication_language: client.preferred_communication_language },
+    applicationId,
+  });
+  const mode = resolvePublicationMode(resolved.language);
 
-  if (requiresClientTranslation(targetLanguage)) {
-    const result = await translateFromEnglish(env, label, targetLanguage);
+  if (mode === LANGUAGE_MODE.MISSING || mode === LANGUAGE_MODE.UNSUPPORTED) {
+    return new Response(blockedPublicationMessage(mode), { status: 400 });
+  }
+
+  if (mode === LANGUAGE_MODE.SUPPORTED_TRANSLATION) {
+    const result = await translateFromEnglish(env, label, resolved.language);
     await env.DB.prepare(
       `INSERT INTO document_requests
         (id, application_id, label, requested_by_staff_email, client_visible, label_translated, label_target_language, label_translation_status)
        VALUES (?, ?, ?, ?, 0, ?, ?, ?)`
     )
-      .bind(newId(), applicationId, label, staff.email, result.text, targetLanguage, result.status)
+      .bind(newId(), applicationId, label, staff.email, result.text, resolved.language, result.status)
       .run();
     return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
   }
 
+  // mode === ENGLISH
   await env.DB.prepare(
     `INSERT INTO document_requests (id, application_id, label, requested_by_staff_email, client_visible, label_translation_status)
      VALUES (?, ?, ?, ?, 1, ?)`
@@ -1507,9 +1544,9 @@ async function updateDocumentRequestStatus(request, env, staff, applicationId, d
 // amount_php is structured payment data and is NEVER passed through
 // translateFromEnglish — only `description` (staff-authored prose, e.g.
 // "ACR I-Card processing fee") is translatable. Same gated-publish shape
-// as requestDocument above: for a client needing translation, the row
-// starts client_visible = 0 until staff explicitly confirms; the amount
-// itself is authoritative and identical whichever path is taken.
+// as requestDocument above: MISSING/UNSUPPORTED blocks the request
+// outright (nothing is created) rather than publishing an English
+// description a non-English client may not be able to read.
 async function createPaymentRequest(request, env, staff, applicationId) {
   const form = await request.formData();
   const amount = parseFloat(form.get("amount"));
@@ -1517,27 +1554,37 @@ async function createPaymentRequest(request, env, staff, applicationId) {
   if (!amount || amount <= 0 || !description) return new Response("Amount and description required", { status: 400 });
 
   const client = await env.DB.prepare(
-    "SELECT c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT c.id AS client_id, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
   if (!client) return notFound();
 
-  const targetLanguage = client.preferred_communication_language;
+  const resolved = await resolveClientCommunicationLanguage(env.DB, {
+    client: { id: client.client_id, preferred_communication_language: client.preferred_communication_language },
+    applicationId,
+  });
+  const mode = resolvePublicationMode(resolved.language);
+
+  if (mode === LANGUAGE_MODE.MISSING || mode === LANGUAGE_MODE.UNSUPPORTED) {
+    return new Response(blockedPublicationMessage(mode), { status: 400 });
+  }
+
   const paymentId = newId();
 
-  if (requiresClientTranslation(targetLanguage)) {
-    const result = await translateFromEnglish(env, description, targetLanguage);
+  if (mode === LANGUAGE_MODE.SUPPORTED_TRANSLATION) {
+    const result = await translateFromEnglish(env, description, resolved.language);
     await env.DB.prepare(
       `INSERT INTO payment_requests
         (id, application_id, amount_php, description, client_visible, description_translated, description_target_language, description_translation_status)
        VALUES (?, ?, ?, ?, 0, ?, ?, ?)`
     )
-      .bind(paymentId, applicationId, amount, description, result.text, targetLanguage, result.status)
+      .bind(paymentId, applicationId, amount, description, result.text, resolved.language, result.status)
       .run();
     return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
   }
 
+  // mode === ENGLISH
   await env.DB.prepare(
     `INSERT INTO payment_requests (id, application_id, amount_php, description, client_visible, description_translation_status)
      VALUES (?, ?, ?, ?, 1, ?)`

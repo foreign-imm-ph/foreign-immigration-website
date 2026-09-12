@@ -29,21 +29,6 @@ const MODEL = "@cf/meta/llama-3.1-70b-instruct";
 
 export const CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
 
-// Phase 3.1: the single place that decides whether a piece of dynamic
-// staff-authored client-facing prose (a status note, a document request
-// title, a payment description) needs to go through Translate & Preview
-// before it can be shown to a client. True only for a client whose
-// preferred_communication_language is one of the five supported
-// non-English languages. False for English (nothing to translate), and
-// false for null/'other'/anything unrecognized — there is no defined
-// target to translate into, so that content is shown to the client as
-// written (English) rather than blocked or guessed at. This mirrors how
-// the rest of the system already treats a null/'other' preference
-// (e.g. translateFromEnglish's own "unsupported_target" handling).
-export function requiresClientTranslation(language) {
-  return CANONICAL_LANGUAGES.includes(language) && language !== "en";
-}
-
 const LANGUAGE_NAMES = {
   en: "English",
   "zh-CN": "Simplified Chinese",

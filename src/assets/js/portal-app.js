@@ -315,7 +315,24 @@
         document.getElementById("profile-phone").value = data.phone || "";
         document.getElementById("profile-nationality").value = data.nationality || "";
         document.getElementById("profile-preferredLanguage").value = data.preferredCommunicationLanguage || "";
-        document.getElementById("profile-preferredChannel").value = data.preferredCommunicationChannel || "";
+
+        // Phase 3.1 correction: the active-channel selector only offers
+        // Email/Client Portal, but an account may already have an inactive
+        // value on file (from before this correction). Represent it
+        // honestly with an extra option rather than silently showing no
+        // selection, without making it newly selectable once changed away
+        // from — resubmitting the form unchanged still preserves it
+        // (server allows only the unchanged value through), but choosing
+        // Email/Client Portal/Not specified switches away for good.
+        var channelSelect = document.getElementById("profile-preferredChannel");
+        var currentChannel = data.preferredCommunicationChannel || "";
+        if (currentChannel && !channelSelect.querySelector('option[value="' + currentChannel + '"]')) {
+          var inactiveOption = document.createElement("option");
+          inactiveOption.value = currentChannel;
+          inactiveOption.textContent = currentChannel + " (not currently active)";
+          channelSelect.appendChild(inactiveOption);
+        }
+        channelSelect.value = currentChannel;
         document.getElementById("profile-mobileNumber").value = data.mobileE164 || "";
         document.getElementById("profile-mobileCountry").value = "";
 

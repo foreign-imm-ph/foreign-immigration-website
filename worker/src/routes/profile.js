@@ -6,11 +6,17 @@ import { normalizePhoneNumber, isSupportedMobileCountry } from "../lib/phone.js"
 import { getConsentStatusMap, setClientConsent, isValidConsentChannel, isValidConsentStatus } from "../lib/consents.js";
 
 // Preferred communication channel — a separate fact from preferred
-// language (Phase 1) and from any specific contact address. 'portal' and
-// 'email' are always available; the four external channels are listed here
-// only as an eventual destination, never implying consent or an active
-// integration on their own.
-const COMMUNICATION_CHANNELS = ["portal", "email", "sms", "whatsapp", "telegram", "wechat"];
+// language (Phase 1) and from any specific contact address, and from
+// Future Messaging Permissions (client_channel_consents), which remains
+// entirely separate. Phase 3.1 correction: a client can only newly SELECT
+// a channel FIS can actually use today — 'portal' and 'email'. The four
+// external channel identifiers (sms/whatsapp/telegram/wechat) remain
+// valid values elsewhere (consent records, external identity records, and
+// any value already stored on an existing client from before this
+// correction) — this allowlist only governs what a NEW self-service
+// update may set, so it deliberately does not reject reading back an
+// existing stored value, only writing a new inactive one.
+const ACTIVE_COMMUNICATION_CHANNELS = ["portal", "email"];
 
 export async function handleGetProfile(request, env) {
   const client = await getSessionClient(request, env);
@@ -52,7 +58,12 @@ export async function handleUpdateProfile(request, env) {
   let preferredCommunicationChannel = client.preferred_communication_channel;
   if (body.preferredCommunicationChannel !== undefined) {
     const value = String(body.preferredCommunicationChannel).trim();
-    if (value && !COMMUNICATION_CHANNELS.includes(value)) {
+    // Only a genuinely NEW selection is restricted to the active set — an
+    // unrelated profile edit (e.g. mobile number) that resubmits an
+    // inactive value already on file (from before this correction, or
+    // set directly against the API) must not be blocked or silently
+    // rewritten (Phase 3.1 correction, Section 37).
+    if (value && value !== client.preferred_communication_channel && !ACTIVE_COMMUNICATION_CHANNELS.includes(value)) {
       throw new HttpError(400, "Invalid preferred communication channel");
     }
     preferredCommunicationChannel = value || null;
