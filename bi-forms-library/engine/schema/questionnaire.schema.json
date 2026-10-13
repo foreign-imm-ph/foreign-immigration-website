@@ -11,9 +11,30 @@
     "languages": {
       "type": "array",
       "minItems": 1,
-      "items": { "enum": ["en", "ja", "ko", "vi", "zh-cn", "zh-hant"] },
+      "items": { "enum": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"] },
       "contains": { "const": "en" },
-      "description": "Every form must at minimum offer English; other entries are the site's five additional supported locales."
+      "description": "Every form must at minimum offer English; other entries are the site's five additional supported locales. Codes match the site's own canonical casing exactly (worker/src/lib/translation.js CANONICAL_LANGUAGES, src/_data/site.json) -- NOT lowercase -- reconciled in Phase 2 Stage 5 (previously zh-cn/zh-hant, a real mismatch with the rest of the codebase)."
+    },
+    "staffFieldRequirements": {
+      "type": "object",
+      "description": "Per-coordinate-map-field-key override of whether a staff-controlled field is required before a submission can be approved (see engine/lib/questionnaire-answers.js getRequiredStaffFields()). A key with no entry here defaults to required.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "required": { "const": false, "description": "Marks this field as never required (e.g. a free-text continuation line that's often legitimately blank)." },
+          "requiredIf": {
+            "type": "object",
+            "required": ["customerAnswerKey", "equals"],
+            "additionalProperties": false,
+            "properties": {
+              "customerAnswerKey": { "type": "string", "minLength": 1 },
+              "equals": {}
+            },
+            "description": "Required only when the customer's answer at this key equals the given value."
+          }
+        }
+      }
     },
     "questions": {
       "type": "array",
@@ -31,8 +52,8 @@
         "ja": { "type": "string" },
         "ko": { "type": "string" },
         "vi": { "type": "string" },
-        "zh-cn": { "type": "string" },
-        "zh-hant": { "type": "string" }
+        "zh-CN": { "type": "string" },
+        "zh-Hant": { "type": "string" }
       }
     },
     "question": {

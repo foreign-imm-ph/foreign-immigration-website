@@ -19,6 +19,25 @@ database_id = "85d16e91-9dba-45da-b8e4-b12c0592f779"
 binding = "CLIENT_FILES"
 bucket_name = "fis-client-files"
 
+# Phase 2 (BI Forms): the private library of original BI templates and
+# their pre-rendered blank-region backgrounds, already populated out of
+# band (see bi-forms-library/inventory/forms-library-inventory.json for
+# the approved object-key mapping, e.g. "originals/CCS-A-CDR-2016.pdf").
+# This is a SEPARATE bucket from CLIENT_FILES above -- it holds FIS's own
+# static reference material, never a customer's data, and the Worker only
+# ever reads from it (.get()), never writes. Not made public; the bucket
+# itself has no public access configured, and nothing here changes that.
+#
+# PREPARED BUT NOT YET APPLIED: this binding does not exist on the live
+# Worker today. Adding it here is configuration only -- it takes effect
+# only on the next `wrangler deploy`, which has not been run and is not
+# authorized in this phase. Needed before approveBiForm's original-
+# template lookup (routes/staffBiForms.js) can work against the real
+# bucket instead of local/test data.
+[[r2_buckets]]
+binding = "BI_FORMS_LIBRARY"
+bucket_name = "fis-bi-forms-library"
+
 [ai]
 binding = "AI"
 # Workers AI, used only for the multilingual-communications translation

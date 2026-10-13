@@ -1,6 +1,14 @@
 {
   "formId": "2014-13-006",
-  "languages": ["en", "ja", "ko", "vi", "zh-cn", "zh-hant"],
+  "languages": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"],
+  "staffFieldRequirements": {
+    "landline2": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
+    "mobile2": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
+    "requestingAgency": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
+    "courtName": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } },
+    "courtBranchPlace": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } },
+    "courtContactNumber": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } }
+  },
   "questions": [
     { "id": "lastName", "type": "text", "dataKey": "lastName", "labels": { "en": "Last Name" }, "forFields": ["lastName"] },
     { "id": "firstName", "type": "text", "dataKey": "firstName", "labels": { "en": "First/Given Name" }, "forFields": ["firstName"] },

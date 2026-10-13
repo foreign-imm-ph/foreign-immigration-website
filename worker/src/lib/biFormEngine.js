@@ -22,9 +22,9 @@ import coordinateMap006 from "../../../bi-forms-library/configs/2014-13-006/coor
 import questionnaire006 from "../../../bi-forms-library/configs/2014-13-006/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
-import { fieldsForAudience } from "../../../bi-forms-library/engine/lib/field-permissions.js";
+import { fieldsForAudience, staffOwnedFields } from "../../../bi-forms-library/engine/lib/field-permissions.js";
 import { resolveFieldValues } from "../../../bi-forms-library/engine/lib/field-bindings.js";
-import { validateAnswers } from "../../../bi-forms-library/engine/lib/questionnaire-answers.js";
+import { validateAnswers, getRequiredStaffFields } from "../../../bi-forms-library/engine/lib/questionnaire-answers.js";
 // render-pipeline.js is loaded lazily (dynamic import, inside
 // getDocumentBuilders() below), not statically here, even though it is
 // itself pure/Workers-safe pdf-lib code (verified directly -- see
@@ -67,4 +67,17 @@ export function getFormConfig(biFormId) {
   return entry;
 }
 
-export { fieldsForAudience, resolveFieldValues, validateAnswers };
+// The approved object-key convention for the private fis-bi-forms-library
+// R2 bucket (binding BI_FORMS_LIBRARY, see wrangler.toml), per
+// bi-forms-library/inventory/forms-library-inventory.json: every
+// inventoried form's original is at "originals/<formId>.pdf", including
+// all three forms registered above. Centralized here (not hand-typed at
+// each call site) so a future form with a different key only needs an
+// entry in this one map, not a code change at every caller.
+const ORIGINAL_KEY_OVERRIDES = {};
+export function originalTemplateKey(biFormId) {
+  if (!KNOWN_BI_FORM_IDS.includes(biFormId)) throw new Error(`Unknown BI form id: ${JSON.stringify(biFormId)}`);
+  return ORIGINAL_KEY_OVERRIDES[biFormId] || `originals/${biFormId}.pdf`;
+}
+
+export { fieldsForAudience, resolveFieldValues, validateAnswers, staffOwnedFields, getRequiredStaffFields };

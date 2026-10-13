@@ -81,8 +81,8 @@
           "ja": { "type": "string" },
           "ko": { "type": "string" },
           "vi": { "type": "string" },
-          "zh-cn": { "type": "string" },
-          "zh-hant": { "type": "string" }
+          "zh-CN": { "type": "string" },
+          "zh-Hant": { "type": "string" }
         }
       }
     },

@@ -127,4 +127,22 @@ function fieldsForAudience(coordinateMap, audience) {
   return out;
 }
 
-module.exports = { assertFieldPermissions, fieldsForAudience, VALID_AUDIENCES, VALID_SUPPLIED_BY };
+/**
+ * Returns a flat list of every staff-controlled (suppliedBy: "staff")
+ * field across all three field collections, with its label -- used by
+ * the staff-review UI/API to know which fields it's responsible for
+ * collecting, and by the approval completeness check (see
+ * questionnaire-answers.js's getRequiredStaffFields()) to know which of
+ * those are actually required for THIS submission.
+ */
+function staffOwnedFields(coordinateMap) {
+  const out = [];
+  for (const coll of ["charBoxFields", "checkboxFields", "freeTextFields"]) {
+    for (const [key, field] of Object.entries(coordinateMap[coll] || {})) {
+      if (field.roles && field.roles.suppliedBy === "staff") out.push({ key, label: field.label, coll });
+    }
+  }
+  return out;
+}
+
+module.exports = { assertFieldPermissions, fieldsForAudience, staffOwnedFields, VALID_AUDIENCES, VALID_SUPPLIED_BY };

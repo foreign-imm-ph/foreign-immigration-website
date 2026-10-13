@@ -51,7 +51,11 @@ async function staffRequest(path, { method = "GET", staffEmail, body, isForm = t
 }
 
 async function putFakeOriginal(biFormId) {
-  await env.CLIENT_FILES.put(`bi-form-templates/${biFormId}/original.pdf`, new TextEncoder().encode("%PDF-1.7\nfake original for test purposes\n"));
+  // Matches the real, approved object-key convention for the private
+  // fis-bi-forms-library bucket (BI_FORMS_LIBRARY binding) -- see
+  // bi-forms-library/inventory/forms-library-inventory.json and
+  // biFormEngine.js's originalTemplateKey().
+  await env.BI_FORMS_LIBRARY.put(`originals/${biFormId}.pdf`, new TextEncoder().encode("%PDF-1.7\nfake original for test purposes\n"));
 }
 
 describe("staff-facing BI-form routes", () => {
@@ -174,6 +178,81 @@ describe("staff-facing BI-form routes", () => {
     submission = await transitionStatus(env.DB, submission, "under_review", { staffEmail: staff.email });
     const resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
     expect(resp.status).toBe(501);
+  });
+
+  it("approve does not require staff fields that are conditionally inapplicable to this submission (requestingAgencyApplies/courtLegalApplies both false)", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("2014-13-006");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "2014-13-006", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(JSON.stringify({
+        lastName: "SMITH", firstName: "JONATHAN", gender: "M", middleName: "M", otherName1: "N/A", otherName2: "N/A",
+        dobDay: "15", dobMonth: "MAR", dobYear: "1985", placeOfBirth: "X", citizenship: "X", address1: "X", barangay: "X",
+        provinceZip: "X", passportNumber: "PA1", requestingAgencyApplies: false, courtLegalApplies: false, trips: [],
+      }), submission.id)
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+    submission = await transitionStatus(env.DB, submission, "under_review", { staffEmail: staff.email });
+
+    // Only the unconditionally-required staff fields are supplied --
+    // landline2/mobile2/requestingAgency (gated on requestingAgencyApplies)
+    // and courtName/courtBranchPlace/courtContactNumber (gated on
+    // courtLegalApplies) are deliberately left blank, since neither gate
+    // applies to this submission.
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { landline1: "N/A", mobile1: "09171234567", signatureLineContactNumber: "09171234567" },
+    });
+    expect(resp.status).toBe(303);
+
+    // If the conditional fields were still being treated as required, this
+    // would come back 422 (missing required staff field). Reaching the
+    // known pdf-lib harness limitation (500) instead confirms every
+    // precondition this route is responsible for -- including the new
+    // conditional staff-field completeness check -- was satisfied.
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500);
+  });
+
+  it("approve still requires conditionally-applicable staff fields once their gate is satisfied", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("2014-13-006");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "2014-13-006", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(JSON.stringify({
+        lastName: "SMITH", firstName: "JONATHAN", gender: "M", middleName: "M", otherName1: "N/A", otherName2: "N/A",
+        dobDay: "15", dobMonth: "MAR", dobYear: "1985", placeOfBirth: "X", citizenship: "X", address1: "X", barangay: "X",
+        provinceZip: "X", passportNumber: "PA1", requestingAgencyApplies: false, courtLegalApplies: true, trips: [],
+      }), submission.id)
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+    submission = await transitionStatus(env.DB, submission, "under_review", { staffEmail: staff.email });
+
+    // courtLegalApplies is true, so the court fields are now required --
+    // leaving them blank must still be rejected.
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { landline1: "N/A", mobile1: "09171234567", signatureLineContactNumber: "09171234567" },
+    });
+    expect(resp.status).toBe(303);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(422);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { courtName: "Regional Trial Court", courtBranchPlace: "Branch 1, Manila", courtContactNumber: "09170000000" },
+    });
+    expect(resp.status).toBe(303);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500); // harness limitation, not a missing-field 422 -- see file-level comment above
   });
 
   it("staff fields cannot be edited before review has started (draft status)", async () => {

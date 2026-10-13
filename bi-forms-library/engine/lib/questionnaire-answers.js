@@ -83,4 +83,39 @@ function validateAnswers(questionnaire, answers) {
   return { ok: errors.length === 0, errors };
 }
 
-module.exports = { validateAnswers };
+// Determines whether a STAFF-controlled field is currently required for
+// approval, given this submission's CUSTOMER answers -- distinct from
+// validateAnswers() above (which checks customer answers themselves).
+// Some staff fields are only meaningful conditionally (e.g. a court
+// contact number only matters if the customer said this request is for
+// a court/legal purpose); treating every staff field as unconditionally
+// required blocks approval on fields nobody will ever fill in. Declared
+// per form in questionnaire.json's optional `staffFieldRequirements` map:
+//   { "fieldKey": { "required": false } }
+//     -- never required (e.g. a free-text continuation line that's
+//        often legitimately blank)
+//   { "fieldKey": { "requiredIf": { "customerAnswerKey": "x", "equals": true } } }
+//     -- required only when the customer's answer to question "x"
+//        equals the given value
+// A staff field with no entry in this map defaults to required (same
+// convention questionnaire.json's own per-question `required` uses).
+function isStaffFieldRequired(fieldKey, questionnaire, customerAnswers) {
+  const rule = (questionnaire.staffFieldRequirements || {})[fieldKey];
+  if (!rule) return true;
+  if (rule.required === false) return false;
+  if (rule.requiredIf) {
+    const data = customerAnswers && typeof customerAnswers === "object" ? customerAnswers : {};
+    return data[rule.requiredIf.customerAnswerKey] === rule.requiredIf.equals;
+  }
+  return true;
+}
+
+// `staffFields` is the array shape field-permissions.js's
+// staffOwnedFields() returns ({key, label, coll}[]) -- kept as a
+// parameter rather than imported here so this module has no dependency
+// on field-permissions.js and stays trivially unit-testable.
+function getRequiredStaffFields(staffFields, questionnaire, customerAnswers) {
+  return staffFields.filter((f) => isStaffFieldRequired(f.key, questionnaire, customerAnswers));
+}
+
+module.exports = { validateAnswers, isStaffFieldRequired, getRequiredStaffFields };

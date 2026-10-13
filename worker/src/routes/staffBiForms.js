@@ -1,7 +1,14 @@
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
 import { HttpError } from "../lib/storage.js";
 import { newId } from "../lib/crypto.js";
-import { getFormConfig, KNOWN_BI_FORM_IDS, getDocumentBuilders } from "../lib/biFormEngine.js";
+import {
+  getFormConfig,
+  KNOWN_BI_FORM_IDS,
+  getDocumentBuilders,
+  originalTemplateKey,
+  staffOwnedFields,
+  getRequiredStaffFields,
+} from "../lib/biFormEngine.js";
 import { composeAndFinalizeCustomerPreview } from "../lib/biFormRaster.js";
 import {
   createSubmission,
@@ -14,16 +21,6 @@ import {
 
 function notFound() {
   return new Response("Not found", { status: 404 });
-}
-
-function staffOwnedFields(coordinateMap) {
-  const out = [];
-  for (const coll of ["charBoxFields", "checkboxFields", "freeTextFields"]) {
-    for (const [key, field] of Object.entries(coordinateMap[coll] || {})) {
-      if (field.roles && field.roles.suppliedBy === "staff") out.push({ key, label: field.label, coll });
-    }
-  }
-  return out;
 }
 
 export async function listBiForms(env, staff, url) {
@@ -233,26 +230,35 @@ export async function approveBiForm(request, env, staff, submissionId) {
 
   // Checked before validating staff-field completeness: there is no point
   // asking staff to finish filling in a form generation cannot proceed
-  // with anyway. original.pdf is never committed to this repository
-  // (confidential BI template) -- it must already exist in R2 at a
-  // well-known key for the form, placed there out of band by staff/an
-  // operator. Not configured yet for any form; this is a real, documented
-  // blocker, not an oversight (see Phase 2 Stage 3 report).
-  const originalKey = `bi-form-templates/${submission.bi_form_id}/original.pdf`;
-  const originalObject = await env.CLIENT_FILES.get(originalKey);
+  // with anyway. Reads the EXISTING private fis-bi-forms-library bucket
+  // (binding BI_FORMS_LIBRARY, see wrangler.toml) at its already-approved
+  // object key -- see bi-forms-library/inventory/
+  // forms-library-inventory.json, which documents "originals/<formId>.pdf"
+  // for every one of the 20 inventoried forms, these three included.
+  // Nothing is re-created or re-uploaded here; this only reads what
+  // already exists out of band.
+  const originalKey = originalTemplateKey(submission.bi_form_id);
+  const originalObject = await env.BI_FORMS_LIBRARY.get(originalKey);
   if (!originalObject) {
-    throw new HttpError(501, `Original BI template for "${submission.bi_form_id}" is not available at ${originalKey}. It must be uploaded to R2 out of band before this form can be generated.`);
+    throw new HttpError(501, `Original BI template for "${submission.bi_form_id}" was not found at ${originalKey} in the fis-bi-forms-library bucket (BI_FORMS_LIBRARY binding). Confirm the binding is configured and the object exists at the approved key.`);
   }
 
   const staffFields = staffOwnedFields(coordinateMap);
   const staffAnswers = submission.staff_answers_json ? JSON.parse(submission.staff_answers_json) : {};
-  const missing = staffFields.filter((f) => !staffAnswers[f.key] || String(staffAnswers[f.key]).trim() === "");
+  const customerAnswers = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
+  // Only fields the form's own rules currently require are checked -- a
+  // field marked `required: false`, or one gated by `requiredIf` on a
+  // customer answer that doesn't currently apply (e.g. court/legal fields
+  // when the customer said this isn't for a court purpose), does not
+  // block approval. See questionnaire.json's staffFieldRequirements and
+  // engine/lib/questionnaire-answers.js getRequiredStaffFields().
+  const requiredStaffFields = getRequiredStaffFields(staffFields, questionnaire, customerAnswers);
+  const missing = requiredStaffFields.filter((f) => !staffAnswers[f.key] || String(staffAnswers[f.key]).trim() === "");
   if (missing.length > 0) {
     throw new HttpError(422, `Missing required staff field(s): ${missing.map((f) => f.label).join(", ")}`);
   }
   const originalBytes = new Uint8Array(await originalObject.arrayBuffer());
 
-  const customerAnswers = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
   const data = { ...customerAnswers, ...staffAnswers };
   const bindings = questionnaire.fieldBindings || {};
 

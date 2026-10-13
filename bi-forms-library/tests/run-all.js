@@ -28,7 +28,8 @@ const { loadFormConfig, listFormIds } = require(path.join(ENGINE_DIR, "lib", "co
 const { validateForm } = require(path.join(ENGINE_DIR, "lib", "validate-form"));
 const { fieldsForAudience } = require(path.join(ENGINE_DIR, "lib", "field-permissions"));
 const { resolveFieldValues } = require(path.join(ENGINE_DIR, "lib", "field-bindings"));
-const { validateAnswers } = require(path.join(ENGINE_DIR, "lib", "questionnaire-answers"));
+const { validateAnswers, getRequiredStaffFields } = require(path.join(ENGINE_DIR, "lib", "questionnaire-answers"));
+const { staffOwnedFields } = require(path.join(ENGINE_DIR, "lib", "field-permissions"));
 const {
   buildStaffDocument,
   buildCustomerFieldsDocument,
@@ -206,6 +207,62 @@ test("2014-13-006: validateAnswers does not require additionalTravelHistory (req
   const withoutExtra = { ...data };
   delete withoutExtra.additionalTravelHistory;
   assert.ok(validateAnswers(questionnaire, withoutExtra).ok);
+});
+
+// --- getRequiredStaffFields / isStaffFieldRequired (questionnaire-answers.js):
+// the staff-field completeness rules approveBiForm enforces, distinct
+// from validateAnswers above (which checks CUSTOMER answers). ---
+
+for (const [formId, optionalKey] of [["CCS-A-CDR-2016", "purposeLine2"], ["2014-13-002", "purposeLine2"]]) {
+  test(`${formId}: getRequiredStaffFields excludes ${optionalKey} (required: false)`, () => {
+    const { coordinateMap, questionnaire } = loadFormConfig(formId);
+    const staffFields = staffOwnedFields(coordinateMap);
+    assert.ok(staffFields.some((f) => f.key === optionalKey), `expected ${optionalKey} to be a staff-owned field`);
+    const required = getRequiredStaffFields(staffFields, questionnaire, {});
+    assert.ok(!required.some((f) => f.key === optionalKey), `expected ${optionalKey} to be excluded from required staff fields`);
+  });
+}
+
+test("2014-13-006: getRequiredStaffFields requires landline2/mobile2/requestingAgency only when requestingAgencyApplies is true", () => {
+  const { coordinateMap, questionnaire } = loadFormConfig("2014-13-006");
+  const staffFields = staffOwnedFields(coordinateMap);
+  const conditionalKeys = ["landline2", "mobile2", "requestingAgency"];
+
+  const whenNo = getRequiredStaffFields(staffFields, questionnaire, { requestingAgencyApplies: false });
+  for (const key of conditionalKeys) {
+    assert.ok(!whenNo.some((f) => f.key === key), `expected ${key} to not be required when requestingAgencyApplies is false`);
+  }
+
+  const whenYes = getRequiredStaffFields(staffFields, questionnaire, { requestingAgencyApplies: true });
+  for (const key of conditionalKeys) {
+    assert.ok(whenYes.some((f) => f.key === key), `expected ${key} to be required when requestingAgencyApplies is true`);
+  }
+});
+
+test("2014-13-006: getRequiredStaffFields requires courtName/courtBranchPlace/courtContactNumber only when courtLegalApplies is true", () => {
+  const { coordinateMap, questionnaire } = loadFormConfig("2014-13-006");
+  const staffFields = staffOwnedFields(coordinateMap);
+  const conditionalKeys = ["courtName", "courtBranchPlace", "courtContactNumber"];
+
+  const whenNo = getRequiredStaffFields(staffFields, questionnaire, { courtLegalApplies: false });
+  for (const key of conditionalKeys) {
+    assert.ok(!whenNo.some((f) => f.key === key), `expected ${key} to not be required when courtLegalApplies is false`);
+  }
+
+  const whenYes = getRequiredStaffFields(staffFields, questionnaire, { courtLegalApplies: true });
+  for (const key of conditionalKeys) {
+    assert.ok(whenYes.some((f) => f.key === key), `expected ${key} to be required when courtLegalApplies is true`);
+  }
+});
+
+test("2014-13-006: getRequiredStaffFields always requires landline1/mobile1/signatureLineContactNumber regardless of either gate", () => {
+  const { coordinateMap, questionnaire } = loadFormConfig("2014-13-006");
+  const staffFields = staffOwnedFields(coordinateMap);
+  const unconditionalKeys = ["landline1", "mobile1", "signatureLineContactNumber"];
+  const required = getRequiredStaffFields(staffFields, questionnaire, { requestingAgencyApplies: false, courtLegalApplies: false });
+  for (const key of unconditionalKeys) {
+    assert.ok(required.some((f) => f.key === key), `expected ${key} to always be required`);
+  }
 });
 
 // ---------------------------------------------------------------------
