@@ -37,6 +37,11 @@ const {
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
+const { execFileSync } = require("child_process");
+
+const GOLDEN_DIR = path.join(__dirname, "golden");
+const COMPARE_SCRIPT = path.join(ENGINE_DIR, "lib", "raster", "compare_png.py");
+const GOLDEN_DPI = 150;
 
 const FORM_IDS = listFormIds();
 const ORIGINALS_DIR = process.env.FIS_BI_ORIGINALS_DIR;
@@ -249,6 +254,56 @@ for (const formId of FORM_IDS) {
     const staff = await buildStaffDocument(originalBytes, coordinateMap, bindings, data);
     assert.ok(staff.overflowReport.length > 0, `expected the overlong fixture to be flagged in overflowReport for ${formId}, but none were reported`);
   });
+}
+
+// ---------------------------------------------------------------------
+// Tier 3: golden-reference parity. Committed PNGs (fictional sample data
+// only -- see tests/golden/<formId>/) are the visual record of what each
+// form's output looked like when last approved. Generation here is fully
+// deterministic (vector text at fixed coordinates, rasterized by the same
+// Poppler build), so an exact pixel match is the bar, not a fuzzy
+// similarity score -- any regression, however small, shows up as a
+// nonzero diff.
+// ---------------------------------------------------------------------
+
+for (const formId of FORM_IDS) {
+  const originalPath = originalPathFor(formId);
+  const skip = !originalPath;
+  const skipReason = `FIS_BI_ORIGINALS_DIR not set or missing ${formId}.pdf`;
+
+  for (const audience of ["staff", "customer"]) {
+    const goldenPath = path.join(GOLDEN_DIR, formId, audience === "staff" ? "staff.png" : "customer-preview.png");
+
+    test(`${formId}: ${audience} render matches the committed golden reference pixel-for-pixel`, { skip: (skip && skipReason) || (!fs.existsSync(goldenPath) && `no golden reference committed yet at ${goldenPath}`) }, async () => {
+      const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+      const originalBytes = fs.readFileSync(originalPath);
+      const bindings = questionnaire.fieldBindings || {};
+      const data = sampleData;
+
+      let candidateBytes;
+      if (audience === "staff") {
+        candidateBytes = (await buildStaffDocument(originalBytes, coordinateMap, bindings, data)).bytes;
+      } else {
+        const custFields = await buildCustomerFieldsDocument(originalBytes, coordinateMap, bindings, data);
+        const { canvasPng, dims } = await composeCustomerCanvas(custFields.bytes, coordinateMap, 300);
+        candidateBytes = await finalizeCustomerPreview(canvasPng, dims, coordinateMap, coordinateMap.watermark.text, coordinateMap.watermark.opacity);
+      }
+
+      const candidatePng = await raster.rasterize(candidateBytes, GOLDEN_DPI);
+      const tmpPng = path.join(require("os").tmpdir(), `fis-golden-candidate-${formId}-${audience}-${Date.now()}.png`);
+      const tmpJson = path.join(require("os").tmpdir(), `fis-golden-diff-${formId}-${audience}-${Date.now()}.json`);
+      fs.writeFileSync(tmpPng, candidatePng);
+      try {
+        execFileSync("python3.13", [COMPARE_SCRIPT, goldenPath, tmpPng, tmpJson]);
+        const result = JSON.parse(fs.readFileSync(tmpJson, "utf8"));
+        assert.ok(result.sameSize, `${formId} ${audience}: golden is ${JSON.stringify(result.goldenSize)}, candidate is ${JSON.stringify(result.candidateSize)}`);
+        assert.equal(result.diffPixels, 0, `${formId} ${audience}: ${result.diffPixels} of ${result.totalPixels} pixels differ from the golden reference (bbox ${JSON.stringify(result.bbox)}) -- visual regression`);
+      } finally {
+        fs.unlinkSync(tmpPng);
+        if (fs.existsSync(tmpJson)) fs.unlinkSync(tmpJson);
+      }
+    });
+  }
 }
 
 test("2014-13-006: a distinctive staff-only marker string in the Court/Legal YES path never appears in the customer preview", { skip: !originalPathFor("2014-13-006") && "FIS_BI_ORIGINALS_DIR not set or missing 2014-13-006.pdf" }, async () => {
