@@ -18,6 +18,7 @@
   "landline1": "N/A",
   "mobile1": "09175551234",
   "requestingAgency": "N/A",
+  "requestingAgencyApplies": false,
   "landline2": "N/A",
   "mobile2": "N/A",
   "courtLegalApplies": true,

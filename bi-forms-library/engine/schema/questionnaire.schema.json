@@ -62,6 +62,10 @@
           "type": "boolean",
           "description": "True when this question collects customer input that FIS staff review and manually decide what (if anything) to write onto the official PDF -- the answer is never auto-drawn onto any field. Required to be true for any question whose forFields are all staff-owned/suppliedBy:staff fields."
         },
+        "required": {
+          "type": "boolean",
+          "description": "Whether a customer must supply a non-empty answer before the questionnaire can be submitted (see engine/lib/questionnaire-answers.js validateAnswers()). Defaults to true (required) when omitted -- matching the official forms' own \"write N/A if not applicable\" convention, where every field gets SOME answer. Set to false only for a genuinely optional question (e.g. 2014-13-006's additionalTravelHistory). Not checked at all for a question currently hidden by an unsatisfied showIf gate, regardless of this value."
+        },
         "showIf": {
           "type": "object",
           "required": ["questionId", "equals"],

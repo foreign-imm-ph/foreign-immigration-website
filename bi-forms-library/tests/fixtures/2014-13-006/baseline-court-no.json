@@ -15,23 +15,47 @@
   "address1": "12 ORCHID STREET",
   "barangay": "BRGY BEL AIR MAKATI",
   "provinceZip": "METRO MANILA 1209",
-
   "landline1": "N/A",
   "mobile1": "09175551234",
   "requestingAgency": "N/A",
+  "requestingAgencyApplies": false,
   "landline2": "N/A",
   "mobile2": "N/A",
-
   "courtLegalApplies": false,
   "courtName": "N/A",
   "courtBranchPlace": "N/A",
   "courtContactNumber": "N/A",
-
   "signatureLineContactNumber": "09175551234",
-
   "trips": [
-    { "arrivalDay": "14", "arrivalMonth": "FEB", "arrivalYear": "2025", "arrivalFlight": "PR0431", "departureDay": "28", "departureMonth": "FEB", "departureYear": "2025", "departureFlight": "PR0432" },
-    { "arrivalDay": "", "arrivalMonth": "", "arrivalYear": "", "arrivalFlight": "", "departureDay": "", "departureMonth": "", "departureYear": "", "departureFlight": "" },
-    { "arrivalDay": "", "arrivalMonth": "", "arrivalYear": "", "arrivalFlight": "", "departureDay": "", "departureMonth": "", "departureYear": "", "departureFlight": "" }
+    {
+      "arrivalDay": "14",
+      "arrivalMonth": "FEB",
+      "arrivalYear": "2025",
+      "arrivalFlight": "PR0431",
+      "departureDay": "28",
+      "departureMonth": "FEB",
+      "departureYear": "2025",
+      "departureFlight": "PR0432"
+    },
+    {
+      "arrivalDay": "",
+      "arrivalMonth": "",
+      "arrivalYear": "",
+      "arrivalFlight": "",
+      "departureDay": "",
+      "departureMonth": "",
+      "departureYear": "",
+      "departureFlight": ""
+    },
+    {
+      "arrivalDay": "",
+      "arrivalMonth": "",
+      "arrivalYear": "",
+      "arrivalFlight": "",
+      "departureDay": "",
+      "departureMonth": "",
+      "departureYear": "",
+      "departureFlight": ""
+    }
   ]
 }

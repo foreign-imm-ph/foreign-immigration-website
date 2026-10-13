@@ -28,6 +28,7 @@ const { loadFormConfig, listFormIds } = require(path.join(ENGINE_DIR, "lib", "co
 const { validateForm } = require(path.join(ENGINE_DIR, "lib", "validate-form"));
 const { fieldsForAudience } = require(path.join(ENGINE_DIR, "lib", "field-permissions"));
 const { resolveFieldValues } = require(path.join(ENGINE_DIR, "lib", "field-bindings"));
+const { validateAnswers } = require(path.join(ENGINE_DIR, "lib", "questionnaire-answers"));
 const {
   buildStaffDocument,
   buildCustomerFieldsDocument,
@@ -145,6 +146,66 @@ test("2014-13-006: a 4th trip entry is refused (the PDF has only 3 physical rows
   const { questionnaire } = loadFormConfig("2014-13-006");
   const data = loadFixture("2014-13-006", "trips-4-invalid.json");
   assert.throws(() => resolveFieldValues(questionnaire.fieldBindings, data), /only provides 3 rows/);
+});
+
+// --- validateAnswers (questionnaire-answers.js): customer-submission
+// completeness checks, distinct from schema-validate.js (which only
+// checks questionnaire.json's own shape). ---
+
+for (const formId of FORM_IDS) {
+  test(`${formId}: validateAnswers accepts the form's own sample-data.json as complete`, () => {
+    const { questionnaire, sampleData } = loadFormConfig(formId);
+    const result = validateAnswers(questionnaire, sampleData);
+    assert.ok(result.ok, `expected sample-data.json to be a complete, valid submission: ${JSON.stringify(result.errors)}`);
+  });
+
+  test(`${formId}: validateAnswers rejects a submission missing a required field`, () => {
+    const { questionnaire, sampleData } = loadFormConfig(formId);
+    const broken = { ...sampleData };
+    delete broken.lastName;
+    const result = validateAnswers(questionnaire, broken);
+    assert.ok(!result.ok, "expected a missing required field to be rejected");
+    assert.ok(result.errors.some((e) => e.includes("lastName")));
+  });
+}
+
+test("2014-13-006: validateAnswers requires courtName only when courtLegalApplies is true", () => {
+  const { questionnaire } = loadFormConfig("2014-13-006");
+  const courtNo = loadFixture("2014-13-006", "baseline-court-no.json");
+  assert.ok(validateAnswers(questionnaire, courtNo).ok, "court=no with courtName='N/A' should be a complete submission");
+
+  const courtYesMissing = { ...courtNo, courtLegalApplies: true, courtName: undefined };
+  const result = validateAnswers(questionnaire, courtYesMissing);
+  assert.ok(!result.ok);
+  assert.ok(result.errors.some((e) => e.includes("courtName")));
+});
+
+test("2014-13-006: validateAnswers treats a fully-blank repeatable-group entry as absent, not incomplete", () => {
+  const { questionnaire } = loadFormConfig("2014-13-006");
+  const oneTrip = loadFixture("2014-13-006", "trips-1.json");
+  // trips-1.json supplies exactly one array entry; baseline-court-no.json
+  // instead pads the array to 3 entries with every sub-field empty --
+  // both must validate as "exactly one trip reported".
+  assert.ok(validateAnswers(questionnaire, oneTrip).ok);
+  const padded = loadFixture("2014-13-006", "baseline-court-no.json");
+  assert.ok(validateAnswers(questionnaire, padded).ok, `padded-blank-rows fixture should validate: ${JSON.stringify(validateAnswers(questionnaire, padded).errors)}`);
+});
+
+test("2014-13-006: validateAnswers rejects a repeatable-group entry with only some sub-fields filled in", () => {
+  const { questionnaire } = loadFormConfig("2014-13-006");
+  const data = loadFixture("2014-13-006", "trips-1.json");
+  const partial = { ...data, trips: [{ ...data.trips[0] }, { arrivalDay: "01" }] }; // second entry has a value but is missing the rest
+  const result = validateAnswers(questionnaire, partial);
+  assert.ok(!result.ok);
+  assert.ok(result.errors.some((e) => e.startsWith("trips[1].") && e !== "trips[1].arrivalDay: required"));
+});
+
+test("2014-13-006: validateAnswers does not require additionalTravelHistory (required: false)", () => {
+  const { questionnaire } = loadFormConfig("2014-13-006");
+  const data = loadFixture("2014-13-006", "trips-1.json");
+  const withoutExtra = { ...data };
+  delete withoutExtra.additionalTravelHistory;
+  assert.ok(validateAnswers(questionnaire, withoutExtra).ok);
 });
 
 // ---------------------------------------------------------------------

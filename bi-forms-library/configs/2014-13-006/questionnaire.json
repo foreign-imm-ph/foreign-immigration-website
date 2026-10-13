@@ -69,7 +69,7 @@
     {
       "id": "additionalTravelHistory", "type": "text", "dataKey": "additionalTravelHistory",
       "labels": { "en": "If you need to report more than three trips, describe them here for FIS staff to arrange separately." },
-      "informsStaffOnly": true
+      "informsStaffOnly": true, "required": false
     }
   ],
   "fieldBindings": {
