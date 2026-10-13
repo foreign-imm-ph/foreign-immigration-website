@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fis-forms-engine/questionnaire.schema.json",
+  "title": "FIS BI Forms Library customer questionnaire",
+  "description": "Structural shape of a form's questionnaire.json: the six-language Client Portal question set, plus the fieldBindings contract that engine/lib/field-bindings.js interprets to turn questionnaire-shaped answers into a flat field-key map. Cross-file consistency against the form's coordinate-map.json (every referenced field key must exist and have compatible roles; a question that only informs a staff-controlled field must not be wired to auto-populate it) is checked separately by engine/lib/config-consistency.js, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formId", "languages", "questions"],
+  "properties": {
+    "formId": { "type": "string", "minLength": 1 },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["en", "ja", "ko", "vi", "zh-cn", "zh-hant"] },
+      "contains": { "const": "en" },
+      "description": "Every form must at minimum offer English; other entries are the site's five additional supported locales."
+    },
+    "questions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/question" }
+    },
+    "fieldBindings": { "$ref": "#/$defs/fieldBindings" }
+  },
+  "$defs": {
+    "labels": {
+      "type": "object",
+      "required": ["en"],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "ja": { "type": "string" },
+        "ko": { "type": "string" },
+        "vi": { "type": "string" },
+        "zh-cn": { "type": "string" },
+        "zh-hant": { "type": "string" }
+      }
+    },
+    "question": {
+      "type": "object",
+      "required": ["id", "type", "labels"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["text", "date", "select", "yesno", "repeatable-group"] },
+        "labels": { "$ref": "#/$defs/labels" },
+        "dataKey": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key this question's answer is stored under in the data object passed to resolveFieldValues(). Required for every type except repeatable-group, which uses groupDataKey instead."
+        },
+        "options": {
+          "type": "array",
+          "description": "For type:select -- the allowed answer values (matched against fieldBindings.checkboxSelect[].options keys, or consumed directly as a direct-passthrough field value).",
+          "items": { "type": "string" }
+        },
+        "forFields": {
+          "type": "array",
+          "description": "coordinate-map.json field keys this question's answer ultimately populates (directly, or via fieldBindings). Used for cross-file consistency checking -- every key here must exist in the form's coordinate-map.json.",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "informsStaffOnly": {
+          "type": "boolean",
+          "description": "True when this question collects customer input that FIS staff review and manually decide what (if anything) to write onto the official PDF -- the answer is never auto-drawn onto any field. Required to be true for any question whose forFields are all staff-owned/suppliedBy:staff fields."
+        },
+        "showIf": {
+          "type": "object",
+          "required": ["questionId", "equals"],
+          "additionalProperties": false,
+          "properties": {
+            "questionId": { "type": "string", "minLength": 1 },
+            "equals": {}
+          }
+        },
+        "groupDataKey": {
+          "type": "string",
+          "minLength": 1,
+          "description": "For type:repeatable-group -- the array key in the data object (data[groupDataKey] is an array of per-entry objects)."
+        },
+        "maxCount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "For type:repeatable-group -- the maximum number of entries the underlying PDF has physical rows for. resolveFieldValues() throws if more entries are supplied than this."
+        },
+        "subQuestions": {
+          "type": "array",
+          "description": "For type:repeatable-group -- the per-entry question set, applied to each item in data[groupDataKey].",
+          "items": { "$ref": "#/$defs/question" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "repeatable-group" } }, "required": ["type"] },
+          "then": { "required": ["groupDataKey", "maxCount", "subQuestions"] },
+          "else": { "required": ["dataKey"] }
+        }
+      ]
+    },
+    "fieldBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checkboxSelect": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dataKey", "options"],
+            "additionalProperties": false,
+            "properties": {
+              "dataKey": { "type": "string", "minLength": 1 },
+              "options": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "minLength": 1 },
+                "minProperties": 1
+              }
+            }
+          }
+        },
+        "wrappedPairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dataKey", "line1", "line2"],
+            "additionalProperties": false,
+            "properties": {
+              "dataKey": { "type": "string", "minLength": 1 },
+              "line1": { "type": "string", "minLength": 1 },
+              "line2": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "conditionalFallback": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["gateDataKey", "fields", "fallbackValue"],
+            "additionalProperties": false,
+            "properties": {
+              "gateDataKey": { "type": "string", "minLength": 1 },
+              "fields": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "fallbackValue": { "type": "string" }
+            }
+          }
+        },
+        "repeatableGroups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dataKey", "maxCount", "subFields"],
+            "additionalProperties": false,
+            "properties": {
+              "dataKey": { "type": "string", "minLength": 1 },
+              "maxCount": { "type": "integer", "minimum": 1 },
+              "subFields": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

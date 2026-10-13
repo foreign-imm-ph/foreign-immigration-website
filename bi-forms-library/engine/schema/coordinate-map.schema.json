@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fis-forms-engine/coordinate-map.schema.json",
+  "title": "FIS BI Forms Library coordinate map",
+  "description": "Structural shape of a form's coordinate-map.json. This schema checks SHAPE (required keys, types, enums) only -- the fail-closed ownership/contradiction rules (e.g. bi_staff fields must never be customer-visible) are enforced separately by engine/lib/field-permissions.js, which runs in addition to this schema, not instead of it.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "formId", "formTitle", "documentType", "reproductionRightsVerified",
+    "pageWidthPt", "pageHeightPt", "sourcePdf", "derivedFrom",
+    "charBoxFields", "checkboxFields", "freeTextFields"
+  ],
+  "properties": {
+    "formId": { "type": "string", "minLength": 1 },
+    "formTitle": { "type": "string", "minLength": 1 },
+    "documentType": { "type": "string", "minLength": 1 },
+    "availability": { "type": "string" },
+    "checkoutEligible": { "type": ["boolean", "null"] },
+    "checkoutEligibleNote": { "type": "string" },
+    "reproductionRightsVerified": { "type": "boolean" },
+    "reproductionRightsNote": { "type": "string" },
+    "pageWidthPt": { "type": "number", "exclusiveMinimum": 0 },
+    "pageHeightPt": { "type": "number", "exclusiveMinimum": 0 },
+    "sourcePdf": { "type": "string", "minLength": 1 },
+    "derivedFrom": { "type": "string", "minLength": 1 },
+    "rolesSchemaNote": { "type": "string" },
+    "charBoxFields": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/charBoxField" }
+    },
+    "checkboxFields": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/checkboxField" }
+    },
+    "freeTextFields": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/freeTextField" }
+    },
+    "signatureBlock": { "$ref": "#/$defs/signatureBlock" },
+    "customerPreviewCropBox": { "$ref": "#/$defs/region" },
+    "customerVisibleRegions": {
+      "type": "object",
+      "required": ["regions"],
+      "properties": {
+        "note": { "type": "string" },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/namedRegion" }
+        }
+      }
+    },
+    "biOnlySections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "roles"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "roles": { "$ref": "#/$defs/roles" }
+        }
+      }
+    },
+    "offFormInstructions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "en"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "note": { "type": "string" },
+          "en": { "type": "string", "minLength": 1 },
+          "ja": { "type": "string" },
+          "ko": { "type": "string" },
+          "vi": { "type": "string" },
+          "zh-cn": { "type": "string" },
+          "zh-hant": { "type": "string" }
+        }
+      }
+    },
+    "visibilityVerification": { "type": "object" },
+    "questionnaireDesign": {
+      "type": "object",
+      "deprecated": true,
+      "description": "Historical/informal planning note format used by the pre-engine 2014-13-006 prototype. Superseded by configs/<formId>/questionnaire.json -- present here only for forms not yet migrated."
+    }
+  },
+  "$defs": {
+    "roles": {
+      "type": "object",
+      "required": ["suppliedBy", "editableBy", "approvedBy", "visibleTo"],
+      "properties": {
+        "suppliedBy": { "enum": ["customer", "staff", "bi_staff", "customer_wet_ink"] },
+        "editableBy": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "approvedBy": { "type": "string", "minLength": 1 },
+        "visibleTo": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["customer", "staff"] }
+        }
+      }
+    },
+    "charBoxField": {
+      "type": "object",
+      "required": ["label", "roles", "yTopPt", "yBottomPt", "colsPt"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "roles": { "$ref": "#/$defs/roles" },
+        "yTopPt": { "type": "number" },
+        "yBottomPt": { "type": "number" },
+        "colsPt": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "checkboxField": {
+      "type": "object",
+      "required": ["label", "roles", "xLeftPt", "xRightPt", "yTopPt", "yBottomPt"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "roles": { "$ref": "#/$defs/roles" },
+        "xLeftPt": { "type": "number" },
+        "xRightPt": { "type": "number" },
+        "yTopPt": { "type": "number" },
+        "yBottomPt": { "type": "number" }
+      }
+    },
+    "freeTextField": {
+      "type": "object",
+      "required": ["label", "roles", "xStartPt", "xEndPt", "baselinePt"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "roles": { "$ref": "#/$defs/roles" },
+        "xStartPt": { "type": "number" },
+        "xEndPt": { "type": "number" },
+        "baselinePt": { "type": "number" },
+        "maxLines": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "signatureBlock": {
+      "type": "object",
+      "required": ["roles", "dateLine", "signatureLine"],
+      "properties": {
+        "note": { "type": "string" },
+        "roles": { "$ref": "#/$defs/roles" },
+        "dateLine": { "$ref": "#/$defs/baselineSpan" },
+        "signatureLine": { "$ref": "#/$defs/baselineSpan" }
+      }
+    },
+    "baselineSpan": {
+      "type": "object",
+      "required": ["xStartPt", "xEndPt", "baselinePt"],
+      "properties": {
+        "xStartPt": { "type": "number" },
+        "xEndPt": { "type": "number" },
+        "baselinePt": { "type": "number" }
+      }
+    },
+    "region": {
+      "type": "object",
+      "required": ["xLeftPt", "xRightPt", "yBottomPt", "yTopPt"],
+      "properties": {
+        "note": { "type": "string" },
+        "xLeftPt": { "type": "number" },
+        "xRightPt": { "type": "number" },
+        "yBottomPt": { "type": "number" },
+        "yTopPt": { "type": "number" }
+      }
+    },
+    "namedRegion": {
+      "allOf": [
+        { "$ref": "#/$defs/region" },
+        {
+          "type": "object",
+          "required": ["id", "label"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "label": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "fis-bi-forms-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared FIS BI Forms Library automation engine (Phase 1, local only). Not deployed; not wired to the live Worker.",
+  "main": "cli.js",
+  "scripts": {
+    "generate": "node cli.js generate",
+    "validate": "node cli.js validate",
+    "test": "node --test ../tests/run-all.js"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "pdf-lib": "1.17.1"
+  }
+}
