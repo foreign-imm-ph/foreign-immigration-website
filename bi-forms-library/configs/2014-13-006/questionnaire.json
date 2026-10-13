@@ -1,96 +1,578 @@
 {
   "formId": "2014-13-006",
-  "languages": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"],
+  "languages": [
+    "en",
+    "ja",
+    "ko",
+    "vi",
+    "zh-CN",
+    "zh-Hant"
+  ],
   "staffFieldRequirements": {
-    "landline2": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
-    "mobile2": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
-    "requestingAgency": { "requiredIf": { "customerAnswerKey": "requestingAgencyApplies", "equals": true } },
-    "courtName": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } },
-    "courtBranchPlace": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } },
-    "courtContactNumber": { "requiredIf": { "customerAnswerKey": "courtLegalApplies", "equals": true } }
+    "landline2": {
+      "requiredIf": {
+        "customerAnswerKey": "requestingAgencyApplies",
+        "equals": true
+      }
+    },
+    "mobile2": {
+      "requiredIf": {
+        "customerAnswerKey": "requestingAgencyApplies",
+        "equals": true
+      }
+    },
+    "requestingAgency": {
+      "requiredIf": {
+        "customerAnswerKey": "requestingAgencyApplies",
+        "equals": true
+      }
+    },
+    "courtName": {
+      "requiredIf": {
+        "customerAnswerKey": "courtLegalApplies",
+        "equals": true
+      }
+    },
+    "courtBranchPlace": {
+      "requiredIf": {
+        "customerAnswerKey": "courtLegalApplies",
+        "equals": true
+      }
+    },
+    "courtContactNumber": {
+      "requiredIf": {
+        "customerAnswerKey": "courtLegalApplies",
+        "equals": true
+      }
+    }
   },
   "questions": [
-    { "id": "lastName", "type": "text", "dataKey": "lastName", "labels": { "en": "Last Name" }, "forFields": ["lastName"] },
-    { "id": "firstName", "type": "text", "dataKey": "firstName", "labels": { "en": "First/Given Name" }, "forFields": ["firstName"] },
-    { "id": "middleName", "type": "text", "dataKey": "middleName", "labels": { "en": "Middle Name" }, "forFields": ["middleName"] },
-    { "id": "otherName1", "type": "text", "dataKey": "otherName1", "labels": { "en": "Other Name(s)/Alias(es) 1" }, "forFields": ["otherName1"] },
-    { "id": "otherName2", "type": "text", "dataKey": "otherName2", "labels": { "en": "Other Name(s)/Alias(es) 2" }, "forFields": ["otherName2"] },
-    { "id": "dobDay", "type": "text", "dataKey": "dobDay", "labels": { "en": "Date of Birth - DD" }, "forFields": ["dobDay"] },
-    { "id": "dobMonth", "type": "text", "dataKey": "dobMonth", "labels": { "en": "Date of Birth - MMM" }, "forFields": ["dobMonth"] },
-    { "id": "dobYear", "type": "text", "dataKey": "dobYear", "labels": { "en": "Date of Birth - YYYY" }, "forFields": ["dobYear"] },
-    { "id": "gender", "type": "select", "dataKey": "gender", "labels": { "en": "Gender" }, "options": ["M", "F"], "forFields": ["genderM", "genderF"] },
-    { "id": "placeOfBirth", "type": "text", "dataKey": "placeOfBirth", "labels": { "en": "Place of Birth" }, "forFields": ["placeOfBirth"] },
-    { "id": "citizenship", "type": "text", "dataKey": "citizenship", "labels": { "en": "Citizenship/Nationality" }, "forFields": ["citizenship"] },
-    { "id": "passportNumber", "type": "text", "dataKey": "passportNumber", "labels": { "en": "Passport Number" }, "forFields": ["passportNumber"] },
-    { "id": "address1", "type": "text", "dataKey": "address1", "labels": { "en": "House/Unit No., Street, Subdivision/Village" }, "forFields": ["address1"] },
-    { "id": "barangay", "type": "text", "dataKey": "barangay", "labels": { "en": "Barangay, Municipality/City" }, "forFields": ["barangay"] },
-    { "id": "provinceZip", "type": "text", "dataKey": "provinceZip", "labels": { "en": "Province, Zip Code" }, "forFields": ["provinceZip"] },
-
     {
-      "id": "requestingAgencyApplies", "type": "yesno", "dataKey": "requestingAgencyApplies",
-      "labels": { "en": "Did an outside institution (foundation, agency, embassy, or other organization) request these travel records on your behalf?" }
-    },
-    {
-      "id": "requestingAgencyName", "type": "text", "dataKey": "requestingAgency",
-      "labels": { "en": "Name of the requesting institution and its contact details" },
-      "forFields": ["requestingAgency"], "informsStaffOnly": true,
-      "showIf": { "questionId": "requestingAgencyApplies", "equals": true }
-    },
-
-    {
-      "id": "courtLegalApplies", "type": "yesno", "dataKey": "courtLegalApplies",
-      "labels": { "en": "Are you requesting your travel records for court proceedings or another legal purpose?" }
-    },
-    {
-      "id": "courtName", "type": "text", "dataKey": "courtName",
-      "labels": { "en": "Name of Court" },
-      "forFields": ["courtName"], "informsStaffOnly": true,
-      "showIf": { "questionId": "courtLegalApplies", "equals": true }
-    },
-    {
-      "id": "courtBranchPlace", "type": "text", "dataKey": "courtBranchPlace",
-      "labels": { "en": "Branch/Place" },
-      "forFields": ["courtBranchPlace"], "informsStaffOnly": true,
-      "showIf": { "questionId": "courtLegalApplies", "equals": true }
-    },
-    {
-      "id": "courtContactNumber", "type": "text", "dataKey": "courtContactNumber",
-      "labels": { "en": "Court Contact Number, if available" },
-      "forFields": ["courtContactNumber"], "informsStaffOnly": true,
-      "showIf": { "questionId": "courtLegalApplies", "equals": true }
-    },
-
-    {
-      "id": "trips", "type": "repeatable-group", "groupDataKey": "trips", "maxCount": 3,
-      "labels": { "en": "Travel entries (up to 3)" },
-      "subQuestions": [
-        { "id": "arrivalDay", "type": "text", "dataKey": "arrivalDay", "labels": { "en": "Arrival Date - DD" } },
-        { "id": "arrivalMonth", "type": "text", "dataKey": "arrivalMonth", "labels": { "en": "Arrival Date - MMM" } },
-        { "id": "arrivalYear", "type": "text", "dataKey": "arrivalYear", "labels": { "en": "Arrival Date - YYYY" } },
-        { "id": "arrivalFlight", "type": "text", "dataKey": "arrivalFlight", "labels": { "en": "Arrival Flight Number" } },
-        { "id": "departureDay", "type": "text", "dataKey": "departureDay", "labels": { "en": "Departure Date - DD" } },
-        { "id": "departureMonth", "type": "text", "dataKey": "departureMonth", "labels": { "en": "Departure Date - MMM" } },
-        { "id": "departureYear", "type": "text", "dataKey": "departureYear", "labels": { "en": "Departure Date - YYYY" } },
-        { "id": "departureFlight", "type": "text", "dataKey": "departureFlight", "labels": { "en": "Departure Flight Number" } }
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": {
+        "en": "Last Name",
+        "zh-CN": "姓",
+        "zh-Hant": "姓",
+        "ko": "성",
+        "ja": "姓",
+        "vi": "Họ"
+      },
+      "forFields": [
+        "lastName"
       ]
     },
     {
-      "id": "additionalTravelHistory", "type": "text", "dataKey": "additionalTravelHistory",
-      "labels": { "en": "If you need to report more than three trips, describe them here for FIS staff to arrange separately." },
-      "informsStaffOnly": true, "required": false
+      "id": "firstName",
+      "type": "text",
+      "dataKey": "firstName",
+      "labels": {
+        "en": "First/Given Name",
+        "zh-CN": "名",
+        "zh-Hant": "名",
+        "ko": "이름",
+        "ja": "名",
+        "vi": "Tên"
+      },
+      "forFields": [
+        "firstName"
+      ]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "labels": {
+        "en": "Middle Name",
+        "zh-CN": "中间名",
+        "zh-Hant": "中間名",
+        "ko": "중간 이름",
+        "ja": "ミドルネーム",
+        "vi": "Tên đệm"
+      },
+      "forFields": [
+        "middleName"
+      ]
+    },
+    {
+      "id": "otherName1",
+      "type": "text",
+      "dataKey": "otherName1",
+      "labels": {
+        "en": "Other Name(s)/Alias(es) 1",
+        "zh-CN": "其他姓名/别名 1",
+        "zh-Hant": "其他姓名/別名 1",
+        "ko": "기타 이름/별칭 1",
+        "ja": "その他の氏名/通称 1",
+        "vi": "Tên khác/Biệt danh 1"
+      },
+      "forFields": [
+        "otherName1"
+      ]
+    },
+    {
+      "id": "otherName2",
+      "type": "text",
+      "dataKey": "otherName2",
+      "labels": {
+        "en": "Other Name(s)/Alias(es) 2",
+        "zh-CN": "其他姓名/别名 2",
+        "zh-Hant": "其他姓名/別名 2",
+        "ko": "기타 이름/별칭 2",
+        "ja": "その他の氏名/通称 2",
+        "vi": "Tên khác/Biệt danh 2"
+      },
+      "forFields": [
+        "otherName2"
+      ]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": {
+        "en": "Date of Birth - DD",
+        "zh-CN": "出生日期 - 日",
+        "zh-Hant": "出生日期 - 日",
+        "ko": "생년월일 - 일",
+        "ja": "生年月日 - 日",
+        "vi": "Ngày sinh - Ngày"
+      },
+      "forFields": [
+        "dobDay"
+      ]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": {
+        "en": "Date of Birth - MMM",
+        "zh-CN": "出生日期 - 月",
+        "zh-Hant": "出生日期 - 月",
+        "ko": "생년월일 - 월",
+        "ja": "生年月日 - 月",
+        "vi": "Ngày sinh - Tháng"
+      },
+      "forFields": [
+        "dobMonth"
+      ]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": {
+        "en": "Date of Birth - YYYY",
+        "zh-CN": "出生日期 - 年",
+        "zh-Hant": "出生日期 - 年",
+        "ko": "생년월일 - 년",
+        "ja": "生年月日 - 年",
+        "vi": "Ngày sinh - Năm"
+      },
+      "forFields": [
+        "dobYear"
+      ]
+    },
+    {
+      "id": "gender",
+      "type": "select",
+      "dataKey": "gender",
+      "labels": {
+        "en": "Gender",
+        "zh-CN": "性别",
+        "zh-Hant": "性別",
+        "ko": "성별",
+        "ja": "性別",
+        "vi": "Giới tính"
+      },
+      "options": [
+        "M",
+        "F"
+      ],
+      "forFields": [
+        "genderM",
+        "genderF"
+      ]
+    },
+    {
+      "id": "placeOfBirth",
+      "type": "text",
+      "dataKey": "placeOfBirth",
+      "labels": {
+        "en": "Place of Birth",
+        "zh-CN": "出生地",
+        "zh-Hant": "出生地",
+        "ko": "출생지",
+        "ja": "出生地",
+        "vi": "Nơi sinh"
+      },
+      "forFields": [
+        "placeOfBirth"
+      ]
+    },
+    {
+      "id": "citizenship",
+      "type": "text",
+      "dataKey": "citizenship",
+      "labels": {
+        "en": "Citizenship/Nationality",
+        "zh-CN": "国籍",
+        "zh-Hant": "國籍",
+        "ko": "국적",
+        "ja": "国籍",
+        "vi": "Quốc tịch"
+      },
+      "forFields": [
+        "citizenship"
+      ]
+    },
+    {
+      "id": "passportNumber",
+      "type": "text",
+      "dataKey": "passportNumber",
+      "labels": {
+        "en": "Passport Number",
+        "zh-CN": "护照号码",
+        "zh-Hant": "護照號碼",
+        "ko": "여권 번호",
+        "ja": "パスポート番号",
+        "vi": "Số hộ chiếu"
+      },
+      "forFields": [
+        "passportNumber"
+      ]
+    },
+    {
+      "id": "address1",
+      "type": "text",
+      "dataKey": "address1",
+      "labels": {
+        "en": "House/Unit No., Street, Subdivision/Village",
+        "zh-CN": "门牌号/单元号、街道、小区/村",
+        "zh-Hant": "門牌號/單位號、街道、社區/村",
+        "ko": "호수/동 번호, 거리, 단지/마을",
+        "ja": "号室/部屋番号、通り、住宅区/村",
+        "vi": "Số nhà/Số căn, Đường, Khu dân cư/Thôn"
+      },
+      "forFields": [
+        "address1"
+      ]
+    },
+    {
+      "id": "barangay",
+      "type": "text",
+      "dataKey": "barangay",
+      "labels": {
+        "en": "Barangay, Municipality/City",
+        "zh-CN": "巴朗盖（Barangay）、市/镇",
+        "zh-Hant": "巴朗蓋（Barangay）、市/鎮",
+        "ko": "바랑가이(Barangay), 시/읍",
+        "ja": "バランガイ（Barangay）、市/町",
+        "vi": "Barangay, Thành phố/Thị trấn"
+      },
+      "forFields": [
+        "barangay"
+      ]
+    },
+    {
+      "id": "provinceZip",
+      "type": "text",
+      "dataKey": "provinceZip",
+      "labels": {
+        "en": "Province, Zip Code",
+        "zh-CN": "省、邮政编码",
+        "zh-Hant": "省、郵遞區號",
+        "ko": "주(도), 우편번호",
+        "ja": "州（プロビンス）、郵便番号",
+        "vi": "Tỉnh, Mã bưu điện"
+      },
+      "forFields": [
+        "provinceZip"
+      ]
+    },
+    {
+      "id": "requestingAgencyApplies",
+      "type": "yesno",
+      "dataKey": "requestingAgencyApplies",
+      "labels": {
+        "en": "Did an outside institution (foundation, agency, embassy, or other organization) request these travel records on your behalf?",
+        "zh-CN": "是否有外部机构（基金会、机构、使领馆或其他组织）代表您请求此旅行记录？",
+        "zh-Hant": "是否有外部機構（基金會、機構、使領館或其他組織）代表您請求此旅行記錄？",
+        "ko": "외부 기관(재단, 기관, 대사관 또는 기타 단체)이 귀하를 대신하여 이 여행 기록을 요청했습니까?",
+        "ja": "外部機関（財団、機関、大使館またはその他の団体）があなたに代わってこの渡航記録を要請しましたか？",
+        "vi": "Có tổ chức bên ngoài (quỹ, cơ quan, đại sứ quán hoặc tổ chức khác) yêu cầu hồ sơ di chuyển này thay mặt bạn không?"
+      }
+    },
+    {
+      "id": "requestingAgencyName",
+      "type": "text",
+      "dataKey": "requestingAgency",
+      "labels": {
+        "en": "Name of the requesting institution and its contact details",
+        "zh-CN": "请求机构的名称及联系方式",
+        "zh-Hant": "請求機構的名稱及聯絡方式",
+        "ko": "요청 기관의 명칭 및 연락처 정보",
+        "ja": "要請機関の名称および連絡先情報",
+        "vi": "Tên của tổ chức yêu cầu và thông tin liên hệ"
+      },
+      "forFields": [
+        "requestingAgency"
+      ],
+      "informsStaffOnly": true,
+      "showIf": {
+        "questionId": "requestingAgencyApplies",
+        "equals": true
+      }
+    },
+    {
+      "id": "courtLegalApplies",
+      "type": "yesno",
+      "dataKey": "courtLegalApplies",
+      "labels": {
+        "en": "Are you requesting your travel records for court proceedings or another legal purpose?",
+        "zh-CN": "您申请此旅行记录是否用于法庭诉讼或其他法律目的？",
+        "zh-Hant": "您申請此旅行記錄是否用於法庭訴訟或其他法律目的？",
+        "ko": "법원 절차 또는 기타 법적 목적을 위해 이 여행 기록을 요청하십니까?",
+        "ja": "この渡航記録を裁判手続きまたはその他の法的目的のために申請していますか？",
+        "vi": "Bạn yêu cầu hồ sơ di chuyển này cho thủ tục tòa án hoặc mục đích pháp lý khác không?"
+      }
+    },
+    {
+      "id": "courtName",
+      "type": "text",
+      "dataKey": "courtName",
+      "labels": {
+        "en": "Name of Court",
+        "zh-CN": "法院名称",
+        "zh-Hant": "法院名稱",
+        "ko": "법원 명칭",
+        "ja": "裁判所名",
+        "vi": "Tên tòa án"
+      },
+      "forFields": [
+        "courtName"
+      ],
+      "informsStaffOnly": true,
+      "showIf": {
+        "questionId": "courtLegalApplies",
+        "equals": true
+      }
+    },
+    {
+      "id": "courtBranchPlace",
+      "type": "text",
+      "dataKey": "courtBranchPlace",
+      "labels": {
+        "en": "Branch/Place",
+        "zh-CN": "分院/地点",
+        "zh-Hant": "分院/地點",
+        "ko": "지원/장소",
+        "ja": "支部/場所",
+        "vi": "Chi nhánh/Địa điểm"
+      },
+      "forFields": [
+        "courtBranchPlace"
+      ],
+      "informsStaffOnly": true,
+      "showIf": {
+        "questionId": "courtLegalApplies",
+        "equals": true
+      }
+    },
+    {
+      "id": "courtContactNumber",
+      "type": "text",
+      "dataKey": "courtContactNumber",
+      "labels": {
+        "en": "Court Contact Number, if available",
+        "zh-CN": "法院联系电话（如有）",
+        "zh-Hant": "法院聯絡電話（如有）",
+        "ko": "법원 연락처(가능한 경우)",
+        "ja": "裁判所の連絡先電話番号（分かる場合）",
+        "vi": "Số điện thoại liên hệ của tòa án (nếu có)"
+      },
+      "forFields": [
+        "courtContactNumber"
+      ],
+      "informsStaffOnly": true,
+      "showIf": {
+        "questionId": "courtLegalApplies",
+        "equals": true
+      }
+    },
+    {
+      "id": "trips",
+      "type": "repeatable-group",
+      "groupDataKey": "trips",
+      "maxCount": 3,
+      "labels": {
+        "en": "Travel entries (up to 3)",
+        "zh-CN": "旅行记录（最多 3 项）",
+        "zh-Hant": "旅行記錄（最多 3 項）",
+        "ko": "여행 내역 (최대 3건)",
+        "ja": "渡航記録（最大3件）",
+        "vi": "Mục nhập chuyến đi (tối đa 3 mục)"
+      },
+      "subQuestions": [
+        {
+          "id": "arrivalDay",
+          "type": "text",
+          "dataKey": "arrivalDay",
+          "labels": {
+            "en": "Arrival Date - DD",
+            "zh-CN": "入境日期 - 日",
+            "zh-Hant": "入境日期 - 日",
+            "ko": "입국일 - 일",
+            "ja": "入国日 - 日",
+            "vi": "Ngày nhập cảnh - Ngày"
+          }
+        },
+        {
+          "id": "arrivalMonth",
+          "type": "text",
+          "dataKey": "arrivalMonth",
+          "labels": {
+            "en": "Arrival Date - MMM",
+            "zh-CN": "入境日期 - 月",
+            "zh-Hant": "入境日期 - 月",
+            "ko": "입국일 - 월",
+            "ja": "入国日 - 月",
+            "vi": "Ngày nhập cảnh - Tháng"
+          }
+        },
+        {
+          "id": "arrivalYear",
+          "type": "text",
+          "dataKey": "arrivalYear",
+          "labels": {
+            "en": "Arrival Date - YYYY",
+            "zh-CN": "入境日期 - 年",
+            "zh-Hant": "入境日期 - 年",
+            "ko": "입국일 - 년",
+            "ja": "入国日 - 年",
+            "vi": "Ngày nhập cảnh - Năm"
+          }
+        },
+        {
+          "id": "arrivalFlight",
+          "type": "text",
+          "dataKey": "arrivalFlight",
+          "labels": {
+            "en": "Arrival Flight Number",
+            "zh-CN": "入境航班号",
+            "zh-Hant": "入境航班號",
+            "ko": "입국 항공편 번호",
+            "ja": "入国フライト番号",
+            "vi": "Số hiệu chuyến bay đến"
+          }
+        },
+        {
+          "id": "departureDay",
+          "type": "text",
+          "dataKey": "departureDay",
+          "labels": {
+            "en": "Departure Date - DD",
+            "zh-CN": "离境日期 - 日",
+            "zh-Hant": "離境日期 - 日",
+            "ko": "출국일 - 일",
+            "ja": "出国日 - 日",
+            "vi": "Ngày khởi hành - Ngày"
+          }
+        },
+        {
+          "id": "departureMonth",
+          "type": "text",
+          "dataKey": "departureMonth",
+          "labels": {
+            "en": "Departure Date - MMM",
+            "zh-CN": "离境日期 - 月",
+            "zh-Hant": "離境日期 - 月",
+            "ko": "출국일 - 월",
+            "ja": "出国日 - 月",
+            "vi": "Ngày khởi hành - Tháng"
+          }
+        },
+        {
+          "id": "departureYear",
+          "type": "text",
+          "dataKey": "departureYear",
+          "labels": {
+            "en": "Departure Date - YYYY",
+            "zh-CN": "离境日期 - 年",
+            "zh-Hant": "離境日期 - 年",
+            "ko": "출국일 - 년",
+            "ja": "出国日 - 年",
+            "vi": "Ngày khởi hành - Năm"
+          }
+        },
+        {
+          "id": "departureFlight",
+          "type": "text",
+          "dataKey": "departureFlight",
+          "labels": {
+            "en": "Departure Flight Number",
+            "zh-CN": "离境航班号",
+            "zh-Hant": "離境航班號",
+            "ko": "출국 항공편 번호",
+            "ja": "出国フライト番号",
+            "vi": "Số hiệu chuyến bay đi"
+          }
+        }
+      ]
+    },
+    {
+      "id": "additionalTravelHistory",
+      "type": "text",
+      "dataKey": "additionalTravelHistory",
+      "labels": {
+        "en": "If you need to report more than three trips, describe them here for FIS staff to arrange separately.",
+        "zh-CN": "如果您需要报告超过三次的旅行，请在此说明，以便 FIS 工作人员另行安排。",
+        "zh-Hant": "如果您需要報告超過三次的旅行，請在此說明，以便 FIS 工作人員另行安排。",
+        "ko": "세 건을 초과하는 여행을 신고해야 하는 경우, FIS 담당자가 별도로 처리할 수 있도록 여기에 설명해 주십시오.",
+        "ja": "3件を超える渡航を報告する必要がある場合は、FISスタッフが別途対応できるよう、こちらにご記入ください。",
+        "vi": "Nếu bạn cần báo cáo nhiều hơn ba chuyến đi, vui lòng mô tả tại đây để nhân viên FIS sắp xếp riêng."
+      },
+      "informsStaffOnly": true,
+      "required": false
     }
   ],
   "fieldBindings": {
     "checkboxSelect": [
-      { "dataKey": "gender", "options": { "M": "genderM", "F": "genderF" } }
+      {
+        "dataKey": "gender",
+        "options": {
+          "M": "genderM",
+          "F": "genderF"
+        }
+      }
     ],
     "conditionalFallback": [
-      { "gateDataKey": "courtLegalApplies", "fields": ["courtName", "courtBranchPlace", "courtContactNumber"], "fallbackValue": "N/A" }
+      {
+        "gateDataKey": "courtLegalApplies",
+        "fields": [
+          "courtName",
+          "courtBranchPlace",
+          "courtContactNumber"
+        ],
+        "fallbackValue": "N/A"
+      }
     ],
     "repeatableGroups": [
       {
-        "dataKey": "trips", "maxCount": 3,
-        "subFields": ["arrivalDay", "arrivalMonth", "arrivalYear", "arrivalFlight", "departureDay", "departureMonth", "departureYear", "departureFlight"]
+        "dataKey": "trips",
+        "maxCount": 3,
+        "subFields": [
+          "arrivalDay",
+          "arrivalMonth",
+          "arrivalYear",
+          "arrivalFlight",
+          "departureDay",
+          "departureMonth",
+          "departureYear",
+          "departureFlight"
+        ]
       }
     ]
   }

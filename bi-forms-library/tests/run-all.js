@@ -81,6 +81,33 @@ for (const formId of FORM_IDS) {
     assert.doesNotThrow(() => validateForm({ formId, coordinateMap, questionnaire }));
   });
 
+  // Stage 5.4/5.5: the questionnaire schema's six-language `languages`
+  // array only declares which locales a form CLAIMS to support --
+  // nothing previously checked that every question (and every
+  // repeatable-group sub-question) actually carries a translated label
+  // for each one. All three forms were, in fact, English-only on every
+  // question until this stage, despite declaring full six-language
+  // support -- caught while building the Client Portal's questionnaire
+  // renderer, which otherwise silently falls back to the English label
+  // for a customer who selected a different language.
+  test(`${formId}: every question (and repeatable-group sub-question) has a label in all six declared languages`, () => {
+    const { questionnaire } = loadFormConfig(formId);
+    const missing = [];
+    for (const q of questionnaire.questions) {
+      for (const lang of questionnaire.languages) {
+        if (!q.labels || !q.labels[lang]) missing.push(`${q.id}.${lang}`);
+      }
+      if (q.type === "repeatable-group") {
+        for (const sub of q.subQuestions || []) {
+          for (const lang of questionnaire.languages) {
+            if (!sub.labels || !sub.labels[lang]) missing.push(`${q.id}.${sub.id}.${lang}`);
+          }
+        }
+      }
+    }
+    assert.deepEqual(missing, [], `${formId}: missing label(s) for ${missing.join(", ")}`);
+  });
+
   test(`${formId}: fieldsForAudience never returns a bi_staff or customer_wet_ink field for either audience`, () => {
     const { coordinateMap } = loadFormConfig(formId);
     for (const audience of ["staff", "customer"]) {

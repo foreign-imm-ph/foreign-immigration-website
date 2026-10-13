@@ -59,6 +59,22 @@ describe("customer-facing BI-form routes", () => {
     expect(body.coordinateMap).toBeUndefined();
   });
 
+  it("the questionnaire returned over the API carries a label in all six FIS languages for every question", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff);
+
+    const resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}`, { cookie }), env);
+    const body = await resp.json();
+    expect(body.questionnaire.languages.sort()).toEqual(["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"].sort());
+    for (const q of body.questionnaire.questions) {
+      for (const lang of body.questionnaire.languages) {
+        expect(q.labels[lang], `${q.id}.${lang}`).toBeTruthy();
+      }
+    }
+  });
+
   it("client B cannot read client A's submission by ID", async () => {
     const clientA = await createTestClient();
     const staff = await createTestStaff();
@@ -264,5 +280,90 @@ describe("customer-facing BI-form routes", () => {
 
     const dlResp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/documents/does-not-matter`, { cookie: cookieB }), env);
     expect(dlResp.status).toBe(404);
+  });
+});
+
+// Stage 5.5: the rest of this suite exercised only CCS-A-CDR-2016 --
+// "for all three validated forms" per this phase's testing requirements.
+// 2014-13-002 is structurally identical to CDR (same personal-info field
+// set), so one straightforward submission test is representative; 2014-
+// 13-006 is the one form with conditional questions (showIf) and a
+// repeatable group, so it gets dedicated coverage for both.
+describe("customer-facing BI-form routes: 2014-13-002", () => {
+  it("a complete submission transitions to submitted", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff, { biFormId: "2014-13-002" });
+    const completeAnswers = {
+      lastName: "TANAKA", firstName: "KENJI", middleName: "HARUTO", otherName1: "N/A", otherName2: "N/A",
+      dobDay: "08", dobMonth: "JUL", dobYear: "1988", gender: "M", placeOfBirth: "OSAKA JAPAN", citizenship: "JAPANESE",
+      address1: "12 ORCHID STREET", barangay: "BRGY BEL AIR MAKATI", provinceZip: "METRO MANILA 1209", passportNumber: "TK4455667",
+    };
+    await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/draft`, { method: "PATCH", cookie, body: { answers: completeAnswers } }), env);
+    const resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/submit`, { method: "POST", cookie }), env);
+    expect(resp.status).toBe(200);
+  });
+});
+
+describe("customer-facing BI-form routes: 2014-13-006 (conditional questions + repeatable fields)", () => {
+  function baseAnswers() {
+    return {
+      lastName: "TANAKA", firstName: "KENJI", middleName: "HARUTO", otherName1: "N/A", otherName2: "N/A",
+      dobDay: "08", dobMonth: "JUL", dobYear: "1988", gender: "M", placeOfBirth: "OSAKA JAPAN", citizenship: "JAPANESE",
+      passportNumber: "TK4455667", address1: "12 ORCHID STREET", barangay: "BRGY BEL AIR MAKATI", provinceZip: "METRO MANILA 1209",
+      requestingAgencyApplies: false, courtLegalApplies: false,
+      trips: [{ arrivalDay: "14", arrivalMonth: "FEB", arrivalYear: "2025", arrivalFlight: "PR0431", departureDay: "28", departureMonth: "FEB", departureYear: "2025", departureFlight: "PR0432" }],
+    };
+  }
+
+  it("submits successfully with both conditional gates answered 'no' and one repeatable trip entry", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff, { biFormId: "2014-13-006" });
+    await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/draft`, { method: "PATCH", cookie, body: { answers: baseAnswers() } }), env);
+
+    const resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/submit`, { method: "POST", cookie }), env);
+    expect(resp.status).toBe(200);
+  });
+
+  it("answering the court/legal gate 'yes' without the follow-up questions is rejected, and accepted once they're answered", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff, { biFormId: "2014-13-006" });
+    const incomplete = { ...baseAnswers(), courtLegalApplies: true }; // courtName/courtBranchPlace/courtContactNumber still unanswered
+    await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/draft`, { method: "PATCH", cookie, body: { answers: incomplete } }), env);
+
+    let resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/submit`, { method: "POST", cookie }), env);
+    expect(resp.status).toBe(422);
+    const body = await resp.json();
+    expect(body.error).toMatch(/courtName/);
+
+    const complete = { ...incomplete, courtName: "Regional Trial Court", courtBranchPlace: "Branch 1, Manila", courtContactNumber: "09170000000" };
+    await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/draft`, { method: "PATCH", cookie, body: { answers: complete } }), env);
+    resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/submit`, { method: "POST", cookie }), env);
+    expect(resp.status).toBe(200);
+  });
+
+  it("two filled repeatable trip entries round-trip correctly through a draft save", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff, { biFormId: "2014-13-006" });
+    const answers = {
+      ...baseAnswers(),
+      trips: [
+        { arrivalDay: "14", arrivalMonth: "FEB", arrivalYear: "2025", arrivalFlight: "PR0431", departureDay: "28", departureMonth: "FEB", departureYear: "2025", departureFlight: "PR0432" },
+        { arrivalDay: "01", arrivalMonth: "JUN", arrivalYear: "2025", arrivalFlight: "CX900", departureDay: "10", departureMonth: "JUN", departureYear: "2025", departureFlight: "CX901" },
+      ],
+    };
+    await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/draft`, { method: "PATCH", cookie, body: { answers } }), env);
+
+    const getResp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}`, { cookie }), env);
+    const getBody = await getResp.json();
+    expect(getBody.submission.answers.trips).toHaveLength(2);
+    expect(getBody.submission.answers.trips[1].arrivalFlight).toBe("CX900");
   });
 });
