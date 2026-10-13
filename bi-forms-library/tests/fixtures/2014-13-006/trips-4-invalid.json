@@ -1,0 +1,70 @@
+{
+  "note": "100% FICTIONAL applicant for prototype/review purposes only. No real person.",
+  "lastName": "TANAKA",
+  "firstName": "KENJI",
+  "middleName": "HARUTO",
+  "otherName1": "N/A",
+  "otherName2": "N/A",
+  "dobDay": "08",
+  "dobMonth": "JUL",
+  "dobYear": "1988",
+  "gender": "M",
+  "placeOfBirth": "OSAKA JAPAN",
+  "citizenship": "JAPANESE",
+  "passportNumber": "TK4455667",
+  "address1": "12 ORCHID STREET",
+  "barangay": "BRGY BEL AIR MAKATI",
+  "provinceZip": "METRO MANILA 1209",
+  "landline1": "N/A",
+  "mobile1": "09175551234",
+  "requestingAgency": "N/A",
+  "landline2": "N/A",
+  "mobile2": "N/A",
+  "courtLegalApplies": false,
+  "courtName": "N/A",
+  "courtBranchPlace": "N/A",
+  "courtContactNumber": "N/A",
+  "signatureLineContactNumber": "09175551234",
+  "trips": [
+    {
+      "arrivalDay": "14",
+      "arrivalMonth": "FEB",
+      "arrivalYear": "2025",
+      "arrivalFlight": "PR0431",
+      "departureDay": "28",
+      "departureMonth": "FEB",
+      "departureYear": "2025",
+      "departureFlight": "PR0432"
+    },
+    {
+      "arrivalDay": "03",
+      "arrivalMonth": "JUN",
+      "arrivalYear": "2024",
+      "arrivalFlight": "NH0862",
+      "departureDay": "19",
+      "departureMonth": "JUN",
+      "departureYear": "2024",
+      "departureFlight": "NH0861"
+    },
+    {
+      "arrivalDay": "21",
+      "arrivalMonth": "DEC",
+      "arrivalYear": "2023",
+      "arrivalFlight": "CX0906",
+      "departureDay": "02",
+      "departureMonth": "JAN",
+      "departureYear": "2024",
+      "departureFlight": "CX0905"
+    },
+    {
+      "arrivalDay": "01",
+      "arrivalMonth": "JAN",
+      "arrivalYear": "2022",
+      "arrivalFlight": "XX0001",
+      "departureDay": "02",
+      "departureMonth": "JAN",
+      "departureYear": "2022",
+      "departureFlight": "XX0002"
+    }
+  ]
+}
