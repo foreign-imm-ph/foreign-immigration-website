@@ -36,6 +36,14 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/freeTextField" }
     },
+    "watermark": {
+      "type": "object",
+      "required": ["text", "opacity"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "opacity": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    },
     "signatureBlock": { "$ref": "#/$defs/signatureBlock" },
     "customerPreviewCropBox": { "$ref": "#/$defs/region" },
     "customerVisibleRegions": {

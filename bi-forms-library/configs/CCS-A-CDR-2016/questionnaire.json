@@ -1,0 +1,29 @@
+{
+  "formId": "CCS-A-CDR-2016",
+  "languages": ["en", "ja", "ko", "vi", "zh-cn", "zh-hant"],
+  "questions": [
+    { "id": "lastName", "type": "text", "dataKey": "lastName", "labels": { "en": "Last Name" }, "forFields": ["lastName"] },
+    { "id": "firstName", "type": "text", "dataKey": "firstName", "labels": { "en": "First/Given Name" }, "forFields": ["firstName"] },
+    { "id": "middleName", "type": "text", "dataKey": "middleName", "labels": { "en": "Middle Name" }, "forFields": ["middleName"] },
+    { "id": "otherName1", "type": "text", "dataKey": "otherName1", "labels": { "en": "Other Name(s)/Alias(es) 1" }, "forFields": ["otherName1"] },
+    { "id": "otherName2", "type": "text", "dataKey": "otherName2", "labels": { "en": "Other Name(s)/Alias(es) 2" }, "forFields": ["otherName2"] },
+    { "id": "dobDay", "type": "text", "dataKey": "dobDay", "labels": { "en": "Date of Birth - DD" }, "forFields": ["dobDay"] },
+    { "id": "dobMonth", "type": "text", "dataKey": "dobMonth", "labels": { "en": "Date of Birth - MMM" }, "forFields": ["dobMonth"] },
+    { "id": "dobYear", "type": "text", "dataKey": "dobYear", "labels": { "en": "Date of Birth - YYYY" }, "forFields": ["dobYear"] },
+    { "id": "gender", "type": "select", "dataKey": "gender", "labels": { "en": "Gender" }, "options": ["M", "F"], "forFields": ["genderM", "genderF"] },
+    { "id": "placeOfBirth", "type": "text", "dataKey": "placeOfBirth", "labels": { "en": "Place of Birth" }, "forFields": ["placeOfBirth"] },
+    { "id": "citizenship", "type": "text", "dataKey": "citizenship", "labels": { "en": "Citizenship/Nationality" }, "forFields": ["citizenship"] },
+    { "id": "address1", "type": "text", "dataKey": "address1", "labels": { "en": "House/Unit No., Street, Subdivision/Village" }, "forFields": ["address1"] },
+    { "id": "barangay", "type": "text", "dataKey": "barangay", "labels": { "en": "Barangay, Municipality/City" }, "forFields": ["barangay"] },
+    { "id": "provinceZip", "type": "text", "dataKey": "provinceZip", "labels": { "en": "Province, Zip Code" }, "forFields": ["provinceZip"] },
+    { "id": "passportNumber", "type": "text", "dataKey": "passportNumber", "labels": { "en": "Passport Number" }, "forFields": ["passportNumber"] }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      { "dataKey": "gender", "options": { "M": "genderM", "F": "genderF" } }
+    ],
+    "wrappedPairs": [
+      { "dataKey": "purpose", "line1": "purposeLine1", "line2": "purposeLine2" }
+    ]
+  }
+}

@@ -1,0 +1,1672 @@
+{
+  "formId": "2014-13-006",
+  "formTitle": "Application Form for Request for Travel Records",
+  "documentType": "application_request",
+  "availability": "active",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE'.",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured independently from a 300 DPI raster of the official blank PDF. Not copied from CCS-A-CDR-2016 or 2014-13-002's coordinates. Two detection pitfalls re-confirmed on this form: (1) the Other Name 1/2 rows' first detected divider was again the printed row-number glyph, not a border -- verified by partial- vs full-height pixel-fraction check, and dropped; (2) the Arrival/Departure Date groups (DD/MMM/YYYY) again have equal gap-and-box spacing, resolved by direct visual zoom rather than arithmetic clustering.",
+  "visibilityDesignNote": "This form's customer-visible content is NOT contiguous. Approved per explicit instruction: two separate customerVisibleRegions (personal info through Province/Zip; Arrival/Departure/Flight section), with staff-only content sandwiched between them excluded entirely, not merely cropped. See customerVisibleRegions and the generation approach documented in ALIGNMENT_REPORT.md.",
+  "charBoxFields": {
+    "lastName": {
+      "label": "Last Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 856.32,
+      "yBottomPt": 842.64,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "firstName": {
+      "label": "First/Given Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 834.24,
+      "yBottomPt": 820.56,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "middleName": {
+      "label": "Middle Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 812.16,
+      "yBottomPt": 798.48,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "otherName1": {
+      "label": "Other Name(s)/Alias(es) 1",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 790.08,
+      "yBottomPt": 776.4,
+      "colsPt": [
+        51,
+        64.68,
+        78.6,
+        92.28,
+        105.96,
+        119.64,
+        133.56,
+        147.24,
+        160.92,
+        174.84,
+        188.52,
+        202.2,
+        216.12,
+        229.8,
+        243.72,
+        257.4,
+        271.32,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "otherName2": {
+      "label": "Other Name(s)/Alias(es) 2",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 774.72,
+      "yBottomPt": 761.04,
+      "colsPt": [
+        51,
+        64.68,
+        78.6,
+        92.28,
+        105.96,
+        119.64,
+        133.56,
+        147.24,
+        160.92,
+        174.84,
+        188.52,
+        202.2,
+        216.12,
+        229.8,
+        243.72,
+        257.4,
+        271.32,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "placeOfBirth": {
+      "label": "Place of Birth",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 729.12,
+      "yBottomPt": 715.44,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "citizenship": {
+      "label": "Citizenship/Nationality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 707.04,
+      "yBottomPt": 693.36,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "address1": {
+      "label": "House/Unit No., Street, Subdivision",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 677.04,
+      "yBottomPt": 663.36,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "barangay": {
+      "label": "Barangay, Municipality/City",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 654.96,
+      "yBottomPt": 641.28,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "provinceZip": {
+      "label": "Province, Zip Code",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 632.88,
+      "yBottomPt": 619.2,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52,
+      "colsPt": [
+        36,
+        49.8,
+        63.48
+      ]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52,
+      "colsPt": [
+        77.4,
+        91.32,
+        105.24,
+        118.92
+      ]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52,
+      "colsPt": [
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04
+      ]
+    },
+    "passportNumber": {
+      "label": "Passport Number (shares the DOB/Gender row on this form)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52,
+      "colsPt": [
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52
+      ]
+    },
+    "landline1": {
+      "label": "Contact Number(s) in the Philippines - Landline (subject's own, 1st block)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 609.6,
+      "yBottomPt": 595.92,
+      "colsPt": [
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48
+      ]
+    },
+    "mobile1": {
+      "label": "Contact Number(s) in the Philippines - Mobile (subject's own, 1st block)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 609.6,
+      "yBottomPt": 595.92,
+      "colsPt": [
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76
+      ]
+    },
+    "requestingAgency": {
+      "label": "Requesting Foundation/Agency/Embassy/Others",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 587.52,
+      "yBottomPt": 573.84,
+      "colsPt": [
+        36,
+        49.8,
+        63.48,
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48,
+        257.4,
+        271.08,
+        285.24,
+        299.04,
+        313.08,
+        326.76,
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76,
+        520.68,
+        534.6,
+        548.52,
+        562.2,
+        576.12
+      ]
+    },
+    "landline2": {
+      "label": "Contact Number(s) in the Philippines - Landline (requesting agency's, 2nd block)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 564.24,
+      "yBottomPt": 550.56,
+      "colsPt": [
+        77.4,
+        91.32,
+        105.24,
+        118.92,
+        132.84,
+        146.76,
+        160.44,
+        174.36,
+        188.04,
+        201.96,
+        215.88,
+        229.56,
+        243.48
+      ]
+    },
+    "mobile2": {
+      "label": "Contact Number(s) in the Philippines - Mobile (requesting agency's, 2nd block)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 564.24,
+      "yBottomPt": 550.56,
+      "colsPt": [
+        340.68,
+        354.6,
+        368.28,
+        382.2,
+        396.12,
+        410.04,
+        423.72,
+        437.64,
+        451.56,
+        465.24,
+        479.16,
+        493.08,
+        506.76
+      ]
+    },
+    "arrivalDay_1": {
+      "label": "Arrival Date DD (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        45,
+        57.24,
+        69.48
+      ]
+    },
+    "arrivalMonth_1": {
+      "label": "Arrival Date MMM (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        81.96,
+        94.2,
+        106.44,
+        118.68
+      ]
+    },
+    "arrivalYear_1": {
+      "label": "Arrival Date YYYY (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        130.92,
+        143.16,
+        155.4,
+        167.64,
+        179.88
+      ]
+    },
+    "arrivalFlight_1": {
+      "label": "Arrival Flight Number (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        198.36,
+        210.6,
+        222.84,
+        235.08,
+        247.32,
+        259.56,
+        271.8,
+        284.52
+      ]
+    },
+    "departureDay_1": {
+      "label": "Departure Date DD (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        315.24,
+        327.48,
+        339.6
+      ]
+    },
+    "departureMonth_1": {
+      "label": "Departure Date MMM (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        352.2,
+        364.44,
+        376.68,
+        388.92
+      ]
+    },
+    "departureYear_1": {
+      "label": "Departure Date YYYY (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        401.16,
+        413.4,
+        425.64,
+        437.88,
+        450.12
+      ]
+    },
+    "departureFlight_1": {
+      "label": "Departure Flight Number (entry 1 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 487.85,
+      "yBottomPt": 470.5,
+      "colsPt": [
+        468.6,
+        480.84,
+        493.08,
+        505.32,
+        517.56,
+        529.8,
+        542.04,
+        554.52
+      ]
+    },
+    "arrivalDay_2": {
+      "label": "Arrival Date DD (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        45,
+        57.24,
+        69.48
+      ]
+    },
+    "arrivalMonth_2": {
+      "label": "Arrival Date MMM (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        81.96,
+        94.2,
+        106.44,
+        118.68
+      ]
+    },
+    "arrivalYear_2": {
+      "label": "Arrival Date YYYY (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        130.92,
+        143.16,
+        155.4,
+        167.64,
+        179.88
+      ]
+    },
+    "arrivalFlight_2": {
+      "label": "Arrival Flight Number (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        198.36,
+        210.6,
+        222.84,
+        235.08,
+        247.32,
+        259.56,
+        271.8,
+        284.52
+      ]
+    },
+    "departureDay_2": {
+      "label": "Departure Date DD (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        315.24,
+        327.48,
+        339.6
+      ]
+    },
+    "departureMonth_2": {
+      "label": "Departure Date MMM (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        352.2,
+        364.44,
+        376.68,
+        388.92
+      ]
+    },
+    "departureYear_2": {
+      "label": "Departure Date YYYY (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        401.16,
+        413.4,
+        425.64,
+        437.88,
+        450.12
+      ]
+    },
+    "departureFlight_2": {
+      "label": "Departure Flight Number (entry 2 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.5,
+      "yBottomPt": 452.2,
+      "colsPt": [
+        468.6,
+        480.84,
+        493.08,
+        505.32,
+        517.56,
+        529.8,
+        542.04,
+        554.52
+      ]
+    },
+    "arrivalDay_3": {
+      "label": "Arrival Date DD (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        45,
+        57.24,
+        69.48
+      ]
+    },
+    "arrivalMonth_3": {
+      "label": "Arrival Date MMM (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        81.96,
+        94.2,
+        106.44,
+        118.68
+      ]
+    },
+    "arrivalYear_3": {
+      "label": "Arrival Date YYYY (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        130.92,
+        143.16,
+        155.4,
+        167.64,
+        179.88
+      ]
+    },
+    "arrivalFlight_3": {
+      "label": "Arrival Flight Number (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        198.36,
+        210.6,
+        222.84,
+        235.08,
+        247.32,
+        259.56,
+        271.8,
+        284.52
+      ]
+    },
+    "departureDay_3": {
+      "label": "Departure Date DD (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        315.24,
+        327.48,
+        339.6
+      ]
+    },
+    "departureMonth_3": {
+      "label": "Departure Date MMM (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        352.2,
+        364.44,
+        376.68,
+        388.92
+      ]
+    },
+    "departureYear_3": {
+      "label": "Departure Date YYYY (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        401.16,
+        413.4,
+        425.64,
+        437.88,
+        450.12
+      ]
+    },
+    "departureFlight_3": {
+      "label": "Departure Flight Number (entry 3 of 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 452.2,
+      "yBottomPt": 434.7,
+      "colsPt": [
+        468.6,
+        480.84,
+        493.08,
+        505.32,
+        517.56,
+        529.8,
+        542.04,
+        554.52
+      ]
+    }
+  },
+  "checkboxFields": {
+    "genderM": {
+      "label": "Gender - M",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 271.08,
+      "xRightPt": 285.24,
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52
+    },
+    "genderF": {
+      "label": "Gender - F",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 313.08,
+      "xRightPt": 326.76,
+      "yTopPt": 751.44,
+      "yBottomPt": 737.52
+    }
+  },
+  "freeTextFields": {
+    "courtName": {
+      "label": "Name of Court (If for Court/Legal Purposes)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 101.32,
+      "xEndPt": 564.24,
+      "baselinePt": 526.3,
+      "maxLines": 1,
+      "questionnaireNote": "Conditional questionnaire asks: 'Are you requesting your travel records for court proceedings or another legal purpose?' If YES, collects Name of Court/Branch/Contact for staff review; if NO, hidden and staff enter N/A on the PDF after review."
+    },
+    "courtBranchPlace": {
+      "label": "Branch/Place (If for Court/Legal Purposes)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 95.76,
+      "xEndPt": 309.58,
+      "baselinePt": 513.58,
+      "maxLines": 1
+    },
+    "courtContactNumber": {
+      "label": "Contact Number(s) (If for Court/Legal Purposes)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 387.5,
+      "xEndPt": 561.21,
+      "baselinePt": 513.58,
+      "maxLines": 1
+    },
+    "signatureLineContactNumber": {
+      "label": "Contact Number (on the signature line)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 464.64,
+      "xEndPt": 576,
+      "baselinePt": 397,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature required by the official form. Deliberately left blank -- not populated by this automation, per explicit instruction.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "signatureLine": {
+      "xStartPt": 35.28,
+      "xEndPt": 243.36,
+      "baselinePt": 397
+    },
+    "dateLine": {
+      "xStartPt": 284.64,
+      "xEndPt": 437.52,
+      "baselinePt": 397
+    }
+  },
+  "customerVisibleRegions": {
+    "note": "Two disjoint regions, per explicit instruction. Staff-controlled content between them (both Contact Number blocks, Requesting Agency, Court/Legal box) and everything below region B (signature line, BI-only processing, Claim Stub) is excluded entirely from the customer artifact -- not drawn, not present, not merely covered.",
+    "regions": [
+      {
+        "id": "personal_info",
+        "label": "Personal information through Province/Zip Code",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 618.8,
+        "yTopPt": 936
+      },
+      {
+        "id": "travel_dates",
+        "label": "Arrival Date, Departure Date and Flight Number",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 434,
+        "yTopPt": 505.8
+      }
+    ]
+  },
+  "biOnlySections": [
+    {
+      "label": "DO NOT FILL OUT THIS PORTION (NO RECORD ON FILE [For ICTS & CCS only]; NOTE [For Records Section only])",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    },
+    {
+      "label": "Certification and Clearance Section (CCS) Window (RECEIVED / RELEASED)",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    },
+    {
+      "label": "Travel Records Claim Stub (entire section, explicitly labelled 'To be filled out by Authorized BI Personnel Only')",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "en": "This form requires your signature in person when you collect it from FIS. You do not need to sign anything online."
+    },
+    {
+      "id": "back_page_note",
+      "en": "The original form mentions using the back page if more space is needed. If you have more than three trips to report, let FIS staff know and they will note the extra details."
+    }
+  ],
+  "questionnaireDesign": {
+    "note": "Planning note for the six-language Client Portal questionnaire. Not implemented as UI here -- this documents the agreed contract the PDF generation logic above already honors.",
+    "tripEntries": "Repeatable block, exactly 3 instances (matching the PDF's 3 physical rows): Arrival Date, Arrival Flight Number, Departure Date, Departure Flight Number. Each field labelled in the client's preferred language per the existing pattern -- official English label first, translation in parentheses, e.g. \"Arrival Date (입국일자)\".",
+    "additionalTravelHistory": "A separate, single free-text field (not a 4th structured entry, since the PDF has no 4th row): \"If you need to report more than three trips, describe them here for FIS staff to arrange separately.\" Routed to staff for manual handling (e.g. a supplementary note, or splitting across multiple requests) -- never auto-inserted onto the 3-row grid, and never silently dropped.",
+    "courtLegalConditional": "Implements the approved conditional logic: \"Are you requesting your travel records for court proceedings or another legal purpose?\" Yes/No. YES reveals Name of Court / Branch-Place / Court Contact Number as customer input for staff review; NO hides them. Either way the official PDF's Court/Legal section remains staff-controlled -- the questionnaire answer informs staff, it does not write directly to the form."
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.12
+  }
+}

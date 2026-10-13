@@ -1,0 +1,89 @@
+{
+  "formId": "2014-13-006",
+  "languages": ["en", "ja", "ko", "vi", "zh-cn", "zh-hant"],
+  "questions": [
+    { "id": "lastName", "type": "text", "dataKey": "lastName", "labels": { "en": "Last Name" }, "forFields": ["lastName"] },
+    { "id": "firstName", "type": "text", "dataKey": "firstName", "labels": { "en": "First/Given Name" }, "forFields": ["firstName"] },
+    { "id": "middleName", "type": "text", "dataKey": "middleName", "labels": { "en": "Middle Name" }, "forFields": ["middleName"] },
+    { "id": "otherName1", "type": "text", "dataKey": "otherName1", "labels": { "en": "Other Name(s)/Alias(es) 1" }, "forFields": ["otherName1"] },
+    { "id": "otherName2", "type": "text", "dataKey": "otherName2", "labels": { "en": "Other Name(s)/Alias(es) 2" }, "forFields": ["otherName2"] },
+    { "id": "dobDay", "type": "text", "dataKey": "dobDay", "labels": { "en": "Date of Birth - DD" }, "forFields": ["dobDay"] },
+    { "id": "dobMonth", "type": "text", "dataKey": "dobMonth", "labels": { "en": "Date of Birth - MMM" }, "forFields": ["dobMonth"] },
+    { "id": "dobYear", "type": "text", "dataKey": "dobYear", "labels": { "en": "Date of Birth - YYYY" }, "forFields": ["dobYear"] },
+    { "id": "gender", "type": "select", "dataKey": "gender", "labels": { "en": "Gender" }, "options": ["M", "F"], "forFields": ["genderM", "genderF"] },
+    { "id": "placeOfBirth", "type": "text", "dataKey": "placeOfBirth", "labels": { "en": "Place of Birth" }, "forFields": ["placeOfBirth"] },
+    { "id": "citizenship", "type": "text", "dataKey": "citizenship", "labels": { "en": "Citizenship/Nationality" }, "forFields": ["citizenship"] },
+    { "id": "passportNumber", "type": "text", "dataKey": "passportNumber", "labels": { "en": "Passport Number" }, "forFields": ["passportNumber"] },
+    { "id": "address1", "type": "text", "dataKey": "address1", "labels": { "en": "House/Unit No., Street, Subdivision/Village" }, "forFields": ["address1"] },
+    { "id": "barangay", "type": "text", "dataKey": "barangay", "labels": { "en": "Barangay, Municipality/City" }, "forFields": ["barangay"] },
+    { "id": "provinceZip", "type": "text", "dataKey": "provinceZip", "labels": { "en": "Province, Zip Code" }, "forFields": ["provinceZip"] },
+
+    {
+      "id": "requestingAgencyApplies", "type": "yesno", "dataKey": "requestingAgencyApplies",
+      "labels": { "en": "Did an outside institution (foundation, agency, embassy, or other organization) request these travel records on your behalf?" }
+    },
+    {
+      "id": "requestingAgencyName", "type": "text", "dataKey": "requestingAgency",
+      "labels": { "en": "Name of the requesting institution and its contact details" },
+      "forFields": ["requestingAgency"], "informsStaffOnly": true,
+      "showIf": { "questionId": "requestingAgencyApplies", "equals": true }
+    },
+
+    {
+      "id": "courtLegalApplies", "type": "yesno", "dataKey": "courtLegalApplies",
+      "labels": { "en": "Are you requesting your travel records for court proceedings or another legal purpose?" }
+    },
+    {
+      "id": "courtName", "type": "text", "dataKey": "courtName",
+      "labels": { "en": "Name of Court" },
+      "forFields": ["courtName"], "informsStaffOnly": true,
+      "showIf": { "questionId": "courtLegalApplies", "equals": true }
+    },
+    {
+      "id": "courtBranchPlace", "type": "text", "dataKey": "courtBranchPlace",
+      "labels": { "en": "Branch/Place" },
+      "forFields": ["courtBranchPlace"], "informsStaffOnly": true,
+      "showIf": { "questionId": "courtLegalApplies", "equals": true }
+    },
+    {
+      "id": "courtContactNumber", "type": "text", "dataKey": "courtContactNumber",
+      "labels": { "en": "Court Contact Number, if available" },
+      "forFields": ["courtContactNumber"], "informsStaffOnly": true,
+      "showIf": { "questionId": "courtLegalApplies", "equals": true }
+    },
+
+    {
+      "id": "trips", "type": "repeatable-group", "groupDataKey": "trips", "maxCount": 3,
+      "labels": { "en": "Travel entries (up to 3)" },
+      "subQuestions": [
+        { "id": "arrivalDay", "type": "text", "dataKey": "arrivalDay", "labels": { "en": "Arrival Date - DD" } },
+        { "id": "arrivalMonth", "type": "text", "dataKey": "arrivalMonth", "labels": { "en": "Arrival Date - MMM" } },
+        { "id": "arrivalYear", "type": "text", "dataKey": "arrivalYear", "labels": { "en": "Arrival Date - YYYY" } },
+        { "id": "arrivalFlight", "type": "text", "dataKey": "arrivalFlight", "labels": { "en": "Arrival Flight Number" } },
+        { "id": "departureDay", "type": "text", "dataKey": "departureDay", "labels": { "en": "Departure Date - DD" } },
+        { "id": "departureMonth", "type": "text", "dataKey": "departureMonth", "labels": { "en": "Departure Date - MMM" } },
+        { "id": "departureYear", "type": "text", "dataKey": "departureYear", "labels": { "en": "Departure Date - YYYY" } },
+        { "id": "departureFlight", "type": "text", "dataKey": "departureFlight", "labels": { "en": "Departure Flight Number" } }
+      ]
+    },
+    {
+      "id": "additionalTravelHistory", "type": "text", "dataKey": "additionalTravelHistory",
+      "labels": { "en": "If you need to report more than three trips, describe them here for FIS staff to arrange separately." },
+      "informsStaffOnly": true
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      { "dataKey": "gender", "options": { "M": "genderM", "F": "genderF" } }
+    ],
+    "conditionalFallback": [
+      { "gateDataKey": "courtLegalApplies", "fields": ["courtName", "courtBranchPlace", "courtContactNumber"], "fallbackValue": "N/A" }
+    ],
+    "repeatableGroups": [
+      {
+        "dataKey": "trips", "maxCount": 3,
+        "subFields": ["arrivalDay", "arrivalMonth", "arrivalYear", "arrivalFlight", "departureDay", "departureMonth", "departureYear", "departureFlight"]
+      }
+    ]
+  }
+}
