@@ -1,0 +1,189 @@
+// Isolated prototype -- scratchpad only. Does not touch the FIS repository,
+// website, database, or any Cloudflare resource.
+//
+// Populates BI FORM 2014-13-006 ("Application Form for Request for Travel
+// Records"). This form's customer-visible content is NOT contiguous (see
+// coordinate-map.json's visibilityDesignNote), so this script only builds
+// the STAFF preview (full page, every field) and an INTERMEDIATE
+// "customer-fields-only" full page (only approved fields drawn, nothing
+// else -- no crop yet). The two approved regions are cropped from that
+// intermediate page and composited into the final customer-preview.pdf by
+// a separate step (see compose-customer-preview.js), because pdf-lib's
+// single rectangular MediaBox/CropBox cannot express two disjoint visible
+// strips on one page -- see the approved Forms Library spec, section 7.3.
+const fs = require("fs");
+const path = require("path");
+const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
+
+const DIR = __dirname;
+const map = JSON.parse(fs.readFileSync(path.join(DIR, "coordinate-map.json"), "utf8"));
+const data = JSON.parse(fs.readFileSync(path.join(DIR, "sample-data.json"), "utf8"));
+
+const overflowReport = [];
+
+function fitCharFontSize(font, chars, boxW, boxH, maxSize = 13) {
+  const hPad = 2.2;
+  const vPad = 2.0;
+  let size = maxSize;
+  while (size > 4) {
+    const widest = Math.max(...chars.map((c) => font.widthOfTextAtSize(c, size)));
+    if (widest <= boxW - 2 * hPad && size <= boxH - 2 * vPad) break;
+    size -= 0.25;
+  }
+  return size;
+}
+
+function drawCharInBox(page, font, char, x1, x2, yBottom, yTop, size) {
+  if (!char || char === " ") return;
+  const w = font.widthOfTextAtSize(char, size);
+  const capHeight = size * 0.718;
+  const x = x1 + (x2 - x1 - w) / 2;
+  const y = yBottom + (yTop - yBottom - capHeight) / 2;
+  page.drawText(char, { x, y, size, font, color: rgb(0, 0, 0) });
+}
+
+function populateCharField(page, font, fieldKey, value) {
+  const f = map.charBoxFields[fieldKey];
+  if (!f) throw new Error(`Unknown char-box field: ${fieldKey}`);
+  const v = String(value ?? "").toUpperCase();
+  const nBoxes = f.colsPt.length - 1;
+  if (v.length > nBoxes) {
+    overflowReport.push({
+      field: f.label,
+      issue: `Value "${value}" is ${v.length} characters but the form provides only ${nBoxes} boxes. Truncated to fit -- flag for staff review.`,
+    });
+  }
+  const chars = v.slice(0, nBoxes).split("");
+  const size = chars.length
+    ? fitCharFontSize(font, chars, f.colsPt[1] - f.colsPt[0], f.yTopPt - f.yBottomPt)
+    : 13;
+  chars.forEach((ch, i) => {
+    drawCharInBox(page, font, ch, f.colsPt[i], f.colsPt[i + 1], f.yBottomPt, f.yTopPt, size);
+  });
+}
+
+function drawCheckbox(page, font, fieldKey) {
+  const f = map.checkboxFields[fieldKey];
+  const size = fitCharFontSize(font, ["X"], f.xRightPt - f.xLeftPt, f.yTopPt - f.yBottomPt, 12);
+  drawCharInBox(page, font, "X", f.xLeftPt, f.xRightPt, f.yBottomPt, f.yTopPt, size);
+}
+
+function drawFreeText(page, font, fieldKey, text) {
+  const f = map.freeTextFields[fieldKey];
+  const available = f.xEndPt - f.xStartPt - 6;
+  let size = 11;
+  let w = font.widthOfTextAtSize(text, size);
+  while (w > available && size > 6) {
+    size -= 0.25;
+    w = font.widthOfTextAtSize(text, size);
+  }
+  if (w > available) {
+    overflowReport.push({
+      field: f.label,
+      issue: `Text "${text}" does not fit even at the minimum 6pt floor (needs ${w.toFixed(1)}pt, line provides ${available.toFixed(1)}pt).`,
+    });
+  }
+  page.drawText(text, { x: f.xStartPt + 3, y: f.baselinePt, size, font, color: rgb(0, 0, 0) });
+}
+
+// ---- Customer-visible fields (identity/address + arrival/departure/flight) ----
+function populateApplicantFields(page, font) {
+  for (const key of [
+    "lastName", "firstName", "middleName", "otherName1", "otherName2",
+    "placeOfBirth", "citizenship", "address1", "barangay", "provinceZip", "passportNumber",
+  ]) {
+    populateCharField(page, font, key, data[key]);
+  }
+  populateCharField(page, font, "dobDay", data.dobDay);
+  populateCharField(page, font, "dobMonth", data.dobMonth);
+  populateCharField(page, font, "dobYear", data.dobYear);
+  drawCheckbox(page, font, data.gender === "M" ? "genderM" : "genderF");
+}
+
+function populateTripFields(page, font) {
+  data.trips.forEach((trip, i) => {
+    const n = i + 1;
+    populateCharField(page, font, `arrivalDay_${n}`, trip.arrivalDay);
+    populateCharField(page, font, `arrivalMonth_${n}`, trip.arrivalMonth);
+    populateCharField(page, font, `arrivalYear_${n}`, trip.arrivalYear);
+    populateCharField(page, font, `arrivalFlight_${n}`, trip.arrivalFlight);
+    populateCharField(page, font, `departureDay_${n}`, trip.departureDay);
+    populateCharField(page, font, `departureMonth_${n}`, trip.departureMonth);
+    populateCharField(page, font, `departureYear_${n}`, trip.departureYear);
+    populateCharField(page, font, `departureFlight_${n}`, trip.departureFlight);
+  });
+}
+
+// ---- Staff-only fields (never drawn on the customer-fields document) ----
+function populateStaffOnlyFields(page, font) {
+  populateCharField(page, font, "landline1", data.landline1);
+  populateCharField(page, font, "mobile1", data.mobile1);
+  populateCharField(page, font, "requestingAgency", data.requestingAgency);
+  populateCharField(page, font, "landline2", data.landline2);
+  populateCharField(page, font, "mobile2", data.mobile2);
+
+  // Court/Legal: conditional questionnaire logic settles this at staff-review
+  // time. If the client answered NO (or the question never applied), N/A is
+  // written here -- never left to guesswork, never silently blank.
+  const courtName = data.courtLegalApplies ? data.courtName : "N/A";
+  const courtBranchPlace = data.courtLegalApplies ? data.courtBranchPlace : "N/A";
+  const courtContactNumber = data.courtLegalApplies ? data.courtContactNumber : "N/A";
+  drawFreeText(page, font, "courtName", courtName);
+  drawFreeText(page, font, "courtBranchPlace", courtBranchPlace);
+  drawFreeText(page, font, "courtContactNumber", courtContactNumber);
+
+  drawFreeText(page, font, "signatureLineContactNumber", data.signatureLineContactNumber);
+}
+
+// ---- Adopted metadata-minimization standard (from the roadmap, effective
+// starting with this form) -- rewrites only the Info dictionary, no effect
+// on visible content. ----
+async function applyMetadataStandard(doc, title) {
+  doc.setAuthor("Foreign Immigration Services");
+  doc.setCreator("FIS Forms Library");
+  doc.setTitle(title);
+}
+
+async function main() {
+  const originalBytes = fs.readFileSync(path.join(DIR, "original.pdf"));
+
+  // ---------- STAFF PREVIEW: full original page, every field, BI-only
+  // sections left completely untouched. ----------
+  const staffDoc = await PDFDocument.load(originalBytes);
+  const staffFont = await staffDoc.embedFont(StandardFonts.Helvetica);
+  const staffPage = staffDoc.getPages()[0];
+  populateApplicantFields(staffPage, staffFont);
+  populateTripFields(staffPage, staffFont);
+  populateStaffOnlyFields(staffPage, staffFont);
+  await applyMetadataStandard(staffDoc, map.formTitle);
+  const staffSmallFont = await staffDoc.embedFont(StandardFonts.HelveticaOblique);
+  staffPage.drawText("PROTOTYPE - FICTIONAL DATA - NOT FOR FILING", {
+    x: 36, y: 16, size: 7, font: staffSmallFont, color: rgb(0.55, 0.55, 0.55),
+  });
+  fs.writeFileSync(path.join(DIR, "staff-preview.pdf"), await staffDoc.save());
+
+  // ---------- CUSTOMER-FIELDS INTERMEDIATE: a FRESH copy of the blank
+  // template with ONLY the two approved regions' fields drawn. Staff-only
+  // fields (landline1/mobile1, requestingAgency, landline2/mobile2, the
+  // Court/Legal box, the signature-line contact number) are never written
+  // to this document at all -- not merely cropped out later. Still a full,
+  // uncropped page at this stage; compose-customer-preview.js extracts and
+  // composites the two approved regions from it. ----------
+  const customerFieldsDoc = await PDFDocument.load(originalBytes);
+  const customerFont = await customerFieldsDoc.embedFont(StandardFonts.Helvetica);
+  const customerPage = customerFieldsDoc.getPages()[0];
+  populateApplicantFields(customerPage, customerFont);
+  populateTripFields(customerPage, customerFont);
+  await applyMetadataStandard(customerFieldsDoc, map.formTitle);
+  fs.writeFileSync(path.join(DIR, "customer-fields-fullpage.pdf"), await customerFieldsDoc.save());
+
+  fs.writeFileSync(path.join(DIR, "overflow-report.json"), JSON.stringify(overflowReport, null, 2));
+  console.log("Generated staff-preview.pdf and customer-fields-fullpage.pdf");
+  console.log("Overflow issues:", overflowReport.length);
+  if (overflowReport.length) console.log(JSON.stringify(overflowReport, null, 2));
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

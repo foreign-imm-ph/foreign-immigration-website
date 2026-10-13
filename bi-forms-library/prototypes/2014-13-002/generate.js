@@ -153,28 +153,28 @@ async function main() {
   });
   fs.writeFileSync(path.join(DIR, "staff-preview.pdf"), await staffDoc.save());
 
-  // ---------- CUSTOMER PREVIEW: a FRESH copy of the blank template with
-  // ONLY applicant-owned fields drawn -- FIS-only fields (landline, mobile,
-  // purpose) are never written to this document at all, not merely cropped
-  // out. Cropped immediately after Passport Number per explicit instruction.
-  const customerDoc = await PDFDocument.load(originalBytes);
-  const customerFont = await customerDoc.embedFont(StandardFonts.Helvetica);
-  const customerPage = customerDoc.getPages()[0];
-  populateApplicantFields(customerPage, customerFont);
-  const wmFont = await customerDoc.embedFont(StandardFonts.HelveticaBold);
-  customerDoc.watermarkFont = wmFont;
-  const cb = map.customerPreviewCropBox;
-  const cropWidth = cb.xRightPt - cb.xLeftPt;
-  const cropHeight = cb.yTopPt - cb.yBottomPt;
-  addWatermark(customerPage, "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS", {
-    xLeft: cb.xLeftPt, yBottom: cb.yBottomPt, width: cropWidth, height: cropHeight,
-  });
-  customerPage.setCropBox(cb.xLeftPt, cb.yBottomPt, cropWidth, cropHeight);
-  customerPage.setMediaBox(cb.xLeftPt, cb.yBottomPt, cropWidth, cropHeight);
-  fs.writeFileSync(path.join(DIR, "customer-preview.pdf"), await customerDoc.save());
+  // ---------- CUSTOMER-FIELDS INTERMEDIATE (secure reconstruction, per the
+  // 2026 security audit): a FRESH copy of the blank template with ONLY
+  // applicant-owned fields drawn -- FIS-only fields (landline, mobile,
+  // purpose) are never written to this document at all. This intermediate,
+  // uncropped page is rendered and cropped to the SAME approved region as
+  // before (compose_customer_canvas.py + finalize_customer_preview.js),
+  // then embedded as an image into a brand-new PDF document rather than
+  // using setCropBox/setMediaBox on a copy of original.pdf -- removing the
+  // audit finding that the old approach left the full content stream
+  // physically recoverable by expanding the box back out. Boundary, field
+  // ownership, formatting and watermark appearance (opacity 0.12, same
+  // sizing/centering logic) are byte-for-byte the same as the previously
+  // approved version. ----------
+  const customerFieldsDoc = await PDFDocument.load(originalBytes);
+  const customerFieldsFont = await customerFieldsDoc.embedFont(StandardFonts.Helvetica);
+  const customerFieldsPage = customerFieldsDoc.getPages()[0];
+  populateApplicantFields(customerFieldsPage, customerFieldsFont);
+  fs.writeFileSync(path.join(DIR, "customer-fields-fullpage.pdf"), await customerFieldsDoc.save());
 
   fs.writeFileSync(path.join(DIR, "overflow-report.json"), JSON.stringify(overflowReport, null, 2));
-  console.log("Generated staff-preview.pdf and customer-preview.pdf");
+  console.log("Generated staff-preview.pdf and customer-fields-fullpage.pdf");
+  console.log("Run compose_customer_canvas.py then finalize_customer_preview.js to produce customer-preview.pdf");
   console.log("Overflow issues:", overflowReport.length);
   if (overflowReport.length) console.log(JSON.stringify(overflowReport, null, 2));
 }

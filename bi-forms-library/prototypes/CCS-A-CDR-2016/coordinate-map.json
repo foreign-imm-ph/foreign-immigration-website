@@ -1,0 +1,81 @@
+{
+  "formId": "CCS-A-CDR-2016",
+  "formTitle": "Request for Certified True Copy of Derogatory Records",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- business classification pending. See BI_FORMS_LIBRARY_SPECIFICATION.md, open decision #3.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE'.",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured programmatically from a 300 DPI raster of the official blank PDF by detecting grid-line pixel positions (see detect-boxes.py), not estimated by eye.",
+  "rolesSchemaNote": "Each field's former single 'owner' string has been replaced with a 'roles' object (suppliedBy/editableBy/approvedBy/visibleTo) per the approved Forms Library spec. All yTopPt/yBottomPt/colsPt coordinates and the crop boundary below are byte-for-byte unchanged from the delivered, inspected-and-corrected prototype.",
+  "charBoxFields": {
+    "lastName":        { "label": "Last Name",                              "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 762.72, "yBottomPt": 748.08, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "firstName":       { "label": "First/Given Name",                       "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 737.28, "yBottomPt": 722.64, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "middleName":      { "label": "Middle Name",                            "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 711.84, "yBottomPt": 697.2,  "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "otherName1":      { "label": "Other Name(s)/Alias(es) 1",              "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 686.64, "yBottomPt": 672.0,  "colsPt": [52.68,66.36,80.04,93.72,107.4,121.08,134.76,148.44,162.12,175.8,189.48,203.4,217.32,231.0,244.92,258.6,272.52,286.2,300.12,313.8,327.72,341.4,355.32,369.0,382.92,396.6,410.52,424.2,438.12,451.8,465.72,479.4,493.32,507.0,520.92,534.6,548.52,562.2,576.0] },
+    "otherName2":      { "label": "Other Name(s)/Alias(es) 2",              "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 670.32, "yBottomPt": 655.68, "colsPt": [52.68,66.36,80.04,93.72,107.4,121.08,134.76,148.44,162.12,175.8,189.48,203.4,217.32,231.0,244.92,258.6,272.52,286.2,300.12,313.8,327.72,341.4,355.32,369.0,382.92,396.6,410.52,424.2,438.12,451.8,465.72,479.4,493.32,507.0,520.92,534.6,548.52,562.2,576.0] },
+    "placeOfBirth":    { "label": "Place of Birth",                         "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 619.44, "yBottomPt": 604.8,  "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "citizenship":     { "label": "Citizenship/Nationality",                "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 594.24, "yBottomPt": 579.6,  "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "address1":        { "label": "House/Unit No., Street, Subdivision/Village", "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 558.24, "yBottomPt": 543.6, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "barangay":        { "label": "Barangay, Municipality/City",            "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 532.8,  "yBottomPt": 518.16, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "provinceZip":     { "label": "Province, Zip Code",                     "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 507.6,  "yBottomPt": 492.96, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "passportNumber":  { "label": "Passport Number",                        "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 482.16, "yBottomPt": 467.52, "colsPt": [35.88,49.8,63.72,77.4,91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4,271.32,285.24,299.16,312.84,326.76,340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76,520.68,534.48,548.28,562.2,576.0] },
+    "dobDay":          { "label": "Date of Birth - DD",                     "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 643.32, "yBottomPt": 630.36, "colsPt": [36.0,49.92,63.84] },
+    "dobMonth":        { "label": "Date of Birth - MMM",                    "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 643.32, "yBottomPt": 630.36, "colsPt": [77.28,91.2,105.12,119.04] },
+    "dobYear":         { "label": "Date of Birth - YYYY",                   "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "yTopPt": 643.32, "yBottomPt": 630.36, "colsPt": [132.96,146.88,160.8,174.24,188.16] },
+    "landline":        { "label": "Landline",                               "roles": { "suppliedBy": "staff",    "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] }, "yTopPt": 456.6,  "yBottomPt": 442.92, "colsPt": [91.32,105.24,119.16,132.84,146.76,160.68,174.36,188.28,202.2,215.88,229.8,243.72,257.4] },
+    "mobile":          { "label": "Mobile",                                 "roles": { "suppliedBy": "staff",    "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] }, "yTopPt": 456.6,  "yBottomPt": 442.92, "colsPt": [340.68,354.36,368.28,382.2,396.12,409.8,423.72,437.64,451.32,465.24,479.16,493.08,506.76] }
+  },
+  "checkboxFields": {
+    "genderM": { "label": "Gender - M", "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "xLeftPt": 340.8, "xRightPt": 354.24, "yTopPt": 643.32, "yBottomPt": 630.36 },
+    "genderF": { "label": "Gender - F", "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] }, "xLeftPt": 382.08, "xRightPt": 396.0,  "yTopPt": 643.32, "yBottomPt": 630.36 }
+  },
+  "freeTextFields": {
+    "documentsToBeCertified": { "label": "Documents to be certified", "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] }, "xStartPt": 139.2, "xEndPt": 573.6, "baselinePt": 431.5, "maxLines": 1 },
+    "purposeLine1":           { "label": "Purpose (line 1)",          "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] }, "xStartPt": 72.0,  "xEndPt": 572.88, "baselinePt": 416.4, "maxLines": 1 },
+    "purposeLine2":           { "label": "Purpose (line 2, continuation)", "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] }, "xStartPt": 36.0, "xEndPt": 572.88, "baselinePt": 401.3, "maxLines": 1 }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature required by the official form. Deliberately left blank in both the customer and staff previews -- not populated by this automation. See alignment report.",
+    "roles": { "suppliedBy": "customer_wet_ink", "editableBy": ["none_system_generated"], "approvedBy": "n/a", "visibleTo": ["staff"] },
+    "dateLine":      { "xStartPt": 36.0,  "xEndPt": 188.64, "baselinePt": 365.5 },
+    "signatureLine": { "xStartPt": 360.0, "xEndPt": 570.0,  "baselinePt": 365.5 }
+  },
+  "customerPreviewCropBox": {
+    "note": "Per explicit instruction: visible area ends immediately after the Passport Number field and before the Contact Number(s) in the Philippines section. yBottomPt measured to sit just below the Passport Number box's bottom border (467.52pt) and above the top of the 'Contact Number(s) in the Philippines' heading text (465.6pt), so the heading itself is fully excluded. UNCHANGED since original delivery -- preserved verbatim per explicit instruction.",
+    "xLeftPt": 0, "xRightPt": 612,
+    "yBottomPt": 466.5,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Generalized, multi-region form of customerPreviewCropBox above (Forms Library universal visibility policy, section 7.2 of the spec). For CCS-A-CDR-2016 there is exactly one region, and its four numbers are copied verbatim from customerPreviewCropBox -- nothing here changes what the customer sees.",
+    "regions": [
+      { "id": "applicant_fields", "label": "Applicant personal information", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 466.5, "yTopPt": 936 }
+    ]
+  },
+  "biOnlySections": [
+    { "label": "Certification and Clearance Section (CCS) Window (RECEIVED / RELEASED)", "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] } },
+    { "label": "Certified True Copy of Derogatory Records Claim Stub (entire lower half, explicitly labelled 'To be filled out by Authorized BI Personnel Only')", "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] } }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT wording, English only -- needs translation and FIS review before use. See spec section 7.5 and open decision 14.",
+      "en": "This form requires your signature in person when you collect it from FIS. You do not need to sign anything online."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-12",
+    "checks": [
+      { "name": "field_role_region_agreement", "result": "pass", "note": "Every customer-visible field's roles.visibleTo and its coordinates checked against customerVisibleRegions; Landline/Mobile/Documents to be Certified/Purpose confirmed staff-only and outside the approved region." },
+      { "name": "staff_only_data_absent_from_customer_artifact", "result": "pass", "note": "Decompressed every content stream in customer-preview.pdf; the staff-only mobile number and Purpose text drawn into staff-preview.pdf do not appear anywhere in the customer file." },
+      { "name": "all_box_types_constrained", "result": "pass", "note": "pdfinfo -box confirms MediaBox, CropBox, BleedBox, TrimBox and ArtBox are all set to the approved region, not just CropBox." },
+      { "name": "bi_only_sections_unpopulated", "result": "pass", "note": "Confirmed CCS Window and Claim Stub remain blank in staff-preview.pdf." }
+    ]
+  }
+}

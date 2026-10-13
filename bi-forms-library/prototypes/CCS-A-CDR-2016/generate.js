@@ -1,0 +1,218 @@
+// Isolated prototype -- scratchpad only. Does not touch the FIS repository,
+// website, database, or any Cloudflare resource.
+//
+// Populates the official blank BI form CCS-A-CDR-2016 with fictional sample
+// data using a reusable, form-specific coordinate map (coordinate-map.json),
+// derived programmatically from the real box-grid pixel positions (see
+// detect-boxes.py), not from guessed text spacing.
+const fs = require("fs");
+const path = require("path");
+const { PDFDocument, StandardFonts, rgb, degrees } = require("pdf-lib");
+
+const DIR = __dirname;
+const map = JSON.parse(fs.readFileSync(path.join(DIR, "coordinate-map.json"), "utf8"));
+const data = JSON.parse(fs.readFileSync(path.join(DIR, "sample-data.json"), "utf8"));
+
+const overflowReport = [];
+const alignmentNotes = [];
+
+function fitCharFontSize(font, chars, boxW, boxH, maxSize = 13) {
+  const hPad = 2.2; // pt padding each side
+  const vPad = 2.0;
+  let size = maxSize;
+  while (size > 4) {
+    const widest = Math.max(...chars.map((c) => font.widthOfTextAtSize(c, size)));
+    if (widest <= boxW - 2 * hPad && size <= boxH - 2 * vPad) break;
+    size -= 0.25;
+  }
+  return size;
+}
+
+// Centers a single character inside [x1,x2] x [yBottom,yTop] (PDF point space).
+// Vertical centering uses Helvetica's cap-height ratio (~0.718 of font size)
+// since every value is rendered in upper case -- no descenders to account for.
+function drawCharInBox(page, font, char, x1, x2, yBottom, yTop, size) {
+  if (!char || char === " ") return;
+  const w = font.widthOfTextAtSize(char, size);
+  const capHeight = size * 0.718;
+  const x = x1 + (x2 - x1 - w) / 2;
+  const y = yBottom + (yTop - yBottom - capHeight) / 2;
+  page.drawText(char, { x, y, size, font, color: rgb(0, 0, 0) });
+}
+
+function populateCharField(page, font, fieldKey, value) {
+  const f = map.charBoxFields[fieldKey];
+  if (!f) throw new Error(`Unknown char-box field: ${fieldKey}`);
+  const v = String(value ?? "").toUpperCase();
+  const nBoxes = f.colsPt.length - 1;
+  if (v.length > nBoxes) {
+    overflowReport.push({
+      field: f.label,
+      issue: `Value "${value}" is ${v.length} characters but the form provides only ${nBoxes} boxes. Truncated to fit -- flag for staff review.`,
+    });
+  }
+  const chars = v.slice(0, nBoxes).split("");
+  const size = fitCharFontSize(font, chars.length ? chars : ["A"], f.colsPt[1] - f.colsPt[0], f.yTopPt - f.yBottomPt);
+  chars.forEach((ch, i) => {
+    drawCharInBox(page, font, ch, f.colsPt[i], f.colsPt[i + 1], f.yBottomPt, f.yTopPt, size);
+  });
+  return size;
+}
+
+function drawCheckbox(page, font, fieldKey) {
+  const f = map.checkboxFields[fieldKey];
+  const size = fitCharFontSize(font, ["X"], f.xRightPt - f.xLeftPt, f.yTopPt - f.yBottomPt, 12);
+  drawCharInBox(page, font, "X", f.xLeftPt, f.xRightPt, f.yBottomPt, f.yTopPt, size);
+}
+
+function drawFreeText(page, font, fieldKey, text) {
+  const f = map.freeTextFields[fieldKey];
+  const available = f.xEndPt - f.xStartPt - 6; // small end padding
+  let size = 11;
+  let w = font.widthOfTextAtSize(text, size);
+  while (w > available && size > 6) {
+    size -= 0.25;
+    w = font.widthOfTextAtSize(text, size);
+  }
+  if (w > available) {
+    overflowReport.push({
+      field: f.label,
+      issue: `Text "${text}" does not fit even at the minimum 6pt floor (needs ${w.toFixed(1)}pt, line provides ${available.toFixed(1)}pt). Needs shortening or an additional continuation line.`,
+    });
+  }
+  page.drawText(text, { x: f.xStartPt + 3, y: f.baselinePt, size, font, color: rgb(0, 0, 0) });
+  return size;
+}
+
+// Splits `text` across purposeLine1 + purposeLine2 if it doesn't fit on one line.
+function drawPurpose(page, font, text) {
+  const f1 = map.freeTextFields.purposeLine1;
+  const available1 = f1.xEndPt - f1.xStartPt - 6;
+  const size = 11;
+  const fullWidth = font.widthOfTextAtSize(text, size);
+  if (fullWidth <= available1) {
+    drawFreeText(page, font, "purposeLine1", text);
+    return;
+  }
+  // word-wrap onto two lines
+  const words = text.split(" ");
+  let line1 = "";
+  let i = 0;
+  while (i < words.length) {
+    const candidate = line1 ? `${line1} ${words[i]}` : words[i];
+    if (font.widthOfTextAtSize(candidate, size) > available1) break;
+    line1 = candidate;
+    i++;
+  }
+  const line2 = words.slice(i).join(" ");
+  page.drawText(line1, { x: f1.xStartPt + 3, y: f1.baselinePt, size, font, color: rgb(0, 0, 0) });
+  const f2 = map.freeTextFields.purposeLine2;
+  const available2 = f2.xEndPt - f2.xStartPt - 6;
+  if (font.widthOfTextAtSize(line2, size) > available2) {
+    overflowReport.push({
+      field: "Purpose (line 2, continuation)",
+      issue: `Continuation "${line2}" still exceeds the second line. Needs shortening.`,
+    });
+  }
+  page.drawText(line2, { x: f2.xStartPt + 3, y: f2.baselinePt, size, font, color: rgb(0, 0, 0) });
+}
+
+function populateApplicantFields(page, font) {
+  const fontSizes = {};
+  for (const key of [
+    "lastName", "firstName", "middleName", "otherName1", "otherName2",
+    "placeOfBirth", "citizenship", "address1", "barangay", "provinceZip", "passportNumber",
+  ]) {
+    fontSizes[key] = populateCharField(page, font, key, data[key]);
+  }
+  fontSizes.dobDay = populateCharField(page, font, "dobDay", data.dobDay);
+  fontSizes.dobMonth = populateCharField(page, font, "dobMonth", data.dobMonth);
+  fontSizes.dobYear = populateCharField(page, font, "dobYear", data.dobYear);
+  drawCheckbox(page, font, data.gender === "M" ? "genderM" : "genderF");
+  return fontSizes;
+}
+
+function populateFisFields(page, font) {
+  populateCharField(page, font, "landline", data.landline);
+  populateCharField(page, font, "mobile", data.mobile);
+  drawFreeText(page, font, "documentsToBeCertified", data.documentsToBeCertified);
+  drawPurpose(page, font, data.purpose);
+}
+
+// Centers `text`, rotated 28deg, within `bounds` (the actual visible crop
+// area -- not the full underlying page, which the customer preview's crop
+// box makes larger than what's shown). Font size is reduced until the
+// rotated footprint fits the visible area, so the watermark is never
+// clipped by the page edge.
+function addWatermark(page, text, bounds) {
+  const font = page.doc.watermarkFont;
+  const angle = (28 * Math.PI) / 180;
+  let size = 20;
+  while (size > 8) {
+    const w = font.widthOfTextAtSize(text, size);
+    const footprintW = w * Math.cos(angle) + size * Math.sin(angle);
+    const footprintH = w * Math.sin(angle) + size * Math.cos(angle);
+    if (footprintW <= bounds.width * 0.92 && footprintH <= bounds.height * 0.92) break;
+    size -= 0.5;
+  }
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const cx = bounds.xLeft + bounds.width / 2;
+  const cy = bounds.yBottom + bounds.height / 2;
+  const x = cx - (textWidth / 2) * Math.cos(angle);
+  const y = cy - (textWidth / 2) * Math.sin(angle);
+  page.drawText(text, {
+    x, y, size, font,
+    color: rgb(0.78, 0.1, 0.1),
+    opacity: 0.22,
+    rotate: degrees(28),
+  });
+}
+
+async function main() {
+  const originalBytes = fs.readFileSync(path.join(DIR, "original.pdf"));
+
+  // ---------- STAFF PREVIEW: full original page, all customer + FIS fields,
+  // BI-only sections (CCS Window, Claim Stub) left completely untouched. ----------
+  const staffDoc = await PDFDocument.load(originalBytes);
+  const staffFont = await staffDoc.embedFont(StandardFonts.Helvetica);
+  const staffPage = staffDoc.getPages()[0];
+  populateApplicantFields(staffPage, staffFont);
+  populateFisFields(staffPage, staffFont);
+  const staffSmallFont = await staffDoc.embedFont(StandardFonts.HelveticaOblique);
+  staffPage.drawText("PROTOTYPE - FICTIONAL DATA - NOT FOR FILING", {
+    x: 36, y: 16, size: 7, font: staffSmallFont, color: rgb(0.55, 0.55, 0.55),
+  });
+  fs.writeFileSync(path.join(DIR, "staff-preview.pdf"), await staffDoc.save());
+
+  // ---------- CUSTOMER-FIELDS INTERMEDIATE (secure reconstruction, per the
+  // 2026 security audit): a FRESH copy of the blank template with ONLY
+  // applicant fields drawn -- FIS-only fields are never written to this
+  // object at all. This intermediate, uncropped page is rendered and
+  // cropped to the SAME approved region as before by a separate step
+  // (compose_customer_canvas.py + finalize_customer_preview.js), then
+  // embedded as an image into a brand-new PDF document rather than using
+  // setCropBox/setMediaBox on a copy of original.pdf. This removes the
+  // finding from the audit: the old approach left the full content stream
+  // (though never any FIS-entered data) physically recoverable by
+  // expanding the box back out; the new approach cannot contain anything
+  // outside the approved region because the file is never derived from
+  // original.pdf in the first place. Boundary, field ownership, formatting
+  // and watermark appearance (opacity 0.22, same sizing/centering logic)
+  // are byte-for-byte the same as the previously approved version. ----------
+  const customerFieldsDoc = await PDFDocument.load(originalBytes);
+  const customerFieldsFont = await customerFieldsDoc.embedFont(StandardFonts.Helvetica);
+  const customerFieldsPage = customerFieldsDoc.getPages()[0];
+  populateApplicantFields(customerFieldsPage, customerFieldsFont);
+  fs.writeFileSync(path.join(DIR, "customer-fields-fullpage.pdf"), await customerFieldsDoc.save());
+
+  fs.writeFileSync(path.join(DIR, "overflow-report.json"), JSON.stringify(overflowReport, null, 2));
+  console.log("Generated staff-preview.pdf and customer-fields-fullpage.pdf");
+  console.log("Run compose_customer_canvas.py then finalize_customer_preview.js to produce customer-preview.pdf");
+  console.log("Overflow issues:", overflowReport.length);
+  if (overflowReport.length) console.log(JSON.stringify(overflowReport, null, 2));
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
