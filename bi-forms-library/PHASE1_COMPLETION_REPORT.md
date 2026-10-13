@@ -62,8 +62,16 @@ Dependencies: exactly the two approved — `ajv@8.17.1` and `pdf-lib@1.17.1`, bo
 3. `3af2624` — regression suite + fixtures
 4. `e80925e` — golden reference images + pixel-parity test
 5. `3dde2b9` — `prototypes/` marked superseded
+6. `88941e3` — this report
 
-All five are pushed to `claude/fis-website-planning-r52sii`.
+**Reconciliation note**: the first version of this report, committed as
+part of commit 6 (`88941e3`) below, listed only commits 1-5, since a
+commit cannot cite its own hash in its own content at the time it is
+written. The chat summary that accompanied it correctly counted all six
+commits, including `88941e3` itself. There is no discrepancy in the
+underlying history -- both counts refer to the same six-commit set; this
+section was updated after the fact only to state all six explicitly in
+one place. All six are pushed to `claude/fis-website-planning-r52sii`.
 
 ## 6. Remaining blockers before Client Portal integration
 
