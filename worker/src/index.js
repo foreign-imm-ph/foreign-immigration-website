@@ -9,6 +9,7 @@ import { handleListMessages, handleSendMessage } from "./routes/messages.js";
 import { handleListPayments, handleGetQrPhImage, handleUploadPaymentProof } from "./routes/payments.js";
 import { handleGetProfile, handleUpdateProfile, handleSetOwnConsent } from "./routes/profile.js";
 import { handleStaffRequest } from "./routes/staff.js";
+import { handleListBiForms, handleGetBiForm, handleSaveDraft, handleSubmitBiForm, handleListBiFormDocuments } from "./routes/biFormsCustomer.js";
 
 // Requests that change state must come from our own site — checked once,
 // here, rather than repeated in every handler.
@@ -79,6 +80,16 @@ async function route(request, env, path, method) {
 
   const payProofMatch = path.match(/^\/api\/applications\/([^/]+)\/payments\/([^/]+)\/proof$/);
   if (payProofMatch && method === "POST") return handleUploadPaymentProof(request, env, payProofMatch[1], payProofMatch[2]);
+
+  if (path === "/api/bi-forms" && method === "GET") return handleListBiForms(request, env);
+  const biFormMatch = path.match(/^\/api\/bi-forms\/([^/]+)$/);
+  if (biFormMatch && method === "GET") return handleGetBiForm(request, env, biFormMatch[1]);
+  const biFormDraftMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/draft$/);
+  if (biFormDraftMatch && method === "PATCH") return handleSaveDraft(request, env, biFormDraftMatch[1]);
+  const biFormSubmitMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/submit$/);
+  if (biFormSubmitMatch && method === "POST") return handleSubmitBiForm(request, env, biFormSubmitMatch[1]);
+  const biFormDocsMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/documents$/);
+  if (biFormDocsMatch && method === "GET") return handleListBiFormDocuments(request, env, biFormDocsMatch[1]);
 
   if (path === "/api/profile" && method === "GET") return handleGetProfile(request, env);
   if (path === "/api/profile" && method === "PATCH") return handleUpdateProfile(request, env);

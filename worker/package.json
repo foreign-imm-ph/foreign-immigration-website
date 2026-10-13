@@ -16,6 +16,8 @@
     "wrangler": "^4.0.0"
   },
   "dependencies": {
-    "libphonenumber-js": "^1.13.13"
+    "ajv": "8.17.1",
+    "libphonenumber-js": "^1.13.13",
+    "pdf-lib": "1.17.1"
   }
 }

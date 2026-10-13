@@ -50,6 +50,7 @@ export function staffPage(title, bodyHtml, staffEmail) {
       <a href="/staff/enquiries/">Enquiries</a>
       <a href="/staff/enquiries/archived/">Archived Enquiries</a>
       <a href="/staff/applications/">Applications</a>
+      <a href="/staff/bi-forms/">BI Forms</a>
     </nav>
     <span class="muted">${escapeHtml(staffEmail || "")}</span>
   </header>

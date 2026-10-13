@@ -97,6 +97,23 @@ export async function handleDownloadDocument(request, env, applicationId, docume
     .first();
   if (!doc) throw new HttpError(404, "Not found");
 
+  // Phase 2 (BI Forms): a document's `kind` governs customer access
+  // regardless of ownership -- the full staff PDF for a BI form is never
+  // downloadable by a client-authenticated request through ANY route, and
+  // a customer_preview is only downloadable once its owning
+  // bi_form_submission has been explicitly published. Checked here, in
+  // the one shared download path every application-scoped document goes
+  // through, not only in a BI-forms-specific route -- see
+  // bi-forms-library/BI_FORM_LIFECYCLE.md, "What approved and published
+  // each gate".
+  if (doc.kind === "staff_pdf") throw new HttpError(404, "Not found");
+  if (doc.kind === "customer_preview" && doc.bi_form_submission_id) {
+    const submission = await env.DB.prepare("SELECT published_at FROM bi_form_submissions WHERE id = ?")
+      .bind(doc.bi_form_submission_id)
+      .first();
+    if (!submission || !submission.published_at) throw new HttpError(404, "Not found");
+  }
+
   const response = await streamObject(env.CLIENT_FILES, doc.r2_key, doc.original_filename, doc.content_type);
   if (!response) throw new HttpError(404, "Not found");
   return response;

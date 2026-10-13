@@ -7,6 +7,14 @@ import { defineConfig } from "vitest/config";
 // mocked/stubbed environment. This is local-only: nothing here touches the
 // real Cloudflare account, the real D1 database, or the real R2 bucket.
 export default defineConfig({
+  // The shared engine (bi-forms-library/engine/lib/*) is plain CommonJS
+  // and calls require("pdf-lib"); pdf-lib's package.json has no "exports"
+  // map, only legacy main/module fields. Without this, Vite's dependency
+  // resolution prefers the ESM "module" build even for a require() call,
+  // which throws ("Unexpected token 'export'") when that ESM source hits
+  // a CommonJS parse. Preferring "main" first restores normal Node
+  // require() resolution semantics for this test environment.
+  resolve: { mainFields: ["main", "module"] },
   plugins: [
     cloudflareTest(async () => {
       const migrationsPath = path.join(import.meta.dirname, "migrations");
@@ -31,5 +39,6 @@ export default defineConfig({
   ],
   test: {
     setupFiles: ["./test/apply-migrations.js"],
+    server: { deps: { inline: ["pdf-lib", "tslib"] } },
   },
 });

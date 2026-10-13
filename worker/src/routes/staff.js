@@ -3,7 +3,7 @@ import { getClientByEmail, createClient, insertUniqueReference, logAudit } from 
 import { requireStaff } from "../lib/staffAuth.js";
 import { isSameSiteOrigin } from "../lib/session.js";
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
-import { streamObject } from "../lib/storage.js";
+import { streamObject, HttpError } from "../lib/storage.js";
 import {
   sendMagicLink,
   sendDocumentRequestNotification,
@@ -29,6 +29,19 @@ import { normalizePhoneNumber, isSupportedMobileCountry, SUPPORTED_MOBILE_COUNTR
 import { getConsentStatusMap, setClientConsent, isValidConsentChannel, isValidConsentStatus, CONSENT_CHANNELS } from "../lib/consents.js";
 import { STATUS_OPTIONS, getLocalizedStatusLabel } from "../lib/clientLocaleStrings.js";
 import { LANGUAGE_MODE, resolvePublicationMode, resolveClientCommunicationLanguage, blockedPublicationMessage } from "../lib/languageResolution.js";
+import {
+  listBiForms,
+  renderBiFormsCard,
+  assignBiForm,
+  viewBiForm,
+  startReview,
+  saveStaffFields,
+  requestRevision,
+  approveBiForm,
+  publishBiForm,
+  cancelBiForm,
+  downloadBiFormDocument,
+} from "./staffBiForms.js";
 
 // Channels FIS can actually use today for a client's durable Preferred
 // Contact Channel (Phase 3.1 correction, Section 20-24). Same allowlist as
@@ -71,8 +84,14 @@ export async function handleStaffRequest(request, env, url) {
   try {
     return await dispatch(request, env, url);
   } catch (err) {
-    // Same principle as the JSON API's withErrorHandling: log server-side
-    // only, never return a stack trace or internal detail to the client.
+    // Same principle as the JSON API's withErrorHandling: an HttpError is
+    // an intentional, caller-facing rejection (bad input, wrong lifecycle
+    // state, missing dependency) and its status/message are safe to
+    // return directly -- only a genuinely unexpected error is logged
+    // server-side and flattened to a generic 500 with no internal detail.
+    if (err instanceof HttpError) {
+      return new Response(err.message, { status: err.status });
+    }
     console.error("Unhandled staff route error:", err.message);
     return new Response("Something went wrong. Please try again.", { status: 500 });
   }
@@ -168,6 +187,29 @@ async function dispatch(request, env, url) {
 
   const proofMatch = path.match(/^\/applications\/([^/]+)\/payments\/([^/]+)\/proof$/);
   if (proofMatch && method === "GET") return viewPaymentProof(env, staff, proofMatch[1], proofMatch[2]);
+
+  // BI Forms (Phase 2, Stage 3) -- see bi-forms-library/BI_FORM_LIFECYCLE.md
+  const assignBiFormMatch = path.match(/^\/applications\/([^/]+)\/bi-forms\/assign$/);
+  if (assignBiFormMatch && method === "POST") return assignBiForm(request, env, staff, assignBiFormMatch[1]);
+
+  if (path === "/bi-forms/" && method === "GET") return listBiForms(env, staff, url);
+  const biFormMatch = path.match(/^\/bi-forms\/([^/]+)\/?$/);
+  if (biFormMatch && method === "GET") return viewBiForm(env, staff, biFormMatch[1]);
+
+  const startReviewMatch = path.match(/^\/bi-forms\/([^/]+)\/start-review$/);
+  if (startReviewMatch && method === "POST") return startReview(request, env, staff, startReviewMatch[1]);
+  const staffFieldsMatch = path.match(/^\/bi-forms\/([^/]+)\/staff-fields$/);
+  if (staffFieldsMatch && method === "POST") return saveStaffFields(request, env, staff, staffFieldsMatch[1]);
+  const requestRevisionMatch = path.match(/^\/bi-forms\/([^/]+)\/request-revision$/);
+  if (requestRevisionMatch && method === "POST") return requestRevision(request, env, staff, requestRevisionMatch[1]);
+  const approveMatch = path.match(/^\/bi-forms\/([^/]+)\/approve$/);
+  if (approveMatch && method === "POST") return approveBiForm(request, env, staff, approveMatch[1]);
+  const publishMatch = path.match(/^\/bi-forms\/([^/]+)\/publish$/);
+  if (publishMatch && method === "POST") return publishBiForm(request, env, staff, publishMatch[1]);
+  const cancelBiFormMatch = path.match(/^\/bi-forms\/([^/]+)\/cancel$/);
+  if (cancelBiFormMatch && method === "POST") return cancelBiForm(request, env, staff, cancelBiFormMatch[1]);
+  const biFormDocDlMatch = path.match(/^\/bi-forms\/([^/]+)\/documents\/([^/]+)\/download$/);
+  if (biFormDocDlMatch && method === "GET") return downloadBiFormDocument(env, staff, biFormDocDlMatch[1], biFormDocDlMatch[2]);
 
   return notFound();
 }
@@ -1156,6 +1198,7 @@ async function viewApplication(env, staff, id) {
     .join("");
   const draftPaymentHtml = draftPayments.map((p) => renderDraftPaymentRequest(`/staff/applications/${id}`, p)).join("");
   const statusHistoryHtml = statusHistory.map((row) => renderStatusHistoryItem(`/staff/applications/${id}`, row)).join("") || '<p class="muted">No status history yet.</p>';
+  const biFormsCardHtml = await renderBiFormsCard(env, id);
 
   return staffPage(
     `Application ${application.reference}`,
@@ -1176,6 +1219,8 @@ async function viewApplication(env, staff, id) {
        <h2>Status History</h2>
        ${statusHistoryHtml}
      </div>
+
+     ${biFormsCardHtml}
 
      <div class="card">
        <h2>Communication Preferences</h2>

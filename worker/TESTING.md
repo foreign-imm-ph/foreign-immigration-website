@@ -66,6 +66,73 @@ npm test
   site Origin is let through; `GET` requests are never subject to the
   check at all.
 
-BI-form-specific routes, lifecycle transitions, questionnaire validation,
-and staff-PDF access control are added in Stage 3 alongside the routes
-they test, since those routes don't exist yet as of this file's commit.
+## Coverage (Stage 3 — BI-form routes, lifecycle, access control)
+
+- Lifecycle transitions (`lib/biForms.js` `assertTransitionAllowed`): the
+  full 7×7 status matrix is tested exhaustively, not spot-checked — every
+  allowed transition succeeds and every other pair is rejected. A
+  realistic end-to-end run (draft → submit → review → request revision →
+  resubmit → review → approve → publish) is verified against real D1,
+  including the full chronological `bi_form_status_history` trail and
+  the `approved → revision_requested` / `published → revision_requested`
+  safety-valve transitions.
+- Customer-facing BI-form routes: a client sees only their own assigned
+  forms; `GET` returns the questionnaire but never the coordinate map
+  (field positions, staff-only field names); drafts can only be edited
+  while `draft`/`revision_requested`; an incomplete submission is
+  rejected with the specific missing fields named; a complete one
+  transitions to `submitted`; a submission cannot be submitted twice;
+  every endpoint rejects an unauthenticated request; cross-client ID
+  guessing is rejected at every one of these (404, and the guessed-at
+  row is confirmed unmodified in D1).
+- Staff-facing BI-form routes: assigning a form to an application
+  (rejecting an unknown form id); the assignment appearing on the
+  existing application detail page; starting review; staff-field save
+  rejected before review has started; `request-revision` requiring a
+  note; `publish` and `cancel` as isolated state transitions; every
+  staff route rejecting a request with no valid Access identity.
+- Document access control (Phase 2 decision 2.7 — the core security
+  requirement of this phase): a client can **never** download a
+  `staff_pdf` document, including their own, through any route; a
+  `customer_preview` is refused until its owning submission is actually
+  published; publication is per-submission (one submission's publish
+  does not leak a different submission's still-unpublished preview);
+  cross-client access is rejected for both kinds; staff can download
+  both kinds through the staff route; a mismatched submission ID in a
+  staff download URL is rejected even when the document ID itself is
+  real; the customer-facing document-listing endpoint never lists a
+  `staff_pdf` or an unpublished `customer_preview`.
+
+## Known test-harness limitation (not a gap in the code it tests)
+
+`approveBiForm`'s actual document-generation step (`getDocumentBuilders()`
+in `lib/biFormEngine.js`, which lazily loads the shared engine's
+`render-pipeline.js` and therefore `pdf-lib`) cannot be exercised through
+`worker.fetch()` in this harness. Two independent causes, both isolated
+and documented in code:
+
+1. `@cloudflare/vitest-plugin` 1.4.1 (a newly renamed, young package)
+   fails to resolve `pdf-lib`'s dual CJS/ESM package shape when it's
+   pulled in via a static import graph — confirmed to be a test-harness-
+   only issue, since a direct `esbuild --bundle --platform=node` of the
+   exact same import chain (what `wrangler deploy` actually uses)
+   succeeds cleanly with no error.
+2. `vi.mock()` can stub this import when called directly from a test
+   file's own module scope, but **not** when the real Worker `fetch()`
+   handler runs inside the plugin's simulated Workers isolate — that is
+   a genuinely separate module registry from Vitest's own mocking
+   system, with no supported way (as of this version) to stub an
+   internal module used only by code executing inside it.
+
+Every precondition check leading up to that point (status guards,
+staff-field completeness, original-template availability) is fully
+tested. The generation code itself is independently verified correct by
+the shared engine's own 45-test Node suite
+(`bi-forms-library/tests/run-all.js`, which exercises
+`buildStaffDocument`/`buildCustomerFieldsDocument` extensively against
+all three real forms, including pixel-exact golden-reference parity) and
+by the direct esbuild bundle check above. Two tests are marked
+`it.todo(...)` rather than deleted, so this gap stays visible and is the
+first thing to re-verify once a Stage 4 raster backend is wired in (at
+which point the whole path can be exercised against a real, deployed
+Worker instead).
