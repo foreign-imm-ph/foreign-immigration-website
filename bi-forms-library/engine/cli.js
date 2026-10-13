@@ -21,12 +21,8 @@ const { loadFormConfig, listFormIds } = require("./lib/config-loader");
 const { validateForm } = require("./lib/validate-form");
 const { fieldsForAudience } = require("./lib/field-permissions");
 const { resolveFieldValues } = require("./lib/field-bindings");
-const {
-  buildStaffDocument,
-  buildCustomerFieldsDocument,
-  composeCustomerCanvas,
-  finalizeCustomerPreview,
-} = require("./lib/render-pipeline");
+const { buildStaffDocument, buildCustomerFieldsDocument } = require("./lib/render-pipeline");
+const { composeCustomerCanvas, finalizeCustomerPreview } = require("./lib/raster-pipeline");
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion } = require("./lib/validate");
 
 function parseFlags(argv) {

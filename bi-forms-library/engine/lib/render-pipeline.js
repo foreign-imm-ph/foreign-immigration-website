@@ -1,37 +1,24 @@
-// Orchestrates the four-stage secure-reconstruction pipeline shared by all
-// three forms:
-//   1. buildStaffDocument      -- full page, every drawable field, BI-only
-//                                 sections and wet-ink fields untouched.
-//   2. buildCustomerFieldsDocument -- fresh copy, ONLY customer-visible
-//                                 fields drawn. Nothing else is written to
-//                                 this object, for any form.
-//   3. composeCustomerCanvas   -- rasterizes (2), crops the one-or-many
-//                                 approved regions, composites them (with a
-//                                 divider when there's more than one) onto
-//                                 a single new canvas image.
-//   4. finalizeCustomerPreview -- embeds that canvas into a BRAND-NEW
-//                                 PDFDocument (never derived from the
-//                                 original template), draws the watermark
-//                                 on top, applies the metadata standard.
+// Pure PDF-assembly logic shared by every form: builds the full staff
+// document and the (unresolved) customer-fields-only document, both
+// straight from pdf-lib with no filesystem, subprocess, or raster
+// dependency of any kind. This is what makes these functions directly
+// importable by the Cloudflare Worker (Phase 2 Stage 3) as well as the
+// local Node CLI -- the SAME code runs in both places, unmodified.
 //
-// This is the generalization of what CCS-A-CDR-2016, 2014-13-002, and
-// 2014-13-006 already do -- same guarantee, same technique, now driven by
-// config instead of being hand-written three times.
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
-const { execFileSync } = require("child_process");
+// The next step of the secure-reconstruction pipeline -- rasterizing,
+// cropping, and compositing the customer-fields document into a final
+// customer preview -- needs a raster backend (Poppler locally; still
+// undecided for production, see bi-forms-library/PHASE2_INTEGRATION_PLAN.md
+// Stage 4) and lives in raster-pipeline.js instead, which only the local
+// Node CLI and test suite import. Nothing in this file may import "fs",
+// "os", "path", "child_process", or "./raster" -- that boundary is the
+// whole point of the split.
 const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 
 const { fieldsForAudience } = require("./field-permissions");
 const { populateCharField, drawCheckbox, drawFreeText, drawWrappedFreeText } = require("./pdf-fields");
 const { resolveFieldValues } = require("./field-bindings");
 const { applyMetadataStandard } = require("./metadata");
-const { addWatermark } = require("./watermark");
-const raster = require("./raster");
-
-const PYTHON_BIN = "python3.13"; // system interpreter with Pillow pre-installed; the default `python3` on this image is 3.11 and lacks it
-const COMPOSE_SCRIPT = path.join(__dirname, "raster", "compose_canvas.py");
 
 // Draws a given field set (as returned by fieldsForAudience) onto a page.
 // `values`/`checkboxMarks`/`wrappedPairs` come from field-bindings.js's
@@ -101,57 +88,9 @@ function getRegions(coordinateMap) {
   throw new Error("No customerVisibleRegions or customerPreviewCropBox defined -- refusing to guess a visible region.");
 }
 
-async function composeCustomerCanvas(customerFieldsBytes, coordinateMap, dpi = 300) {
-  const pngBytes = await raster.rasterize(customerFieldsBytes, dpi);
-  const regions = getRegions(coordinateMap);
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fis-compose-"));
-  try {
-    const srcPng = path.join(tmpDir, "src.png");
-    const regionsJson = path.join(tmpDir, "regions.json");
-    const outPng = path.join(tmpDir, "canvas.png");
-    const outDims = path.join(tmpDir, "dims.json");
-    fs.writeFileSync(srcPng, pngBytes);
-    fs.writeFileSync(regionsJson, JSON.stringify(regions));
-    const scale = dpi / 72.0;
-    execFileSync(PYTHON_BIN, [COMPOSE_SCRIPT, srcPng, String(coordinateMap.pageHeightPt), String(scale), "22", regionsJson, outPng, outDims]);
-    return { canvasPng: fs.readFileSync(outPng), dims: JSON.parse(fs.readFileSync(outDims, "utf8")) };
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-}
-
-async function finalizeCustomerPreview(canvasPngBytes, dims, coordinateMap, watermarkText, watermarkOpacity) {
-  const doc = await PDFDocument.create();
-  const png = await doc.embedPng(canvasPngBytes);
-  const page = doc.addPage([dims.widthPt, dims.heightPt]);
-  page.drawImage(png, { x: 0, y: 0, width: dims.widthPt, height: dims.heightPt });
-
-  const wmFont = await doc.embedFont(StandardFonts.HelveticaBold);
-  addWatermark(page, watermarkText, wmFont, { xLeft: 0, yBottom: 0, width: dims.widthPt, height: dims.heightPt }, watermarkOpacity);
-
-  if (dims.regionCount > 1 && dims.dividerPt > 0) {
-    const italic = await doc.embedFont(StandardFonts.HelveticaOblique);
-    const caption = "FIS staff prepare the remaining sections of this form";
-    const capSize = 9;
-    const regionAHeightPt = dims.regionHeightsPt[0];
-    const dividerCenterY = dims.heightPt - regionAHeightPt - dims.dividerPt / 2;
-    const capWidth = italic.widthOfTextAtSize(caption, capSize);
-    page.drawText(caption, {
-      x: dims.widthPt / 2 - capWidth / 2,
-      y: dividerCenterY - capSize / 2,
-      size: capSize, font: italic, color: rgb(0.45, 0.45, 0.45),
-    });
-  }
-
-  await applyMetadataStandard(doc, coordinateMap.formTitle);
-  return doc.save();
-}
-
 module.exports = {
   buildStaffDocument,
   buildCustomerFieldsDocument,
-  composeCustomerCanvas,
-  finalizeCustomerPreview,
   getRegions,
   drawFields,
 };

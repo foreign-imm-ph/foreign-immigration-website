@@ -31,10 +31,9 @@ const { resolveFieldValues } = require(path.join(ENGINE_DIR, "lib", "field-bindi
 const {
   buildStaffDocument,
   buildCustomerFieldsDocument,
-  composeCustomerCanvas,
-  finalizeCustomerPreview,
   getRegions,
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
+const { composeCustomerCanvas, finalizeCustomerPreview } = require(path.join(ENGINE_DIR, "lib", "raster-pipeline"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
 const { execFileSync } = require("child_process");
