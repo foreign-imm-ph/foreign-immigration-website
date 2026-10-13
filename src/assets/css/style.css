@@ -1779,6 +1779,61 @@ summary:focus-visible {
   margin-bottom: 0.6rem;
 }
 
+/* Phase 2 Stage 5.4: BI-form questionnaire section + full editor, added
+   to the existing application detail view (see portal-bi-form.js). Reuses
+   .form-field/.btn/.status-badge/.portal-upload-label/.enquiry-form-actions
+   from elsewhere on this page rather than redefining them. */
+
+.portal-bi-forms-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.portal-bi-form-item {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(13, 61, 37, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.portal-bi-form-detail .form-field { margin-bottom: 1rem; }
+
+.portal-required-mark { color: var(--color-accent, #b23b3b); }
+
+.portal-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 1.2rem;
+  font-weight: normal;
+}
+
+.portal-repeatable-entry {
+  border: 1px solid rgba(13, 61, 37, 0.12);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 0.6rem 0;
+}
+
+.portal-repeatable-entry legend {
+  font-weight: 600;
+  padding: 0 0.3rem;
+}
+
+.portal-bi-form-revision-notice,
+.portal-bi-form-ready {
+  background: var(--color-offwhite);
+  border: 1px solid rgba(13, 61, 37, 0.12);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  margin: 0.8rem 0;
+}
+
+.portal-bi-form-ready .btn { margin-right: 0.6rem; }
+
 :lang(ko) {
   word-break: keep-all;
   overflow-wrap: break-word;

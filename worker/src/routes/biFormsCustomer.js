@@ -1,6 +1,7 @@
 import { getSessionClient } from "../lib/session.js";
 import { json, requireFields } from "../lib/http.js";
-import { HttpError } from "../lib/storage.js";
+import { readAndValidateUpload, documentKey, streamObject, HttpError } from "../lib/storage.js";
+import { newId } from "../lib/crypto.js";
 import { getFormConfig, validateAnswers } from "../lib/biFormEngine.js";
 import {
   requireOwnedSubmission,
@@ -99,22 +100,103 @@ export async function handleSaveDraft(request, env, submissionId) {
   return json({ ok: true });
 }
 
-// Discoverability only -- a document returned here is reachable (and a
-// staff_pdf or an unpublished customer_preview is refused) via the same
-// rule enforced independently in routes/documents.js handleDownloadDocument,
-// which is what actually protects it. The two must stay in agreement:
-// only a published submission's customer_preview document is ever listed.
+// Discoverability: lists both (a) the published customer_preview, if any
+// -- a document listed here is reachable (and a staff_pdf or an
+// unpublished customer_preview is refused) via the same rule enforced
+// independently in handleDownloadBiFormDocument below, which is what
+// actually protects it; the two must stay in agreement -- and (b) every
+// client_upload the customer has attached to this submission themselves
+// (e.g. a required supporting document), which is always listable back
+// to the client who uploaded it regardless of the submission's status.
 export async function handleListBiFormDocuments(request, env, submissionId) {
   const client = await requireClient(request, env);
   const submission = await requireOwnedSubmission(env.DB, client, submissionId);
-  if (!submission.published_at) return json({ documents: [] });
 
-  const { results } = await env.DB.prepare(
+  const { results: uploads } = await env.DB.prepare(
+    "SELECT id, original_filename, created_at FROM documents WHERE bi_form_submission_id = ? AND kind = 'client_upload' ORDER BY created_at DESC"
+  )
+    .bind(submissionId)
+    .all();
+
+  if (!submission.published_at) return json({ documents: [], uploads });
+
+  const { results: previews } = await env.DB.prepare(
     "SELECT id, original_filename, created_at FROM documents WHERE bi_form_submission_id = ? AND kind = 'customer_preview' ORDER BY created_at DESC"
   )
     .bind(submissionId)
     .all();
-  return json({ documents: results });
+  return json({ documents: previews, uploads });
+}
+
+// A customer may attach a supporting document (e.g. a passport scan) to
+// their own BI-form submission directly, independent of the generic
+// application-level document_requests flow -- the questionnaire schema
+// does not yet model a per-form list of named required documents (noted
+// as a gap for a later iteration), so this accepts any upload the
+// customer chooses to attach while the form is still theirs to edit.
+// Reuses the same validated-upload/storage primitives
+// routes/documents.js's application-scoped upload already uses.
+export async function handleUploadBiFormDocument(request, env, submissionId) {
+  const client = await requireClient(request, env);
+  const submission = await requireOwnedSubmission(env.DB, client, submissionId);
+  if (!CUSTOMER_EDITABLE_STATUSES.has(submission.status)) {
+    throw new HttpError(409, `Documents cannot be attached in this form's current status (${submission.status}).`);
+  }
+  // documents.application_id is NOT NULL (same column every ordinary
+  // uploaded document uses) -- a BI-form submission with no application
+  // at all is a future Instant Checkout concern, not yet schema-
+  // accommodated (same noted-not-solved gap as staffBiForms.js's
+  // generated staff/customer-preview documents). Every submission this
+  // phase actually creates is staff-assigned to an existing application,
+  // so this is not reachable in practice today.
+  if (!submission.application_id) {
+    throw new HttpError(501, "Attaching documents to a BI-form submission with no associated application is not yet supported.");
+  }
+
+  const { bytes, contentType, filename } = await readAndValidateUpload(request);
+  const key = documentKey(client.id, submission.application_id);
+  await env.CLIENT_FILES.put(key, bytes, { httpMetadata: { contentType } });
+
+  const id = newId();
+  await env.DB.prepare(
+    `INSERT INTO documents
+      (id, application_id, client_id, bi_form_submission_id, r2_key, original_filename, content_type, size_bytes, uploaded_by, kind)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'client', 'client_upload')`
+  )
+    .bind(id, submission.application_id, client.id, submissionId, key, filename, contentType, bytes.byteLength)
+    .run();
+
+  return json({ id, filename }, { status: 201 });
+}
+
+// Dedicated download path for a BI-form-submission-scoped document,
+// independent of routes/documents.js's application-scoped one -- a
+// submission is not guaranteed to have an application_id (Instant
+// Checkout, not yet active), so this never relies on
+// requireOwnedApplication. Ownership and the same kind/publication gate
+// handleDownloadDocument enforces are both re-checked here directly.
+export async function handleDownloadBiFormDocument(request, env, submissionId, documentId) {
+  const client = await requireClient(request, env);
+  await requireOwnedSubmission(env.DB, client, submissionId);
+
+  const doc = await env.DB.prepare(
+    "SELECT * FROM documents WHERE id = ? AND bi_form_submission_id = ? AND client_id = ?"
+  )
+    .bind(documentId, submissionId, client.id)
+    .first();
+  if (!doc) throw new HttpError(404, "Not found");
+
+  if (doc.kind === "staff_pdf") throw new HttpError(404, "Not found");
+  if (doc.kind === "customer_preview") {
+    const submission = await env.DB.prepare("SELECT published_at FROM bi_form_submissions WHERE id = ?")
+      .bind(submissionId)
+      .first();
+    if (!submission || !submission.published_at) throw new HttpError(404, "Not found");
+  }
+
+  const response = await streamObject(env.CLIENT_FILES, doc.r2_key, doc.original_filename, doc.content_type);
+  if (!response) throw new HttpError(404, "Not found");
+  return response;
 }
 
 export async function handleSubmitBiForm(request, env, submissionId) {

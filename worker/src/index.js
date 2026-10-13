@@ -9,7 +9,15 @@ import { handleListMessages, handleSendMessage } from "./routes/messages.js";
 import { handleListPayments, handleGetQrPhImage, handleUploadPaymentProof } from "./routes/payments.js";
 import { handleGetProfile, handleUpdateProfile, handleSetOwnConsent } from "./routes/profile.js";
 import { handleStaffRequest } from "./routes/staff.js";
-import { handleListBiForms, handleGetBiForm, handleSaveDraft, handleSubmitBiForm, handleListBiFormDocuments } from "./routes/biFormsCustomer.js";
+import {
+  handleListBiForms,
+  handleGetBiForm,
+  handleSaveDraft,
+  handleSubmitBiForm,
+  handleListBiFormDocuments,
+  handleUploadBiFormDocument,
+  handleDownloadBiFormDocument,
+} from "./routes/biFormsCustomer.js";
 
 // Requests that change state must come from our own site — checked once,
 // here, rather than repeated in every handler.
@@ -32,20 +40,32 @@ export default {
       return handleStaffRequest(request, env, url);
     }
 
-    return withErrorHandling(async () => {
+    // withErrorHandling's own catch block returns an error Response
+    // directly (see lib/http.js) -- CORS/security headers are attached
+    // HERE, outside it, so they land on every response uniformly whether
+    // the handler succeeded or threw. Attaching them only on the success
+    // path (as a previous version of this function did) meant every
+    // error response -- 400/401/403/404/409/422/500, including this very
+    // PATCH/POST's own validation errors -- reached the browser with no
+    // Access-Control-Allow-Origin header at all, which a browser reports
+    // as an opaque "CORS policy" / "Failed to fetch" error, hiding the
+    // real, human-readable error message from the user entirely. Caught
+    // directly while browser-testing Stage 5.4's questionnaire submit
+    // flow (a real 422 "incomplete questionnaire" response), not
+    // something only this new feature could trigger -- any cross-origin
+    // error response site-wide was affected.
+    const response = await withErrorHandling(async () => {
       if (STATE_CHANGING_METHODS.has(method) && !isSameSiteOrigin(request, env)) {
         throw new HttpError(403, "Request rejected");
       }
-
-      const response = await route(request, env, path, method, url);
-      if (!response) return json({ error: "Not found" }, { status: 404 });
-
-      // Attach CORS + baseline security headers to every API response.
-      const headers = new Headers(response.headers);
-      for (const [k, v] of Object.entries(corsHeaders(env))) headers.set(k, v);
-      for (const [k, v] of Object.entries(securityHeaders())) headers.set(k, v);
-      return new Response(response.body, { status: response.status, headers });
+      const routed = await route(request, env, path, method, url);
+      return routed || json({ error: "Not found" }, { status: 404 });
     });
+
+    const headers = new Headers(response.headers);
+    for (const [k, v] of Object.entries(corsHeaders(env))) headers.set(k, v);
+    for (const [k, v] of Object.entries(securityHeaders())) headers.set(k, v);
+    return new Response(response.body, { status: response.status, headers });
   },
 };
 
@@ -90,6 +110,9 @@ async function route(request, env, path, method) {
   if (biFormSubmitMatch && method === "POST") return handleSubmitBiForm(request, env, biFormSubmitMatch[1]);
   const biFormDocsMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/documents$/);
   if (biFormDocsMatch && method === "GET") return handleListBiFormDocuments(request, env, biFormDocsMatch[1]);
+  if (biFormDocsMatch && method === "POST") return handleUploadBiFormDocument(request, env, biFormDocsMatch[1]);
+  const biFormDocDlMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/documents\/([^/]+)$/);
+  if (biFormDocDlMatch && method === "GET") return handleDownloadBiFormDocument(request, env, biFormDocDlMatch[1], biFormDocDlMatch[2]);
 
   if (path === "/api/profile" && method === "GET") return handleGetProfile(request, env);
   if (path === "/api/profile" && method === "PATCH") return handleUpdateProfile(request, env);

@@ -2,7 +2,11 @@ import { env } from "cloudflare:workers";
 import { describe, it, expect } from "vitest";
 import worker from "../src/index.js";
 import { createSubmission, transitionStatus } from "../src/lib/biForms.js";
-import { createTestClient, createSessionCookieFor, createTestApplication, createTestStaff, authedRequest } from "./helpers.js";
+import { createTestClient, createSessionCookieFor, createTestApplication, createTestStaff, authedRequest, SITE_ORIGIN } from "./helpers.js";
+
+function fakePdfBytes() {
+  return new TextEncoder().encode("%PDF-1.7\n% fake but correctly-signed test content\n");
+}
 
 async function assignForm(client, application, staff, overrides = {}) {
   return createSubmission(env.DB, {
@@ -183,5 +187,82 @@ describe("customer-facing BI-form routes", () => {
     expect(resp.status).toBe(200);
     const body = await resp.json();
     expect(body.documents).toEqual([]);
+  });
+
+  it("a client can upload a supporting document to their own BI-form submission and download it back", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, application, staff);
+
+    const uploadReq = new Request(`${SITE_ORIGIN}/api/bi-forms/${submission.id}/documents`, {
+      method: "POST",
+      headers: { Origin: SITE_ORIGIN, Cookie: cookie, "X-Filename": "passport.pdf" },
+      body: fakePdfBytes(),
+    });
+    const uploadResp = await worker.fetch(uploadReq, env);
+    expect(uploadResp.status).toBe(201);
+    const { id: documentId } = await uploadResp.json();
+
+    const listResp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/documents`, { cookie }), env);
+    const listBody = await listResp.json();
+    expect(listBody.uploads.map((u) => u.id)).toContain(documentId);
+    expect(listBody.documents).toEqual([]); // still unpublished -- no customer_preview listed
+
+    const dlResp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/documents/${documentId}`, { cookie }), env);
+    expect(dlResp.status).toBe(200);
+    expect(new Uint8Array(await dlResp.arrayBuffer())).toEqual(fakePdfBytes());
+  });
+
+  it("a supporting document cannot be attached once the form is past draft/revision_requested", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    let submission = await assignForm(client, application, staff);
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+
+    const uploadReq = new Request(`${SITE_ORIGIN}/api/bi-forms/${submission.id}/documents`, {
+      method: "POST",
+      headers: { Origin: SITE_ORIGIN, Cookie: cookie, "X-Filename": "late.pdf" },
+      body: fakePdfBytes(),
+    });
+    const resp = await worker.fetch(uploadReq, env);
+    expect(resp.status).toBe(409);
+  });
+
+  it("attaching a document to a submission with no associated application is refused clearly, not with a raw 500", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff); // no application
+
+    const uploadReq = new Request(`${SITE_ORIGIN}/api/bi-forms/${submission.id}/documents`, {
+      method: "POST",
+      headers: { Origin: SITE_ORIGIN, Cookie: cookie, "X-Filename": "orphan.pdf" },
+      body: fakePdfBytes(),
+    });
+    const resp = await worker.fetch(uploadReq, env);
+    expect(resp.status).toBe(501);
+  });
+
+  it("client B cannot upload to or download from client A's BI-form submission", async () => {
+    const clientA = await createTestClient();
+    const applicationA = await createTestApplication(clientA);
+    const staff = await createTestStaff();
+    const submission = await assignForm(clientA, applicationA, staff);
+    const clientB = await createTestClient();
+    const cookieB = await createSessionCookieFor(clientB);
+
+    const uploadReq = new Request(`${SITE_ORIGIN}/api/bi-forms/${submission.id}/documents`, {
+      method: "POST",
+      headers: { Origin: SITE_ORIGIN, Cookie: cookieB, "X-Filename": "hijack.pdf" },
+      body: fakePdfBytes(),
+    });
+    expect((await worker.fetch(uploadReq, env)).status).toBe(404);
+
+    const dlResp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}/documents/does-not-matter`, { cookie: cookieB }), env);
+    expect(dlResp.status).toBe(404);
   });
 });

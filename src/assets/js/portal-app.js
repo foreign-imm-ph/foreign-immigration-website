@@ -132,12 +132,13 @@
       window.portalFetch("/api/applications/" + applicationId + "/documents").then((r) => r.json()),
       window.portalFetch("/api/applications/" + applicationId + "/messages").then((r) => r.json()),
       window.portalFetch("/api/applications/" + applicationId + "/payments").then((r) => r.json()),
+      window.portalFetch("/api/bi-forms").then((r) => r.json()),
     ]).then(function (results) {
-      renderApplicationDetail(applicationId, results[0], results[1], results[2], results[3]);
+      renderApplicationDetail(applicationId, results[0], results[1], results[2], results[3], results[4]);
     });
   }
 
-  function renderApplicationDetail(applicationId, appData, docsData, msgData, payData) {
+  function renderApplicationDetail(applicationId, appData, docsData, msgData, payData, biFormsData) {
     var detailEl = document.getElementById("portal-application-detail");
     var application = appData.application;
 
@@ -234,6 +235,7 @@
       '<h2>' + escapeHtml(application.reference) + '</h2>' +
       '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(application.statusLabel || statusLabel(application.status)) + "</span></p>" +
       (historyHtml ? '<h3>Status History</h3><ul class="portal-history">' + historyHtml + "</ul>" : "") +
+      '<div id="portal-bi-forms-section"></div>' +
       '<h3>Documents</h3><ul class="portal-doc-requests">' + docRequestsHtml + "</ul>" +
       '<h3>Messages</h3><div class="portal-messages">' + messagesHtml + '</div>' +
       '<form class="portal-message-form"><textarea placeholder="Write a message..." required></textarea><button type="submit" class="btn btn-secondary">Send</button></form>' +
@@ -241,6 +243,37 @@
       "</div>";
 
     wireDetailInteractions(detailEl, applicationId);
+
+    // BI Forms assigned to THIS application, rendered via the dedicated
+    // questionnaire module (Phase 2 Stage 5.4) -- kept as a separate file
+    // (portal-bi-form.js) rather than folded in here given its own scope
+    // (generic multi-language question rendering, draft/submit,
+    // documents), but still just another section of this same detail view.
+    if (window.PortalBiForms) {
+      var ownForms = (biFormsData.submissions || []).filter(function (s) { return s.applicationId === applicationId; });
+      wireBiFormsSection(applicationId, ownForms);
+    }
+  }
+
+  function wireBiFormsSection(applicationId, submissions) {
+    var sectionEl = document.getElementById("portal-bi-forms-section");
+    var detailEl = document.getElementById("portal-application-detail");
+    var biFormViewEl = document.getElementById("portal-bi-form-view");
+    // Per-submission preferredLanguage (saved on first draft/submit) is
+    // the authoritative source once a form has been touched -- /api/auth/me
+    // intentionally returns only id/fullName/email, so there is no
+    // client-wide language preference available here to fall back to
+    // without a separate /api/profile fetch; a never-touched submission
+    // simply defaults to English until the customer picks a language.
+    window.PortalBiForms.wireBiFormsSection(sectionEl, submissions, function (submissionId) {
+      detailEl.hidden = true;
+      biFormViewEl.hidden = false;
+      biFormViewEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.PortalBiForms.openBiFormDetail(biFormViewEl, submissionId, function () {
+        biFormViewEl.hidden = true;
+        detailEl.hidden = false;
+      });
+    });
   }
 
   function wireDetailInteractions(detailEl, applicationId) {
