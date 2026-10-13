@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# *** SUPERSEDED (Phase 1 of the FIS Forms Library engine migration) ***
+# Historical reference only -- see bi-forms-library/engine/cli.js and
+# bi-forms-library/configs/2014-13-002/ for the current implementation.
+# Not run by anything; left unmodified below this notice.
+# ---------------------------------------------------------------------
+
 # Secure reconstruction (2026 audit retrofit): crops the single approved
 # customer-visible region from the rendered customer-fields-only page.
 # Single-region version of the technique built for 2014-13-006 -- no

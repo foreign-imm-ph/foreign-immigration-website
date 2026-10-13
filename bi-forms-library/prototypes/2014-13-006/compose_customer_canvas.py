@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# *** SUPERSEDED (Phase 1 of the FIS Forms Library engine migration) ***
+# Historical reference only -- see bi-forms-library/engine/cli.js and
+# bi-forms-library/configs/2014-13-006/ for the current implementation.
+# Not run by anything; left unmodified below this notice.
+# ---------------------------------------------------------------------
+
 # Crops the two approved customer-visible regions from the rendered
 # customer-fields-only page and composites them onto one new canvas with a
 # visible divider between them, so nothing from the excluded staff-only
