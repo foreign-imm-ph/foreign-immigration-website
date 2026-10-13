@@ -88,9 +88,43 @@ function getRegions(coordinateMap) {
   throw new Error("No customerVisibleRegions or customerPreviewCropBox defined -- refusing to guess a visible region.");
 }
 
+// The same fixed divider height raster-pipeline.js's composeCustomerCanvas
+// has always passed to compose_canvas.py ("22"pt) for a multi-region form
+// -- centralized here as a named constant now that a second caller
+// (svg-compose.js, Phase 2 Stage 5.3) needs the identical value without
+// depending on raster-pipeline.js itself (which requires Poppler/fs and is
+// not Workers-safe).
+const REGION_DIVIDER_PT = 22;
+
+// Computes the composed multi-region canvas's logical dimensions PURELY
+// from coordinateMap -- no raster/Poppler step needed, since every region
+// is already known to be full-page-width (verified across all three
+// migrated forms) and the only arithmetic involved is summing declared
+// region heights plus fixed dividers. This is what let Stage 5.3's
+// Workers-compatible compositor (svg-compose.js) size its output SVG
+// canvas without needing compose_canvas.py's own (Poppler-dependent)
+// dims.json -- the two are required to agree, and a shared regression
+// test (tests/run-all.js) checks that directly.
+function getCanvasDims(coordinateMap) {
+  const regions = getRegions(coordinateMap);
+  const regionHeightsPt = regions.map((r) => r.yTopPt - r.yBottomPt);
+  const regionCount = regions.length;
+  const dividerPt = regionCount > 1 ? REGION_DIVIDER_PT : 0;
+  const heightPt = regionHeightsPt.reduce((s, h) => s + h, 0) + dividerPt * Math.max(0, regionCount - 1);
+  return {
+    widthPt: coordinateMap.pageWidthPt,
+    heightPt,
+    dividerPt,
+    regionHeightsPt,
+    regionCount,
+  };
+}
+
 module.exports = {
   buildStaffDocument,
   buildCustomerFieldsDocument,
   getRegions,
+  getCanvasDims,
+  REGION_DIVIDER_PT,
   drawFields,
 };

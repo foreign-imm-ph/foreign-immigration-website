@@ -16,6 +16,7 @@
     "wrangler": "^4.0.0"
   },
   "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
     "ajv": "8.17.1",
     "libphonenumber-js": "^1.13.13",
     "pdf-lib": "1.17.1"

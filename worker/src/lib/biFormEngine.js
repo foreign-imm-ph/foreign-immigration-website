@@ -80,4 +80,16 @@ export function originalTemplateKey(biFormId) {
   return ORIGINAL_KEY_OVERRIDES[biFormId] || `originals/${biFormId}.pdf`;
 }
 
+// Stage 5.3's pre-rendered blank-region background PNG, generated offline
+// via bi-forms-library/engine/scripts/generate-blank-backgrounds.js (see
+// that script and svg-compose.js for why it must be pre-rendered rather
+// than produced at request time). Same bucket, sibling prefix to
+// originalTemplateKey() above -- not yet confirmed populated in the real
+// bucket (see wrangler.toml's BI_FORMS_LIBRARY comment).
+const BACKGROUND_KEY_OVERRIDES = {};
+export function backgroundTemplateKey(biFormId) {
+  if (!KNOWN_BI_FORM_IDS.includes(biFormId)) throw new Error(`Unknown BI form id: ${JSON.stringify(biFormId)}`);
+  return BACKGROUND_KEY_OVERRIDES[biFormId] || `backgrounds/${biFormId}.png`;
+}
+
 export { fieldsForAudience, resolveFieldValues, validateAnswers, staffOwnedFields, getRequiredStaffFields };

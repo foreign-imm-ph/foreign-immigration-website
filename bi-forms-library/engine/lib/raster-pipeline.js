@@ -16,7 +16,7 @@ const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 
 const { applyMetadataStandard } = require("./metadata");
 const { addWatermark } = require("./watermark");
-const { getRegions } = require("./render-pipeline");
+const { getRegions, REGION_DIVIDER_PT } = require("./render-pipeline");
 const raster = require("./raster");
 
 const PYTHON_BIN = "python3.13"; // system interpreter with Pillow pre-installed; the default `python3` on this image is 3.11 and lacks it
@@ -34,7 +34,7 @@ async function composeCustomerCanvas(customerFieldsBytes, coordinateMap, dpi = 3
     fs.writeFileSync(srcPng, pngBytes);
     fs.writeFileSync(regionsJson, JSON.stringify(regions));
     const scale = dpi / 72.0;
-    execFileSync(PYTHON_BIN, [COMPOSE_SCRIPT, srcPng, String(coordinateMap.pageHeightPt), String(scale), "22", regionsJson, outPng, outDims]);
+    execFileSync(PYTHON_BIN, [COMPOSE_SCRIPT, srcPng, String(coordinateMap.pageHeightPt), String(scale), String(REGION_DIVIDER_PT), regionsJson, outPng, outDims]);
     return { canvasPng: fs.readFileSync(outPng), dims: JSON.parse(fs.readFileSync(outDims, "utf8")) };
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });

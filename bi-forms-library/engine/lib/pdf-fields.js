@@ -58,19 +58,30 @@ function drawCheckbox(page, font, coordinateMap, fieldKey) {
   drawCharInBox(page, font, "X", f.xLeftPt, f.xRightPt, f.yBottomPt, f.yTopPt, size);
 }
 
+// Shrink-to-fit sizing for a single line of free text, extracted so a
+// caller that only needs the SIZE (not an actual pdf-lib page.drawText
+// call -- e.g. the SVG/resvg compositing path in svg-compose.js, which
+// draws text itself) can reuse the exact same fitting logic rather than
+// re-implementing it. Shrinks from 11pt to a 6pt floor before reporting
+// the line doesn't fit (never silently clips without flagging).
+function fitFreeTextSize(font, text, availableWidthPt) {
+  let size = 11;
+  let w = font.widthOfTextAtSize(text, size);
+  while (w > availableWidthPt && size > 6) {
+    size -= 0.25;
+    w = font.widthOfTextAtSize(text, size);
+  }
+  return { size, width: w, fits: w <= availableWidthPt };
+}
+
 // Free-text single-line field, shrinking to a 6pt floor before flagging
 // overflow (never silently clips without flagging).
 function drawFreeText(page, font, coordinateMap, fieldKey, text, overflowReport) {
   const f = coordinateMap.freeTextFields[fieldKey];
   if (!f) throw new Error(`Unknown free-text field: ${fieldKey}`);
   const available = f.xEndPt - f.xStartPt - 6;
-  let size = 11;
-  let w = font.widthOfTextAtSize(text, size);
-  while (w > available && size > 6) {
-    size -= 0.25;
-    w = font.widthOfTextAtSize(text, size);
-  }
-  if (w > available) {
+  const { size, width: w, fits } = fitFreeTextSize(font, text, available);
+  if (!fits) {
     overflowReport.push({
       field: f.label,
       issue: `Text "${text}" does not fit even at the minimum 6pt floor (needs ${w.toFixed(1)}pt, line provides ${available.toFixed(1)}pt).`,
@@ -114,6 +125,7 @@ function drawWrappedFreeText(page, font, coordinateMap, line1Key, line2Key, text
 
 module.exports = {
   fitCharFontSize,
+  fitFreeTextSize,
   drawCharInBox,
   populateCharField,
   drawCheckbox,

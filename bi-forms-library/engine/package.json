@@ -10,6 +10,7 @@
     "test": "node --test ../tests/run-all.js"
   },
   "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
     "ajv": "8.17.1",
     "pdf-lib": "1.17.1"
   }

@@ -36,9 +36,19 @@ const {
   getRegions,
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
 const { composeCustomerCanvas, finalizeCustomerPreview } = require(path.join(ENGINE_DIR, "lib", "raster-pipeline"));
+const { getCanvasDims } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
+const { composeAndFinalizeCustomerPreviewWasm } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
 const { execFileSync } = require("child_process");
+
+const FONTS_DIR = path.join(ENGINE_DIR, "assets", "fonts");
+const RESVG_WASM_PATH = path.join(ENGINE_DIR, "node_modules", "@resvg", "resvg-wasm", "index_bg.wasm");
+function loadResvgFontBuffers() {
+  return ["LiberationSans-Regular.ttf", "LiberationSans-Bold.ttf", "LiberationSans-Italic.ttf"].map((f) =>
+    fs.readFileSync(path.join(FONTS_DIR, f))
+  );
+}
 
 const GOLDEN_DIR = path.join(__dirname, "golden");
 const COMPARE_SCRIPT = path.join(ENGINE_DIR, "lib", "raster", "compare_png.py");
@@ -370,6 +380,127 @@ for (const formId of FORM_IDS) {
     const data = loadFixture(formId, "overlong.json");
     const staff = await buildStaffDocument(originalBytes, coordinateMap, bindings, data);
     assert.ok(staff.overflowReport.length > 0, `expected the overlong fixture to be flagged in overflowReport for ${formId}, but none were reported`);
+  });
+}
+
+// --- Stage 5.3: svg-compose.js (the Workers-compatible resvg-wasm
+// customer-preview compositor) -- distinct from composeCustomerCanvas/
+// finalizeCustomerPreview above (the Poppler/pdf-lib path raster-
+// pipeline.js uses, local-CLI/test-only). These tests run the REAL
+// resvg-wasm renderer (the same npm package the Worker bundles), not a
+// stub, against each form's actual pre-rendered blank-region background
+// (generated here via the same composeCustomerCanvas() Poppler path,
+// exactly as scripts/generate-blank-backgrounds.js does) and the same
+// security audits the Poppler/pdf-lib path's own tests already use. ---
+for (const formId of FORM_IDS) {
+  const originalPath = originalPathFor(formId);
+  const skip = !originalPath;
+  const skipReason = `FIS_BI_ORIGINALS_DIR not set or missing ${formId}.pdf`;
+
+  test(`${formId}: getCanvasDims() (pure, Workers-safe) agrees with composeCustomerCanvas()'s own Poppler-derived dims`, { skip: skip && skipReason }, async () => {
+    const { coordinateMap } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    const { dims: rasterDims } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+    const pureDims = getCanvasDims(coordinateMap);
+    assert.equal(pureDims.widthPt, rasterDims.widthPt);
+    // Sub-point tolerance: raster-pipeline.js's compose_canvas.py rounds
+    // each region's pixel boundaries to whole pixels at 300dpi before
+    // converting back to points, a quantization getCanvasDims()'s pure
+    // arithmetic doesn't have -- the same documented tolerance the
+    // existing "composed canvas height" test above uses.
+    assert.ok(Math.abs(pureDims.heightPt - rasterDims.heightPt) < 0.5, `${pureDims.heightPt} vs ${rasterDims.heightPt}`);
+    assert.equal(pureDims.regionCount, rasterDims.regionCount);
+    assert.equal(pureDims.dividerPt, rasterDims.dividerPt);
+  });
+
+  test(`${formId}: svg-compose.js's resvg-wasm customer preview passes every existing security audit (metadata, content-stream, boundary-expansion)`, { skip: skip && skipReason }, async () => {
+    const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    // The blank background a real deployment would read from R2,
+    // generated here via the exact same local Poppler pipeline
+    // scripts/generate-blank-backgrounds.js uses offline.
+    const { canvasPng: backgroundPngBytes } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+
+    const { bytes, dims } = await composeAndFinalizeCustomerPreviewWasm({
+      coordinateMap,
+      questionnaire,
+      data: sampleData,
+      backgroundPngBytes,
+      resvgWasmInput: fs.readFileSync(RESVG_WASM_PATH),
+      fontBuffers: loadResvgFontBuffers(),
+    });
+
+    const meta = await assertMetadata(bytes, coordinateMap.formTitle);
+    assert.ok(meta.ok, `metadata check failed: ${JSON.stringify(meta.errors)}`);
+
+    const staffFields = fieldsForAudience(coordinateMap, "staff");
+    const customerFields = fieldsForAudience(coordinateMap, "customer");
+    const resolved = resolveFieldValues(questionnaire.fieldBindings || {}, sampleData);
+    const forbidden = [];
+    for (const coll of ["charBoxFields", "checkboxFields", "freeTextFields"]) {
+      for (const key of Object.keys(staffFields[coll])) {
+        if (customerFields[coll][key]) continue;
+        const v = resolved.values[key];
+        if (typeof v === "string" && v.trim() !== "") forbidden.push(v);
+      }
+    }
+    const streamAudit = auditContentStreams(bytes, forbidden);
+    assert.ok(streamAudit.ok, `content-stream audit failed: ${JSON.stringify(streamAudit)}`);
+    // The resvg path bakes everything (background, field values,
+    // watermark, divider caption) into ONE raster image -- stricter than
+    // the Poppler/pdf-lib path's own guarantee, since there is no text
+    // content stream of any kind to audit in the first place.
+    assert.equal(streamAudit.imageCount, 1);
+
+    const boundaryAudit = await auditBoundaryExpansion(bytes, dims.widthPt, dims.heightPt);
+    assert.ok(boundaryAudit.blank, `boundary-expansion audit found non-blank pixels outside the approved region: ${JSON.stringify(boundaryAudit)}`);
+  });
+
+  test(`${formId}: svg-compose.js draws visible ink for a known customer-visible field at its expected position`, { skip: skip && skipReason }, async () => {
+    const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    const { canvasPng: backgroundPngBytes } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+    const { bytes, dims } = await composeAndFinalizeCustomerPreviewWasm({
+      coordinateMap,
+      questionnaire,
+      data: sampleData,
+      backgroundPngBytes,
+      resvgWasmInput: fs.readFileSync(RESVG_WASM_PATH),
+      fontBuffers: loadResvgFontBuffers(),
+    });
+
+    const dpi = 300;
+    const png = await raster.rasterize(bytes, dpi);
+    const tmpPng = path.join(require("os").tmpdir(), `fis-resvg-inktest-${formId}-${Date.now()}.png`);
+    fs.writeFileSync(tmpPng, png);
+    try {
+      // lastName's first character box, mapped from original-page PDF
+      // space into this form's (possibly region-cropped) canvas space --
+      // lastName always falls in each form's first (topmost) region,
+      // which always starts at the original page's own top edge (see
+      // each form's customerVisibleRegions), so the only shift needed is
+      // subtracting that region's own yBottomPt (how much was cropped
+      // off the BOTTOM of the page before this region's canvas began).
+      // checkFieldInk() is written in terms of a coordinateMap +
+      // pageHeightPt, so a minimal synthetic map standing in for "canvas
+      // space" is enough to reuse it as-is.
+      const f = coordinateMap.charBoxFields.lastName;
+      const regions = getRegions(coordinateMap);
+      const firstRegionYBottomPt = regions[0].yBottomPt;
+      const canvasMap = {
+        charBoxFields: {
+          lastName: { ...f, yTopPt: f.yTopPt - firstRegionYBottomPt, yBottomPt: f.yBottomPt - firstRegionYBottomPt },
+        },
+        pageHeightPt: dims.heightPt,
+      };
+      const expectedValue = String(sampleData.lastName).toUpperCase();
+      assert.ok(expectedValue.length > 0, "fixture sanity: lastName must be non-empty for this check to mean anything");
+      const ink = await checkFieldInk(tmpPng, canvasMap, { values: { lastName: sampleData.lastName } }, dpi);
+      const result = ink.results.find((r) => r.key === "lastName");
+      assert.ok(result && result.hasInk, `expected ink at the lastName field's position in the resvg-rendered canvas for ${formId}, found none`);
+    } finally {
+      fs.unlinkSync(tmpPng);
+    }
   });
 }
 

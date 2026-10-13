@@ -19,14 +19,26 @@ database_id = "85d16e91-9dba-45da-b8e4-b12c0592f779"
 binding = "CLIENT_FILES"
 bucket_name = "fis-client-files"
 
-# Phase 2 (BI Forms): the private library of original BI templates and
-# their pre-rendered blank-region backgrounds, already populated out of
-# band (see bi-forms-library/inventory/forms-library-inventory.json for
-# the approved object-key mapping, e.g. "originals/CCS-A-CDR-2016.pdf").
-# This is a SEPARATE bucket from CLIENT_FILES above -- it holds FIS's own
+# Phase 2 (BI Forms): the private library of original BI templates,
+# already populated out of band (confirmed via a read-only R2 listing --
+# see bi-forms-library/inventory/forms-library-inventory.json for the
+# approved object-key mapping, e.g. "originals/CCS-A-CDR-2016.pdf"). This
+# is a SEPARATE bucket from CLIENT_FILES above -- it holds FIS's own
 # static reference material, never a customer's data, and the Worker only
 # ever reads from it (.get()), never writes. Not made public; the bucket
 # itself has no public access configured, and nothing here changes that.
+#
+# Stage 5.3 ALSO reads each form's pre-rendered blank-region background
+# PNG from this same bucket, at "backgrounds/<formId>.png" (see
+# svg-compose.js and scripts/generate-blank-backgrounds.js for why a
+# static, offline-rendered background is needed at all). Unlike
+# originals/, these objects are NOT confirmed to exist in the real bucket
+# yet -- only generated and verified locally in this phase (background
+# PNGs are themselves derived from the confidential original PDFs, so
+# they are not committed to this repository either). Uploading them is a
+# live-R2-write and is out of this phase's authorization; approveBiForm
+# fails with a clear 501 (same pattern as a missing original) if an
+# object at that key isn't found, rather than assuming it's there.
 #
 # PREPARED BUT NOT YET APPLIED: this binding does not exist on the live
 # Worker today. Adding it here is configuration only -- it takes effect
@@ -37,6 +49,23 @@ bucket_name = "fis-client-files"
 [[r2_buckets]]
 binding = "BI_FORMS_LIBRARY"
 bucket_name = "fis-bi-forms-library"
+
+# Phase 2 Stage 5.3: lets the Worker bundle statically import the
+# @resvg/resvg-wasm binary and the bundled Liberation Sans font files
+# (biFormRaster.js, svg-compose.js) as binary module assets, the same way
+# Wrangler already treats a ".wasm" import by default -- declared
+# explicitly here for both so a future Wrangler default change can't
+# silently alter how either is bundled. CompiledWasm gives back a
+# WebAssembly.Module; Data gives back an ArrayBuffer.
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]
+fallthrough = true
 
 [ai]
 binding = "AI"

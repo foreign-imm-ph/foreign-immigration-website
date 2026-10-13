@@ -262,7 +262,7 @@ export async function approveBiForm(request, env, staff, submissionId) {
   const data = { ...customerAnswers, ...staffAnswers };
   const bindings = questionnaire.fieldBindings || {};
 
-  const { buildStaffDocument, buildCustomerFieldsDocument } = await getDocumentBuilders();
+  const { buildStaffDocument } = await getDocumentBuilders();
   const staffDoc = await buildStaffDocument(originalBytes, coordinateMap, bindings, data);
 
   const staffKey = `clients/${submission.client_id}/bi-forms/${submissionId}/${newId()}-staff.pdf`;
@@ -274,12 +274,13 @@ export async function approveBiForm(request, env, staff, submissionId) {
     .bind(newId(), submission.application_id, submission.client_id, submissionId, staffKey, `${submission.bi_form_id}-staff.pdf`, staffDoc.bytes.byteLength)
     .run();
 
-  // The customer preview needs the raster/compose/finalize step, which has
-  // no Workers-compatible backend yet (Stage 4, not decided). The staff
-  // PDF above is already stored and usable; this throws a clear, specific
-  // error rather than silently completing an incomplete approval.
-  const customerFieldsDoc = await buildCustomerFieldsDocument(originalBytes, coordinateMap, bindings, data);
-  const previewBytes = await composeAndFinalizeCustomerPreview(customerFieldsDoc.bytes, coordinateMap, questionnaire);
+  // Customer preview: Stage 5.3's resvg-wasm compositor draws the
+  // customer's resolved field values directly onto the form's
+  // pre-rendered blank-region background (read from R2 inside
+  // composeAndFinalizeCustomerPreview) -- it does not need originalBytes
+  // or a pdf-lib-populated intermediate document at all, unlike the staff
+  // PDF above.
+  const previewBytes = await composeAndFinalizeCustomerPreview(env, submission.bi_form_id, coordinateMap, questionnaire, data);
 
   const previewKey = `clients/${submission.client_id}/bi-forms/${submissionId}/${newId()}-customer-preview.pdf`;
   await env.CLIENT_FILES.put(previewKey, previewBytes, { httpMetadata: { contentType: "application/pdf" } });
