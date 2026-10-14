@@ -144,6 +144,54 @@ Bureau of Immigration Accredited Consultancy`;
   await send(env, { to, subject: `Re: Your enquiry - ${reference}`, text, html });
 }
 
+// Instant Services guest email verification. Mechanically identical to
+// sendMagicLink (same auth_tokens-backed link, same 15-minute/single-use
+// behavior) but its own template/subject line, since this is confirming
+// a brand-new request, not signing in to an existing account -- the
+// customer has no portal history yet to "sign in" to.
+export async function sendInstantServicesVerification(env, { to, url }) {
+  const text = `Confirm your Instant Services request with Foreign Immigration Services.
+
+Click the link below to verify your email and continue your request. This link is valid for 15 minutes and can only be used once.
+
+${url}
+
+If you did not request this, you can safely ignore this email.`;
+
+  const html = wrap(`
+    <p>Confirm your Instant Services request with Foreign Immigration Services.</p>
+    <p><a href="${url}" style="display:inline-block;background:#0d3d25;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:4px;">Verify my email</a></p>
+    <p style="font-size:13px;color:#5b6b62;">This link is valid for 15 minutes and can only be used once. If you did not request this, you can safely ignore this email.</p>
+  `);
+
+  await send(env, { to, subject: "Confirm your Instant Services request", text, html });
+}
+
+export async function sendInstantServicesConfirmation(env, { to, fullName, orderReference, applicationReference }) {
+  const text = `Dear ${fullName},
+
+Your Instant Services request has been submitted for processing.
+
+Request reference: ${orderReference}
+Application reference: ${applicationReference}
+
+You can track progress at any time through the FIS Client Portal.
+
+${env.PUBLIC_SITE_URL}/portal/
+
+Foreign Immigration Services
+Bureau of Immigration Accredited Consultancy`;
+
+  const html = wrap(`
+    <p>Dear ${escapeHtml(fullName)},</p>
+    <p>Your Instant Services request has been submitted for processing.</p>
+    <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">Request reference: <strong>${escapeHtml(orderReference)}</strong><br>Application reference: <strong>${escapeHtml(applicationReference)}</strong></p>
+    <p>You can track progress at any time through the FIS Client Portal.</p>
+  `);
+
+  await send(env, { to, subject: `Instant Services request submitted - ${orderReference}`, text, html });
+}
+
 export async function sendMagicLink(env, { to, url }) {
   const text = `Sign in to your Foreign Immigration Services Client Portal.
 

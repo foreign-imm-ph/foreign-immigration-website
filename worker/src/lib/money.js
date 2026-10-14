@@ -1,0 +1,31 @@
+// Integer-centavo money helpers for Instant Services. Every amount in
+// this feature is stored and computed as an integer number of centavos
+// (1 PHP = 100 centavos) -- never a floating-point peso amount -- so
+// summing fee components can never drift by a fraction of a centavo the
+// way repeated float addition can. Display-only conversion to a peso
+// string happens at the edges (API response shaping, UI), never in the
+// stored or computed values themselves.
+//
+// PHP-only today, by instruction -- "design for potential future
+// multicurrency support without implementing multicurrency payment
+// processing now". The one place that acknowledges this: every stored
+// amount's column name says `_php_centavos` explicitly rather than a
+// generic `_centavos`, so a future second currency is an additive column,
+// not a silent reinterpretation of an existing one.
+
+export function centavosToPhpString(centavos) {
+  const n = Number(centavos) || 0;
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(n));
+  const pesos = Math.floor(abs / 100);
+  const cents = String(abs % 100).padStart(2, "0");
+  return `${sign}${pesos.toLocaleString("en-US")}.${cents}`;
+}
+
+export function sumCentavos(components) {
+  return components.reduce((sum, c) => sum + (Number(c.amount_php_centavos) || 0), 0);
+}
+
+export function isValidCentavos(value) {
+  return Number.isInteger(value) && value >= 0;
+}

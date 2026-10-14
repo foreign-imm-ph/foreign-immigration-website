@@ -63,6 +63,44 @@ export async function createBiFormSubmission(client, application, staff, overrid
   return env.DB.prepare("SELECT * FROM bi_form_submissions WHERE id = ?").bind(id).first();
 }
 
+// Seeds one checkout_services row plus its English i18n row and price
+// components -- the minimum a catalogue/begin-checkout test needs. All
+// synthetic/test-only values (never real prices), and active defaults to
+// 1 here only because these are explicitly test fixtures in a local D1,
+// never anything deployed -- production rows stay active=0 until staff
+// approval, per the migration's fail-closed default.
+export async function createTestCheckoutService(overrides = {}) {
+  const id = newId();
+  await env.DB.prepare(
+    `INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order, active)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  )
+    .bind(
+      id,
+      overrides.serviceSlug || "motions-blacklist",
+      overrides.biFormId || "CCS-A-CDR-2016",
+      overrides.supportsDelivery === undefined ? 1 : overrides.supportsDelivery,
+      overrides.displayOrder || 0,
+      overrides.active === undefined ? 1 : overrides.active
+    )
+    .run();
+  await env.DB.prepare(
+    `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text)
+     VALUES (?, 'en', ?, ?, ?)`
+  )
+    .bind(id, overrides.title || "Test Service", overrides.shortDescription || "Test service description", overrides.eligibilityText || "Eligible for testing")
+    .run();
+  for (const component of overrides.priceComponents || [{ type: "service_fee", label: "FIS Service Fee", amountPhpCentavos: 500000 }]) {
+    await env.DB.prepare(
+      `INSERT INTO checkout_price_components (id, service_id, component_type, label, amount_php_centavos)
+       VALUES (?, ?, ?, ?, ?)`
+    )
+      .bind(newId(), id, component.type, component.label, component.amountPhpCentavos)
+      .run();
+  }
+  return env.DB.prepare("SELECT * FROM checkout_services WHERE id = ?").bind(id).first();
+}
+
 // Builds a Request with the headers every state-changing endpoint in this
 // Worker requires in production (same-site Origin, for the CSRF check in
 // lib/session.js isSameSiteOrigin) -- so a test deliberately checking CSRF

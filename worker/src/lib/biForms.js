@@ -26,15 +26,29 @@ export function assertTransitionAllowed(fromStatus, toStatus) {
   }
 }
 
-export async function createSubmission(db, { applicationId, clientId, biFormId, assignedByStaffEmail }) {
+// `intakePath` defaults to the column's own DB default ('staff_assigned')
+// when omitted, so every existing caller (staff assigning a form) is
+// unaffected -- Instant Services is the one caller that passes
+// 'instant_checkout' explicitly, with assignedByStaffEmail left null.
+export async function createSubmission(db, { applicationId, clientId, biFormId, assignedByStaffEmail, intakePath }) {
   const id = newId();
-  await db
-    .prepare(
-      `INSERT INTO bi_form_submissions (id, application_id, client_id, bi_form_id, assigned_by_staff_email)
-       VALUES (?, ?, ?, ?, ?)`
-    )
-    .bind(id, applicationId, clientId, biFormId, assignedByStaffEmail)
-    .run();
+  if (intakePath) {
+    await db
+      .prepare(
+        `INSERT INTO bi_form_submissions (id, application_id, client_id, bi_form_id, assigned_by_staff_email, intake_path)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .bind(id, applicationId, clientId, biFormId, assignedByStaffEmail, intakePath)
+      .run();
+  } else {
+    await db
+      .prepare(
+        `INSERT INTO bi_form_submissions (id, application_id, client_id, bi_form_id, assigned_by_staff_email)
+         VALUES (?, ?, ?, ?, ?)`
+      )
+      .bind(id, applicationId, clientId, biFormId, assignedByStaffEmail)
+      .run();
+  }
   await recordHistory(db, { submissionId: id, status: "draft", changedByStaffEmail: assignedByStaffEmail });
   return getSubmissionById(db, id);
 }

@@ -18,6 +18,7 @@ import {
   handleUploadBiFormDocument,
   handleDownloadBiFormDocument,
 } from "./routes/biFormsCustomer.js";
+import { handleListCatalogue, handleGetCatalogueService, handleBeginCheckout } from "./routes/checkoutPublic.js";
 
 // Requests that change state must come from our own site — checked once,
 // here, rather than repeated in every handler.
@@ -69,7 +70,7 @@ export default {
   },
 };
 
-async function route(request, env, path, method) {
+async function route(request, env, path, method, url) {
   if (path === "/api/enquiries" && method === "POST") return handleCreateEnquiry(request, env);
 
   if (path === "/api/auth/magic-link" && method === "POST") return handleRequestMagicLink(request, env);
@@ -117,6 +118,16 @@ async function route(request, env, path, method) {
   if (path === "/api/profile" && method === "GET") return handleGetProfile(request, env);
   if (path === "/api/profile" && method === "PATCH") return handleUpdateProfile(request, env);
   if (path === "/api/consents" && method === "POST") return handleSetOwnConsent(request, env);
+
+  // Instant Services -- public catalogue browsing + guest request start.
+  // No auth: catalogue is intentionally public, and "begin" is what
+  // issues the first credential (a verification link), so it can't
+  // itself require a session. Verification itself reuses the existing,
+  // unmodified /api/auth/verify route above -- no new endpoint for that.
+  if (path === "/api/instant-services/catalogue" && method === "GET") return handleListCatalogue(request, env, url);
+  const catalogueItemMatch = path.match(/^\/api\/instant-services\/catalogue\/([^/]+)$/);
+  if (catalogueItemMatch && method === "GET") return handleGetCatalogueService(request, env, url, catalogueItemMatch[1]);
+  if (path === "/api/instant-services/begin" && method === "POST") return handleBeginCheckout(request, env);
 
   return null;
 }
