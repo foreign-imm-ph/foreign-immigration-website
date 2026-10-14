@@ -14,7 +14,7 @@
   var lang = params.get("lang") || "en";
 
   if (!token || !orderId) {
-    status.textContent = "This confirmation link is missing required information. Please start again from the Instant Services page.";
+    status.textContent = "This confirmation link is missing required information. Please start again from the Instant Checkout page.";
     return;
   }
 
@@ -28,6 +28,6 @@
     .catch(function (data) {
       status.textContent =
         (data && data.error) ||
-        "This confirmation link is invalid or has expired. Please start again from the Instant Services page.";
+        "This confirmation link is invalid or has expired. Please start again from the Instant Checkout page.";
     });
 })();

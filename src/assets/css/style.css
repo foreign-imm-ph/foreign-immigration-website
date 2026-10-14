@@ -492,6 +492,14 @@ summary:focus-visible {
   color: var(--color-charcoal);
 }
 
+/* Compact variant for buttons injected inside an existing .card
+   (Core/Specialised service grids) -- the card's own padding and type
+   scale are already tight, so the full-size .btn would unbalance it. */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+}
+
 .btn-on-dark:hover {
   background: var(--color-white);
   color: var(--color-charcoal);
@@ -814,6 +822,29 @@ summary:focus-visible {
   margin-bottom: 1rem;
 }
 
+/* Instant Checkout availability block injected into an existing
+   Core/Specialised service card (instant-services-catalogue.js). Sits
+   between the card's own description and its "Learn more" link, so it
+   gets a top border rather than its own card chrome -- keeps the card's
+   existing height/alignment in the grid instead of growing it unevenly. */
+.card-instant-checkout {
+  border-top: 1px solid rgba(13, 61, 37, 0.12);
+  margin: 0.75rem 0 1rem;
+  padding-top: 0.85rem;
+}
+
+.card-instant-checkout__message {
+  font-size: 0.85rem;
+  color: var(--color-grey);
+  margin-bottom: 0.75rem;
+}
+
+.card-instant-checkout__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* The itemized price breakdown on the Instant Services review/payment
    screens (instant-services-apply.js) -- a plain, legible table, no
    strikethrough/discount styling, consistent with "a plain stated price"
@@ -1128,6 +1159,14 @@ summary:focus-visible {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin: 0 0 1rem;
+}
+
+@media (max-width: 480px) {
+  .service-cta__actions .btn,
+  .card-instant-checkout__actions .btn {
+    flex: 1 1 100%;
+    text-align: center;
+  }
 }
 
 /* Restrained premium callout for the Extensions & Compliance page's

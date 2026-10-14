@@ -42,6 +42,13 @@
   {%- endif %}
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/style.css">
+  {#- Deferred scripts execute in document order, not load order, so
+     portal-config.js (window.portalFetch) must be declared before any
+     page-content script that calls it at top level (instant-services-
+     apply.js, instant-services-verify.js, portal-bi-form.js, etc.) --
+     hence in <head>, ahead of the page's own content and scripts,
+     rather than alongside the other global scripts near </body>. #}
+  <script defer src="/assets/js/portal-config.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">{{ "skipLink" | t(lang) }}</a>
@@ -51,5 +58,13 @@
   </main>
   {% include "partials/footer.njk" %}
   <script defer src="/assets/js/language-gateway.js"></script>
+  {#- Global on every page (not just Instant Checkout's own pages) so that
+     any existing service card or service-detail page can light up its
+     own eligibility/Buy Now CTA the moment a catalogue entry for it goes
+     active -- with no new deployment and no per-page script tag needed.
+     instant-services-catalogue.js itself no-ops immediately on a page
+     with none of its target elements, so this costs nothing on e.g.
+     /contact/ or /about/. #}
+  <script defer src="/assets/js/instant-services-catalogue.js"></script>
 </body>
 </html>
