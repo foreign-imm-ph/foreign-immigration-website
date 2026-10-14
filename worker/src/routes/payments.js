@@ -4,7 +4,7 @@ import { readAndValidateUpload, paymentProofKey, streamObject, HttpError } from 
 import { newId } from "../lib/crypto.js";
 import { json } from "../lib/http.js";
 import { getPaymentDiscrepancyWarning, getTranslatedDescriptionHeading } from "../lib/clientLocaleStrings.js";
-import { getOrderById, transitionOrder } from "../lib/checkout.js";
+import { getOrderById, transitionOrder, getCurrentDeliveryStatus, recordDeliveryStatus } from "../lib/checkout.js";
 
 // No gateway anywhere in this file. A client action can only ever move a
 // payment_request from 'pending' to 'submitted' — never to 'paid'. Only a
@@ -109,15 +109,26 @@ export async function handleUploadPaymentProof(request, env, applicationId, paym
     .run();
 
   // Instant Services: a payment tied to a checkout order also advances
-  // that order's own status, so the Staff Portal's Instant Services
-  // Orders queue reflects "awaiting verification" the moment a proof
-  // lands, rather than staying at "awaiting_payment" until some other
-  // action notices. Every pre-existing (non-checkout) payment request has
-  // checkout_order_id = NULL and is entirely unaffected by this branch.
+  // the relevant status trail, so the Staff Portal's Instant Services
+  // Orders queue reflects the proof landing rather than staying stale
+  // until some other action notices. Every pre-existing (non-checkout)
+  // payment request has checkout_order_id = NULL and is entirely
+  // unaffected by this branch. The service-fee and delivery-fee payments
+  // for the same order advance two DIFFERENT status trails (the order's
+  // own status vs. the delivery status history) -- see Part VI's
+  // "delivery charges are separate" requirement, reflected here as
+  // `purpose` distinguishing which trail a given proof affects.
   if (payment.checkout_order_id) {
-    const order = await getOrderById(env.DB, payment.checkout_order_id);
-    if (order && order.status === "awaiting_payment") {
-      await transitionOrder(env.DB, order, "awaiting_verification");
+    if (payment.purpose === "checkout_service") {
+      const order = await getOrderById(env.DB, payment.checkout_order_id);
+      if (order && order.status === "awaiting_payment") {
+        await transitionOrder(env.DB, order, "awaiting_verification");
+      }
+    } else if (payment.purpose === "checkout_delivery") {
+      const current = await getCurrentDeliveryStatus(env.DB, payment.checkout_order_id);
+      if (current && current.status === "awaiting_delivery_payment") {
+        await recordDeliveryStatus(env.DB, { orderId: payment.checkout_order_id, status: "delivery_payment_verification" });
+      }
     }
   }
 

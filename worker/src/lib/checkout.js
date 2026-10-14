@@ -203,6 +203,129 @@ export async function startOrderApplication(db, order, service) {
   return { applicationId, submissionId: submission.id };
 }
 
+// ---------------------------------------------------------------------
+// Catalogue management (staff-only writes) -- the Staff Portal's
+// catalogue section (routes/staffCheckout.js) is the only caller. A new
+// service is created inactive by the table's own DEFAULT (see the
+// migration) -- never silently live the moment it's created, same
+// fail-closed posture QR Ph's settings log uses.
+// ---------------------------------------------------------------------
+export async function createService(db, { serviceSlug, biFormId, supportsDelivery, displayOrder }) {
+  const id = newId();
+  await db
+    .prepare("INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order) VALUES (?, ?, ?, ?, ?)")
+    .bind(id, serviceSlug, biFormId, supportsDelivery ? 1 : 0, displayOrder || 0)
+    .run();
+  return getServiceById(db, id);
+}
+
+export async function updateServiceMeta(db, serviceId, { serviceSlug, biFormId, supportsDelivery, displayOrder }) {
+  await db
+    .prepare("UPDATE checkout_services SET service_slug = ?, bi_form_id = ?, supports_delivery = ?, display_order = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(serviceSlug, biFormId, supportsDelivery ? 1 : 0, displayOrder || 0, serviceId)
+    .run();
+  return getServiceById(db, serviceId);
+}
+
+export async function setServiceActive(db, serviceId, active) {
+  await db.prepare("UPDATE checkout_services SET active = ?, updated_at = datetime('now') WHERE id = ?").bind(active ? 1 : 0, serviceId).run();
+  return getServiceById(db, serviceId);
+}
+
+export async function upsertServiceI18n(db, serviceId, lang, { title, shortDescription, eligibilityText, noticesText }) {
+  await db
+    .prepare(
+      `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text, notices_text)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(service_id, lang) DO UPDATE SET
+         title = excluded.title, short_description = excluded.short_description,
+         eligibility_text = excluded.eligibility_text, notices_text = excluded.notices_text`
+    )
+    .bind(serviceId, lang, title, shortDescription, eligibilityText, noticesText || null)
+    .run();
+}
+
+// Wholesale replace, not a diff -- the staff form always submits the
+// service's complete fee breakdown, so stale components (one removed in
+// this edit) can never linger. A component with no amount typed in is
+// silently dropped rather than stored as zero -- see staffCheckout.js's
+// form parsing.
+export async function replacePriceComponents(db, serviceId, components) {
+  await db.prepare("DELETE FROM checkout_price_components WHERE service_id = ?").bind(serviceId).run();
+  let order = 0;
+  for (const c of components) {
+    await db
+      .prepare("INSERT INTO checkout_price_components (id, service_id, component_type, label, amount_php_centavos, display_order) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(newId(), serviceId, c.type, c.label, c.amountPhpCentavos, order++)
+      .run();
+  }
+}
+
+export async function listAllServicesForStaff(db) {
+  const { results } = await db.prepare("SELECT * FROM checkout_services ORDER BY display_order, id").all();
+  return results;
+}
+
+export async function listOrdersForStaff(db, { status } = {}) {
+  const query = status
+    ? db.prepare(
+        `SELECT o.*, c.full_name AS client_full_name, c.email AS client_email
+         FROM checkout_orders o JOIN clients c ON c.id = o.client_id
+         WHERE o.status = ? ORDER BY o.updated_at DESC`
+      ).bind(status)
+    : db.prepare(
+        `SELECT o.*, c.full_name AS client_full_name, c.email AS client_email
+         FROM checkout_orders o JOIN clients c ON c.id = o.client_id
+         ORDER BY o.updated_at DESC LIMIT 200`
+      );
+  const { results } = await query.all();
+  return results;
+}
+
+// ---------------------------------------------------------------------
+// Delivery status -- an append-only trail, same pattern as
+// checkout_order_status_history: the LATEST row for an order IS its
+// current delivery status. Deliberately NOT a strict state machine like
+// assertOrderTransitionAllowed above -- Part VI explicitly gives staff
+// latitude to "correct/handle exceptions", so any of DELIVERY_STATUSES
+// is accepted from a staff action, not just the "next" one in sequence.
+// ---------------------------------------------------------------------
+export const DELIVERY_STATUSES = [
+  "awaiting_document_completion",
+  "ready_for_dispatch",
+  "delivery_quotation_issued",
+  "awaiting_delivery_payment",
+  "delivery_payment_verification",
+  "ready_for_shipment",
+  "dispatched",
+  "delivered",
+  "delivery_exception",
+];
+
+export async function recordDeliveryStatus(db, { orderId, status, note = null, courier = null, trackingNumber = null, staffEmail = null }) {
+  await db
+    .prepare(
+      `INSERT INTO checkout_delivery_status_history (id, order_id, status, note, courier, tracking_number, changed_by_staff_email)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(newId(), orderId, status, note, courier, trackingNumber, staffEmail)
+    .run();
+}
+
+export async function getCurrentDeliveryStatus(db, orderId) {
+  return db.prepare("SELECT * FROM checkout_delivery_status_history WHERE order_id = ? ORDER BY changed_at DESC, id DESC LIMIT 1").bind(orderId).first();
+}
+
+export async function getDeliveryStatusHistory(db, orderId) {
+  const { results } = await db.prepare("SELECT * FROM checkout_delivery_status_history WHERE order_id = ? ORDER BY changed_at ASC").bind(orderId).all();
+  return results;
+}
+
+export async function getDeliveryQuotations(db, orderId) {
+  const { results } = await db.prepare("SELECT * FROM checkout_delivery_quotations WHERE order_id = ? ORDER BY created_at DESC").bind(orderId).all();
+  return results;
+}
+
 async function insertUniqueReference(db, table) {
   // Thin re-export point so this file has one obvious place that
   // generates application references, without a circular import back

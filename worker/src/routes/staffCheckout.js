@@ -1,0 +1,636 @@
+// Instant Services Orders: the Staff Portal section for everything Part
+// VII §20 asks for -- reviewing orders, verifying/rejecting payment,
+// managing delivery quotations/status, configuring QR Ph, and managing
+// the catalogue. Deliberately one module (mirrors staffBiForms.js's
+// pattern of a self-contained feature file wired into staff.js), rather
+// than three separate ones, since orders/payments/delivery are all one
+// reviewer's workflow on the same record.
+import { staffPage, escapeHtml } from "../lib/staffHtml.js";
+import { HttpError, streamObject, sniffContentType } from "../lib/storage.js";
+import { logAudit } from "../lib/db.js";
+import { newId } from "../lib/crypto.js";
+import { centavosToPhpString, phpStringToCentavos } from "../lib/money.js";
+import {
+  getOrderById,
+  listOrdersForStaff,
+  getServiceById,
+  getServiceI18n,
+  getPriceComponents,
+  getOrderHistory,
+  transitionOrder,
+  ORDER_STATUSES,
+  DELIVERY_STATUSES,
+  recordDeliveryStatus,
+  getCurrentDeliveryStatus,
+  getDeliveryStatusHistory,
+  getDeliveryQuotations,
+  listAllServicesForStaff,
+  createService,
+  updateServiceMeta,
+  setServiceActive,
+  upsertServiceI18n,
+  replacePriceComponents,
+} from "../lib/checkout.js";
+import { getSubmissionById } from "../lib/biForms.js";
+import { getCurrentPaymentSettings, getPaymentSettingsHistory, recordPaymentSettingsChange } from "../lib/checkoutPaymentSettings.js";
+import { getProvider } from "../lib/paymentGateway.js";
+import { sendPaymentRequestNotification } from "../lib/email.js";
+
+const CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
+const LANGUAGE_LABELS = { en: "English", "zh-CN": "Simplified Chinese", "zh-Hant": "Traditional Chinese", ko: "Korean", ja: "Japanese", vi: "Vietnamese" };
+
+function notFound() {
+  return new Response("Not found", { status: 404 });
+}
+
+// Returns a 403 Response if `staff` isn't an admin, or null otherwise --
+// a Response, not a throw, matching staff.js's own deleteEnquiry
+// convention for the same kind of role check.
+function adminOnlyResponse(staff) {
+  if (staff.role !== "admin") {
+    return new Response("This action requires administrator authorization.", { status: 403 });
+  }
+  return null;
+}
+
+async function requireOrder(env, orderId) {
+  const order = await getOrderById(env.DB, orderId);
+  if (!order) throw new HttpError(404, "Not found");
+  return order;
+}
+
+function redirectTo(request, path) {
+  return Response.redirect(`${new URL(request.url).origin}${path}`, 303);
+}
+
+// ---------------------------------------------------------------------
+// Orders list + detail
+// ---------------------------------------------------------------------
+
+export async function listOrders(env, staff, url) {
+  const status = url.searchParams.get("status") || undefined;
+  const orders = await listOrdersForStaff(env.DB, { status });
+  const rows = orders
+    .map(
+      (o) => `<tr>
+        <td><a class="ref" href="/staff/instant-services/orders/${o.id}">${escapeHtml(o.id.slice(0, 8))}</a></td>
+        <td>${escapeHtml(o.client_full_name)}<br><span class="muted">${escapeHtml(o.client_email)}</span></td>
+        <td><span class="status">${escapeHtml(o.status)}</span></td>
+        <td class="muted">${escapeHtml(o.updated_at)}</td>
+      </tr>`
+    )
+    .join("");
+  return staffPage(
+    "Instant Services Orders",
+    `<h1>Instant Services Orders</h1>
+     <div class="filter-bar">
+       <a href="/staff/instant-services/orders/">All</a> |
+       ${ORDER_STATUSES.map((s) => `<a href="/staff/instant-services/orders/?status=${s}"${status === s ? ' class="filter-active"' : ""}>${s}</a>`).join(" ")}
+     </div>
+     <table>
+       <tr><th>Order</th><th>Client</th><th>Status</th><th>Updated</th></tr>
+       ${rows || '<tr><td colspan="4" class="muted">No Instant Services orders yet.</td></tr>'}
+     </table>`,
+    staff.email
+  );
+}
+
+export async function viewOrder(env, staff, orderId) {
+  const order = await requireOrder(env, orderId);
+  const service = await getServiceById(env.DB, order.service_id);
+  const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(order.client_id).first();
+  const submission = order.bi_form_submission_id ? await getSubmissionById(env.DB, order.bi_form_submission_id) : null;
+  const deliveryAddress = await env.DB.prepare("SELECT * FROM checkout_delivery_addresses WHERE order_id = ?").bind(order.id).first();
+  const { results: payments } = await env.DB.prepare("SELECT * FROM payment_requests WHERE checkout_order_id = ? ORDER BY created_at DESC").bind(order.id).all();
+  const history = await getOrderHistory(env.DB, order.id);
+  const deliveryStatus = await getCurrentDeliveryStatus(env.DB, order.id);
+  const deliveryHistory = await getDeliveryStatusHistory(env.DB, order.id);
+  const quotations = await getDeliveryQuotations(env.DB, order.id);
+
+  const snapshot = order.price_snapshot_json ? JSON.parse(order.price_snapshot_json) : null;
+
+  const paymentRows = payments
+    .map((p) => {
+      const actions = [];
+      if (p.status === "submitted") {
+        actions.push(`<form method="POST" action="/staff/instant-services/orders/${order.id}/payments/${p.id}/verify"><button type="submit">Verify &amp; mark paid</button></form>`);
+        actions.push(`<form method="POST" action="/staff/instant-services/orders/${order.id}/payments/${p.id}/reject"><label for="reject-note-${p.id}">Reason</label><textarea name="note" id="reject-note-${p.id}" required></textarea><button class="danger" type="submit">Reject, request resubmission</button></form>`);
+      }
+      const proofLink = p.submitted_at ? `<a href="/staff/instant-services/orders/${order.id}/payments/${p.id}/proof">View proof</a>` : "";
+      return `<div class="card">
+        <p><strong>${escapeHtml(p.purpose === "checkout_delivery" ? "Delivery payment" : "Service payment")}</strong> — PHP ${Number(p.amount_php).toFixed(2)} — <span class="status">${escapeHtml(p.status)}</span></p>
+        <p class="muted">${escapeHtml(p.description)}</p>
+        <p>${proofLink}</p>
+        ${actions.join("")}
+      </div>`;
+    })
+    .join("") || '<p class="muted">No payment requests for this order yet.</p>';
+
+  const priceHtml = snapshot
+    ? `<table><tr><th>Item</th><th>Amount (PHP)</th></tr>${snapshot.components
+        .map((c) => `<tr><td>${escapeHtml(c.label)}</td><td>${centavosToPhpString(c.amountPhpCentavos)}</td></tr>`)
+        .join("")}<tr><td><strong>Total</strong></td><td><strong>${centavosToPhpString(snapshot.totalPhpCentavos)}</strong></td></tr></table>`
+    : '<p class="muted">Price not yet confirmed by the customer.</p>';
+
+  const deliveryHtml = service && service.supports_delivery
+    ? `<div class="card">
+        <h2>Delivery</h2>
+        <p><strong>Current status:</strong> <span class="status">${escapeHtml(deliveryStatus ? deliveryStatus.status : "(not started)")}</span></p>
+        ${
+          deliveryAddress
+            ? `<p>${escapeHtml(deliveryAddress.recipient_name)}, ${escapeHtml(deliveryAddress.phone)}<br>${escapeHtml(deliveryAddress.address_line1)}${deliveryAddress.address_line2 ? ", " + escapeHtml(deliveryAddress.address_line2) : ""}<br>${escapeHtml(deliveryAddress.city)}${deliveryAddress.region_state_province ? ", " + escapeHtml(deliveryAddress.region_state_province) : ""} ${escapeHtml(deliveryAddress.postal_code || "")}<br>${escapeHtml(deliveryAddress.country)}${deliveryAddress.is_international ? " (international)" : ""}</p>`
+            : '<p class="muted">No delivery address provided yet.</p>'
+        }
+        <form method="POST" action="/staff/instant-services/orders/${order.id}/delivery-quotation">
+          <label for="quoteAmount">Issue a delivery quotation (PHP)</label>
+          <input type="text" name="amountPhp" id="quoteAmount" placeholder="e.g. 350.00" required>
+          <label for="quoteNotes">Notes (shown internally only)</label>
+          <textarea name="notes" id="quoteNotes"></textarea>
+          <button type="submit">Issue quotation &amp; create payment request</button>
+        </form>
+        <form method="POST" action="/staff/instant-services/orders/${order.id}/delivery-status">
+          <label for="deliveryStatus">Set delivery status</label>
+          <select name="status" id="deliveryStatus">${DELIVERY_STATUSES.map((s) => `<option value="${s}">${s}</option>`).join("")}</select>
+          <label for="courier">Courier</label>
+          <input type="text" name="courier" id="courier" placeholder="e.g. LBC, J&amp;T">
+          <label for="trackingNumber">Tracking number</label>
+          <input type="text" name="trackingNumber" id="trackingNumber">
+          <label for="deliveryNote">Note</label>
+          <textarea name="note" id="deliveryNote"></textarea>
+          <button class="secondary" type="submit">Update delivery status</button>
+        </form>
+        <p class="muted">Quotations issued: ${quotations.map((q) => `PHP ${Number(q.amount_php_centavos / 100).toFixed(2)} (${escapeHtml(q.created_at)})`).join("; ") || "none"}</p>
+        <p class="muted">History: ${deliveryHistory.map((h) => `${escapeHtml(h.changed_at)} — ${escapeHtml(h.status)}${h.note ? `: ${escapeHtml(h.note)}` : ""}`).join("<br>") || "none"}</p>
+      </div>`
+    : "";
+
+  return staffPage(
+    `Instant Services Order ${order.id.slice(0, 8)}`,
+    `<h1>Instant Services Order</h1>
+     <div class="card">
+       <p><strong>${escapeHtml(client ? client.full_name : "")}</strong> &lt;${escapeHtml(client ? client.email : "")}&gt;</p>
+       <p><strong>Service:</strong> ${escapeHtml(service ? service.service_slug : order.service_id)}</p>
+       <p><strong>Status:</strong> <span class="status">${escapeHtml(order.status)}</span></p>
+       ${order.application_id ? `<p><a href="/staff/applications/${order.application_id}">View application</a></p>` : ""}
+       ${order.bi_form_submission_id ? `<p><a href="/staff/bi-forms/${order.bi_form_submission_id}">View questionnaire (${escapeHtml(submission ? submission.status : "")})</a></p>` : ""}
+     </div>
+     <div class="card"><h2>Price</h2>${priceHtml}</div>
+     <div class="card"><h2>Payments</h2>${paymentRows}</div>
+     ${deliveryHtml}
+     <div class="card"><h2>Order history</h2>${history.map((h) => `<p class="muted">${escapeHtml(h.changed_at)} — <span class="status">${escapeHtml(h.status)}</span>${h.note ? `: ${escapeHtml(h.note)}` : ""}</p>`).join("") || '<p class="muted">No history.</p>'}</div>`,
+    staff.email
+  );
+}
+
+// ---------------------------------------------------------------------
+// Payment verification -- the ONLY place a checkout-order payment can
+// become 'paid', mirroring staff.js's existing markPaymentPaid for the
+// same invariant on ordinary payment requests.
+// ---------------------------------------------------------------------
+
+export async function verifyOrderPayment(request, env, staff, orderId, paymentId) {
+  const order = await requireOrder(env, orderId);
+  const payment = await env.DB.prepare("SELECT * FROM payment_requests WHERE id = ? AND checkout_order_id = ?").bind(paymentId, orderId).first();
+  if (!payment) return notFound();
+  if (payment.status === "paid") return redirectTo(request, `/staff/instant-services/orders/${orderId}`);
+  if (payment.status !== "submitted") {
+    throw new HttpError(409, "This payment has no submitted proof to verify yet.");
+  }
+
+  await env.DB
+    .prepare("UPDATE payment_requests SET status = 'paid', paid_at = datetime('now'), verified_by_staff_email = ? WHERE id = ?")
+    .bind(staff.email, paymentId)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "verified_checkout_payment", targetTable: "payment_requests", targetId: paymentId });
+
+  if (payment.purpose === "checkout_service" && order.status === "awaiting_verification") {
+    await transitionOrder(env.DB, order, "paid", { staffEmail: staff.email });
+  } else if (payment.purpose === "checkout_delivery") {
+    await recordDeliveryStatus(env.DB, { orderId, status: "ready_for_shipment", staffEmail: staff.email, note: "Delivery payment verified" });
+  }
+
+  return redirectTo(request, `/staff/instant-services/orders/${orderId}`);
+}
+
+export async function rejectOrderPayment(request, env, staff, orderId, paymentId) {
+  const order = await requireOrder(env, orderId);
+  const payment = await env.DB.prepare("SELECT * FROM payment_requests WHERE id = ? AND checkout_order_id = ?").bind(paymentId, orderId).first();
+  if (!payment) return notFound();
+
+  const form = await request.formData();
+  const note = String(form.get("note") || "").trim();
+  if (!note) throw new HttpError(400, "A reason is required when rejecting a payment.");
+
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "rejected_checkout_payment", targetTable: "payment_requests", targetId: paymentId, metadata: JSON.stringify({ note }) });
+
+  if (payment.purpose === "checkout_service" && order.status === "awaiting_verification") {
+    await transitionOrder(env.DB, order, "awaiting_payment", { staffEmail: staff.email, note });
+  } else if (payment.purpose === "checkout_delivery") {
+    await recordDeliveryStatus(env.DB, { orderId, status: "awaiting_delivery_payment", staffEmail: staff.email, note });
+  }
+
+  return redirectTo(request, `/staff/instant-services/orders/${orderId}`);
+}
+
+export async function viewOrderPaymentProof(env, staff, orderId, paymentId) {
+  await requireOrder(env, orderId);
+  const payment = await env.DB.prepare("SELECT id FROM payment_requests WHERE id = ? AND checkout_order_id = ?").bind(paymentId, orderId).first();
+  if (!payment) return notFound();
+
+  const latest = await env.DB.prepare("SELECT * FROM payment_proofs WHERE payment_request_id = ? ORDER BY uploaded_at DESC LIMIT 1").bind(paymentId).first();
+  if (!latest) return notFound();
+
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "viewed_checkout_payment_proof", targetTable: "payment_proofs", targetId: latest.id });
+  return streamObject(env.CLIENT_FILES, latest.r2_key, latest.original_filename, latest.content_type);
+}
+
+// ---------------------------------------------------------------------
+// Delivery
+// ---------------------------------------------------------------------
+
+export async function setDeliveryStatus(request, env, staff, orderId) {
+  await requireOrder(env, orderId);
+  const form = await request.formData();
+  const status = String(form.get("status") || "");
+  if (!DELIVERY_STATUSES.includes(status)) throw new HttpError(400, "Unknown delivery status");
+
+  await recordDeliveryStatus(env.DB, {
+    orderId,
+    status,
+    note: String(form.get("note") || "").trim() || null,
+    courier: String(form.get("courier") || "").trim() || null,
+    trackingNumber: String(form.get("trackingNumber") || "").trim() || null,
+    staffEmail: staff.email,
+  });
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_delivery_status", targetTable: "checkout_orders", targetId: orderId, metadata: JSON.stringify({ status }) });
+
+  return redirectTo(request, `/staff/instant-services/orders/${orderId}`);
+}
+
+// Issuing a quotation creates the SEPARATE delivery payment request Part
+// VI requires (never folded into the service fee) and immediately marks
+// the order "awaiting_delivery_payment" -- the natural, single-action
+// consequence of a staff member issuing a quotation at all, not a second
+// manual step. Reuses the existing payment-request/proof infrastructure
+// via `purpose = 'checkout_delivery'`, same as the service fee.
+export async function createDeliveryQuotation(request, env, staff, orderId) {
+  const order = await requireOrder(env, orderId);
+  const form = await request.formData();
+  const amountCentavos = phpStringToCentavos(form.get("amountPhp"));
+  if (amountCentavos === null || amountCentavos <= 0) throw new HttpError(400, "A valid delivery amount is required");
+  const notes = String(form.get("notes") || "").trim() || null;
+
+  await env.DB
+    .prepare("INSERT INTO checkout_delivery_quotations (id, order_id, amount_php_centavos, notes, created_by_staff_email) VALUES (?, ?, ?, ?, ?)")
+    .bind(newId(), orderId, amountCentavos, notes, staff.email)
+    .run();
+
+  const paymentId = newId();
+  await env.DB
+    .prepare(
+      `INSERT INTO payment_requests (id, application_id, amount_php, description, checkout_order_id, purpose)
+       VALUES (?, ?, ?, ?, ?, 'checkout_delivery')`
+    )
+    .bind(paymentId, order.application_id, amountCentavos / 100, "Instant Services: delivery charge", orderId)
+    .run();
+
+  await recordDeliveryStatus(env.DB, { orderId, status: "awaiting_delivery_payment", staffEmail: staff.email, note: notes });
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "issued_delivery_quotation", targetTable: "checkout_delivery_quotations", targetId: orderId });
+
+  try {
+    const client = await env.DB.prepare("SELECT email FROM clients WHERE id = ?").bind(order.client_id).first();
+    const application = await env.DB.prepare("SELECT reference FROM applications WHERE id = ?").bind(order.application_id).first();
+    if (client && application) {
+      await sendPaymentRequestNotification(env, { to: client.email, applicationReference: application.reference, amountPhp: amountCentavos / 100 });
+    }
+  } catch (err) {
+    console.error("Delivery quotation notification email failed:", err.message);
+  }
+
+  return redirectTo(request, `/staff/instant-services/orders/${orderId}`);
+}
+
+// ---------------------------------------------------------------------
+// QR Ph payment settings
+// ---------------------------------------------------------------------
+
+export async function viewPaymentSettings(env, staff) {
+  const settings = await getCurrentPaymentSettings(env.DB);
+  const history = await getPaymentSettingsHistory(env.DB, 50);
+  const qrPh = getProvider("qr_ph");
+  const isReady = qrPh.isConfigured(settings);
+
+  const historyRows = history
+    .map(
+      (h) => `<tr>
+        <td class="muted">${escapeHtml(h.changed_at)}</td>
+        <td>${escapeHtml(h.changed_by_staff_email)}</td>
+        <td>${h.enabled ? "Enabled" : "Disabled"}</td>
+        <td class="muted">${h.qr_image_r2_key ? "Image configured" : "No image"}</td>
+      </tr>`
+    )
+    .join("");
+
+  return staffPage(
+    "Instant Services Payment Settings",
+    `<h1>Instant Services Payment Settings (QR Ph)</h1>
+     <div class="card">
+       <p><strong>Current status:</strong> ${isReady ? '<span class="status">Ready — shown to customers</span>' : '<span class="status">Not available to customers</span>'}</p>
+       <p><strong>Merchant display name:</strong> ${escapeHtml(settings.merchant_display_name || "(not set)")}</p>
+       <p><strong>Customer instructions:</strong> ${escapeHtml(settings.customer_instructions || "(not set)")}</p>
+       ${settings.qr_image_r2_key ? `<p><img src="/staff/instant-services/payment-settings/qr-image" alt="Current QR Ph image" style="max-width:220px;border:1px solid #e2e2dc;border-radius:6px;"></p>` : '<p class="muted">No QR image uploaded yet.</p>'}
+     </div>
+     <div class="card">
+       <h2>Update settings</h2>
+       ${staff.role === "admin" ? `
+       <form method="POST" action="/staff/instant-services/payment-settings" enctype="multipart/form-data">
+         <label for="qrImage">Replace QR Ph image (PNG or JPEG)</label>
+         <input type="file" name="qrImage" id="qrImage" accept="image/png,image/jpeg">
+         <label for="merchantDisplayName">Merchant display name</label>
+         <input type="text" name="merchantDisplayName" id="merchantDisplayName" value="${escapeHtml(settings.merchant_display_name || "")}">
+         <label for="customerInstructions">Customer instructions</label>
+         <textarea name="customerInstructions" id="customerInstructions">${escapeHtml(settings.customer_instructions || "")}</textarea>
+         <label for="enabled"><input type="checkbox" name="enabled" id="enabled" style="width:auto;display:inline-block;" ${settings.enabled ? "checked" : ""}> Enabled — show QR Ph to customers once an image is configured</label>
+         <button type="submit">Save payment settings</button>
+       </form>` : '<p class="muted">Only an administrator can change payment settings.</p>'}
+     </div>
+     <div class="card">
+       <h2>Audit trail</h2>
+       <table><tr><th>Changed</th><th>By</th><th>Enabled</th><th>Image</th></tr>${historyRows || '<tr><td colspan="4" class="muted">No changes recorded yet.</td></tr>'}</table>
+     </div>`,
+    staff.email
+  );
+}
+
+export async function updatePaymentSettings(request, env, staff) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const form = await request.formData();
+
+  const changes = {
+    merchantDisplayName: String(form.get("merchantDisplayName") || "").trim() || null,
+    customerInstructions: String(form.get("customerInstructions") || "").trim() || null,
+    enabled: form.get("enabled") === "on" || form.get("enabled") === "true",
+  };
+
+  const file = form.get("qrImage");
+  if (file && typeof file.arrayBuffer === "function" && file.size > 0) {
+    if (file.size > 5 * 1024 * 1024) throw new HttpError(413, "QR image must be under 5MB");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const contentType = sniffContentType(bytes);
+    if (!contentType || !["image/png", "image/jpeg"].includes(contentType)) {
+      throw new HttpError(415, "QR image must be a real PNG or JPEG file");
+    }
+    const key = `config/qr-ph-instant-services-${newId()}.${contentType === "image/png" ? "png" : "jpg"}`;
+    await env.CLIENT_FILES.put(key, bytes, { httpMetadata: { contentType } });
+    changes.qrImageR2Key = key;
+  }
+
+  const updated = await recordPaymentSettingsChange(env.DB, { changedByStaffEmail: staff.email, changes });
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: "updated_instant_services_payment_settings",
+    targetTable: "checkout_payment_settings_log",
+    metadata: JSON.stringify({ enabled: updated.enabled, hasImage: !!updated.qr_image_r2_key }),
+  });
+
+  return redirectTo(request, "/staff/instant-services/payment-settings/");
+}
+
+export async function viewPaymentSettingsQrImage(env, staff) {
+  const settings = await getCurrentPaymentSettings(env.DB);
+  if (!settings.qr_image_r2_key) return notFound();
+  const response = await streamObject(env.CLIENT_FILES, settings.qr_image_r2_key, "qr-ph-instant-services.png", "image/png");
+  if (!response) return notFound();
+  return response;
+}
+
+// ---------------------------------------------------------------------
+// Catalogue management
+// ---------------------------------------------------------------------
+
+export async function listCatalogue(env, staff) {
+  const services = await listAllServicesForStaff(env.DB);
+  const rows = await Promise.all(
+    services.map(async (s) => {
+      const i18n = await getServiceI18n(env.DB, s.id, "en");
+      return `<tr>
+        <td><a class="ref" href="/staff/instant-services/catalogue/${s.id}">${escapeHtml(i18n ? i18n.title : s.service_slug)}</a></td>
+        <td class="muted">${escapeHtml(s.service_slug)}</td>
+        <td class="muted">${escapeHtml(s.bi_form_id)}</td>
+        <td>${s.active ? '<span class="status">Active</span>' : '<span class="muted">Inactive</span>'}</td>
+      </tr>`;
+    })
+  );
+  return staffPage(
+    "Instant Services Catalogue",
+    `<h1>Instant Services Catalogue</h1>
+     <p><a href="/staff/instant-services/catalogue/new">+ Add a new service</a></p>
+     <table>
+       <tr><th>Title</th><th>Slug</th><th>BI Form</th><th>Status</th></tr>
+       ${rows.join("") || '<tr><td colspan="4" class="muted">No catalogue services yet.</td></tr>'}
+     </table>`,
+    staff.email
+  );
+}
+
+function languageContentFields(i18nByLang) {
+  return CANONICAL_LANGUAGES
+    .map((lang) => {
+      const row = i18nByLang[lang] || {};
+      return `<fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
+        <legend>${escapeHtml(LANGUAGE_LABELS[lang])}${lang === "en" ? " (required)" : " (optional — falls back to English until translated)"}</legend>
+        <label for="title-${lang}">Title</label>
+        <input type="text" name="title_${lang}" id="title-${lang}" value="${escapeHtml(row.title || "")}" ${lang === "en" ? "required" : ""}>
+        <label for="desc-${lang}">Short description</label>
+        <textarea name="shortDescription_${lang}" id="desc-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.short_description || "")}</textarea>
+        <label for="elig-${lang}">Eligibility</label>
+        <textarea name="eligibilityText_${lang}" id="elig-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.eligibility_text || "")}</textarea>
+      </fieldset>`;
+    })
+    .join("");
+}
+
+function priceComponentFields(components) {
+  const byType = {};
+  for (const c of components) byType[c.component_type] = c;
+  return `
+    <label for="serviceFeeLabel">FIS service fee — label</label>
+    <input type="text" name="serviceFeeLabel" id="serviceFeeLabel" value="${escapeHtml(byType.service_fee ? byType.service_fee.label : "FIS Service Fee")}">
+    <label for="serviceFeeAmount">FIS service fee — amount (PHP)</label>
+    <input type="text" name="serviceFeeAmount" id="serviceFeeAmount" value="${byType.service_fee ? (byType.service_fee.amount_php_centavos / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00" required>
+    <label for="govFeeLabel">Government fee — label (optional)</label>
+    <input type="text" name="govFeeLabel" id="govFeeLabel" value="${escapeHtml(byType.government_fee ? byType.government_fee.label : "Government Fee")}">
+    <label for="govFeeAmount">Government fee — amount (PHP, optional)</label>
+    <input type="text" name="govFeeAmount" id="govFeeAmount" value="${byType.government_fee ? (byType.government_fee.amount_php_centavos / 100).toFixed(2) : ""}">
+    <label for="otherFeeLabel">Other charge — label (optional)</label>
+    <input type="text" name="otherFeeLabel" id="otherFeeLabel" value="${escapeHtml(byType.other ? byType.other.label : "Other")}">
+    <label for="otherFeeAmount">Other charge — amount (PHP, optional)</label>
+    <input type="text" name="otherFeeAmount" id="otherFeeAmount" value="${byType.other ? (byType.other.amount_php_centavos / 100).toFixed(2) : ""}">`;
+}
+
+export async function newServiceForm(env, staff) {
+  return staffPage(
+    "Add Instant Services Catalogue Entry",
+    `<h1>Add a Service</h1>
+     <form method="POST" action="/staff/instant-services/catalogue">
+       <label for="serviceSlug">Service slug (matches the existing public service pages)</label>
+       <input type="text" name="serviceSlug" id="serviceSlug" required>
+       <label for="biFormId">BI Form ID (must already exist in the approved Forms Library)</label>
+       <input type="text" name="biFormId" id="biFormId" required>
+       <label for="displayOrder">Display order</label>
+       <input type="text" name="displayOrder" id="displayOrder" value="0">
+       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" checked> This service involves physical document delivery</label>
+       <h2>Price</h2>
+       ${priceComponentFields([])}
+       <h2>Customer-facing content</h2>
+       ${languageContentFields({})}
+       <p class="muted">New services are created inactive. Activate only once the price, content, and BI Form mapping have been reviewed and approved.</p>
+       <button type="submit">Create (inactive)</button>
+     </form>`,
+    staff.email
+  );
+}
+
+function parsePriceComponentsFromForm(form) {
+  const components = [];
+  const serviceFee = phpStringToCentavos(form.get("serviceFeeAmount"));
+  if (serviceFee === null || serviceFee <= 0) throw new HttpError(400, "A valid FIS service fee amount is required");
+  components.push({ type: "service_fee", label: String(form.get("serviceFeeLabel") || "FIS Service Fee").trim(), amountPhpCentavos: serviceFee });
+
+  const govFeeRaw = form.get("govFeeAmount");
+  if (govFeeRaw && String(govFeeRaw).trim()) {
+    const govFee = phpStringToCentavos(govFeeRaw);
+    if (govFee === null || govFee < 0) throw new HttpError(400, "Invalid government fee amount");
+    if (govFee > 0) components.push({ type: "government_fee", label: String(form.get("govFeeLabel") || "Government Fee").trim(), amountPhpCentavos: govFee });
+  }
+
+  const otherFeeRaw = form.get("otherFeeAmount");
+  if (otherFeeRaw && String(otherFeeRaw).trim()) {
+    const otherFee = phpStringToCentavos(otherFeeRaw);
+    if (otherFee === null || otherFee < 0) throw new HttpError(400, "Invalid other charge amount");
+    if (otherFee > 0) components.push({ type: "other", label: String(form.get("otherFeeLabel") || "Other").trim(), amountPhpCentavos: otherFee });
+  }
+
+  return components;
+}
+
+async function saveLanguageContent(db, serviceId, form) {
+  for (const lang of CANONICAL_LANGUAGES) {
+    const title = String(form.get(`title_${lang}`) || "").trim();
+    const shortDescription = String(form.get(`shortDescription_${lang}`) || "").trim();
+    const eligibilityText = String(form.get(`eligibilityText_${lang}`) || "").trim();
+    if (lang === "en" && (!title || !shortDescription || !eligibilityText)) {
+      throw new HttpError(400, "English title, short description, and eligibility text are required.");
+    }
+    // A language with nothing typed in yet is simply skipped -- the
+    // customer-facing catalogue read (lib/checkout.js getServiceI18n)
+    // already falls back to English for any language with no row, so
+    // this never produces a blank display, only an untranslated one.
+    if (!title && !shortDescription && !eligibilityText) continue;
+    await upsertServiceI18n(db, serviceId, lang, { title, shortDescription, eligibilityText, noticesText: null });
+  }
+}
+
+export async function createServiceHandler(request, env, staff) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const form = await request.formData();
+  const serviceSlug = String(form.get("serviceSlug") || "").trim();
+  const biFormId = String(form.get("biFormId") || "").trim();
+  if (!serviceSlug || !biFormId) throw new HttpError(400, "Service slug and BI Form ID are required");
+
+  const components = parsePriceComponentsFromForm(form);
+
+  const service = await createService(env.DB, {
+    serviceSlug,
+    biFormId,
+    supportsDelivery: form.get("supportsDelivery") === "on",
+    displayOrder: Number(form.get("displayOrder")) || 0,
+  });
+  await replacePriceComponents(env.DB, service.id, components);
+  await saveLanguageContent(env.DB, service.id, form);
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: service.id });
+
+  return redirectTo(request, `/staff/instant-services/catalogue/${service.id}`);
+}
+
+export async function viewService(env, staff, serviceId) {
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service) return notFound();
+  const components = await getPriceComponents(env.DB, serviceId);
+  const i18nByLang = {};
+  for (const lang of CANONICAL_LANGUAGES) {
+    const row = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?").bind(serviceId, lang).first();
+    if (row) i18nByLang[lang] = row;
+  }
+
+  return staffPage(
+    `Catalogue: ${service.service_slug}`,
+    `<h1>${escapeHtml(service.service_slug)}</h1>
+     <div class="card">
+       <p><strong>Status:</strong> ${service.active ? '<span class="status">Active</span>' : '<span class="muted">Inactive</span>'}</p>
+       ${staff.role === "admin" ? `<form method="POST" action="/staff/instant-services/catalogue/${serviceId}/active"><button class="${service.active ? "danger" : ""}" type="submit">${service.active ? "Deactivate" : "Activate"}</button></form>` : '<p class="muted">Only an administrator can activate or deactivate a service.</p>'}
+     </div>
+     <form method="POST" action="/staff/instant-services/catalogue/${serviceId}">
+       <label for="serviceSlug">Service slug</label>
+       <input type="text" name="serviceSlug" id="serviceSlug" value="${escapeHtml(service.service_slug)}" required>
+       <label for="biFormId">BI Form ID</label>
+       <input type="text" name="biFormId" id="biFormId" value="${escapeHtml(service.bi_form_id)}" required>
+       <label for="displayOrder">Display order</label>
+       <input type="text" name="displayOrder" id="displayOrder" value="${service.display_order}">
+       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${service.supports_delivery ? "checked" : ""}> This service involves physical document delivery</label>
+       <h2>Price</h2>
+       ${priceComponentFields(components)}
+       <h2>Customer-facing content</h2>
+       ${languageContentFields(i18nByLang)}
+       <button type="submit">Save changes</button>
+     </form>`,
+    staff.email
+  );
+}
+
+export async function updateServiceHandler(request, env, staff, serviceId) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service) return notFound();
+
+  const form = await request.formData();
+  const serviceSlug = String(form.get("serviceSlug") || "").trim();
+  const biFormId = String(form.get("biFormId") || "").trim();
+  if (!serviceSlug || !biFormId) throw new HttpError(400, "Service slug and BI Form ID are required");
+
+  const components = parsePriceComponentsFromForm(form);
+
+  await updateServiceMeta(env.DB, serviceId, {
+    serviceSlug,
+    biFormId,
+    supportsDelivery: form.get("supportsDelivery") === "on",
+    displayOrder: Number(form.get("displayOrder")) || 0,
+  });
+  await replacePriceComponents(env.DB, serviceId, components);
+  await saveLanguageContent(env.DB, serviceId, form);
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
+
+  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+}
+
+export async function toggleServiceActive(request, env, staff, serviceId) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service) return notFound();
+
+  await setServiceActive(env.DB, serviceId, !service.active);
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: service.active ? "deactivated_instant_services_catalogue_entry" : "activated_instant_services_catalogue_entry",
+    targetTable: "checkout_services",
+    targetId: serviceId,
+  });
+
+  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+}

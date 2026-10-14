@@ -38,3 +38,17 @@ export function sumCentavos(components) {
 export function isValidCentavos(value) {
   return Number.isInteger(value) && value >= 0;
 }
+
+// Parses a staff-typed peso amount (e.g. "5,000.00" or "5000") back into
+// integer centavos for storage -- the one place a human-entered peso
+// string is converted TO the stored representation (the reverse of
+// centavosToPhpString above). Returns null for anything that isn't a
+// valid non-negative amount, so callers can reject it outright rather
+// than silently storing a wrong price.
+export function phpStringToCentavos(str) {
+  const cleaned = String(str ?? "").replace(/,/g, "").trim();
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n * 100);
+}

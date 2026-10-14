@@ -42,6 +42,24 @@ import {
   cancelBiForm,
   downloadBiFormDocument,
 } from "./staffBiForms.js";
+import {
+  listOrders as listCheckoutOrders,
+  viewOrder as viewCheckoutOrder,
+  verifyOrderPayment,
+  rejectOrderPayment,
+  viewOrderPaymentProof,
+  setDeliveryStatus,
+  createDeliveryQuotation,
+  viewPaymentSettings,
+  updatePaymentSettings,
+  viewPaymentSettingsQrImage,
+  listCatalogue,
+  newServiceForm,
+  createServiceHandler,
+  viewService,
+  updateServiceHandler,
+  toggleServiceActive,
+} from "./staffCheckout.js";
 
 // Channels FIS can actually use today for a client's durable Preferred
 // Contact Channel (Phase 3.1 correction, Section 20-24). Same allowlist as
@@ -210,6 +228,38 @@ async function dispatch(request, env, url) {
   if (cancelBiFormMatch && method === "POST") return cancelBiForm(request, env, staff, cancelBiFormMatch[1]);
   const biFormDocDlMatch = path.match(/^\/bi-forms\/([^/]+)\/documents\/([^/]+)\/download$/);
   if (biFormDocDlMatch && method === "GET") return downloadBiFormDocument(env, staff, biFormDocDlMatch[1], biFormDocDlMatch[2]);
+
+  // Instant Services (Part VII §20) -- orders, delivery, QR Ph settings,
+  // and catalogue management. A self-contained module (staffCheckout.js),
+  // same pattern as staffBiForms.js above.
+  if (path === "/instant-services/orders/" && method === "GET") return listCheckoutOrders(env, staff, url);
+  const orderMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/?$/);
+  if (orderMatch && method === "GET") return viewCheckoutOrder(env, staff, orderMatch[1]);
+
+  const orderVerifyMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/payments\/([^/]+)\/verify$/);
+  if (orderVerifyMatch && method === "POST") return verifyOrderPayment(request, env, staff, orderVerifyMatch[1], orderVerifyMatch[2]);
+  const orderRejectMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/payments\/([^/]+)\/reject$/);
+  if (orderRejectMatch && method === "POST") return rejectOrderPayment(request, env, staff, orderRejectMatch[1], orderRejectMatch[2]);
+  const orderProofMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/payments\/([^/]+)\/proof$/);
+  if (orderProofMatch && method === "GET") return viewOrderPaymentProof(env, staff, orderProofMatch[1], orderProofMatch[2]);
+
+  const deliveryStatusMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/delivery-status$/);
+  if (deliveryStatusMatch && method === "POST") return setDeliveryStatus(request, env, staff, deliveryStatusMatch[1]);
+  const deliveryQuoteMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/delivery-quotation$/);
+  if (deliveryQuoteMatch && method === "POST") return createDeliveryQuotation(request, env, staff, deliveryQuoteMatch[1]);
+
+  if (path === "/instant-services/payment-settings/" && method === "GET") return viewPaymentSettings(env, staff);
+  if (path === "/instant-services/payment-settings" && method === "POST") return updatePaymentSettings(request, env, staff);
+  if (path === "/instant-services/payment-settings/qr-image" && method === "GET") return viewPaymentSettingsQrImage(env, staff);
+
+  if (path === "/instant-services/catalogue/" && method === "GET") return listCatalogue(env, staff);
+  if (path === "/instant-services/catalogue/new" && method === "GET") return newServiceForm(env, staff);
+  if (path === "/instant-services/catalogue" && method === "POST") return createServiceHandler(request, env, staff);
+  const catalogueMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/?$/);
+  if (catalogueMatch && method === "GET") return viewService(env, staff, catalogueMatch[1]);
+  if (catalogueMatch && method === "POST") return updateServiceHandler(request, env, staff, catalogueMatch[1]);
+  const catalogueActiveMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/active$/);
+  if (catalogueActiveMatch && method === "POST") return toggleServiceActive(request, env, staff, catalogueActiveMatch[1]);
 
   return notFound();
 }
