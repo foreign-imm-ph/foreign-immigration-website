@@ -45,10 +45,31 @@ export async function handleGetOrder(request, env, orderId) {
 
   const submission = order.bi_form_submission_id ? await getSubmissionById(env.DB, order.bi_form_submission_id) : null;
   const deliveryAddress = await env.DB.prepare("SELECT * FROM checkout_delivery_addresses WHERE order_id = ?").bind(order.id).first();
-  const payment = await env.DB
-    .prepare("SELECT id, amount_php, status, created_at, submitted_at, paid_at FROM payment_requests WHERE checkout_order_id = ? ORDER BY created_at DESC LIMIT 1")
+  const paymentRow = await env.DB
+    .prepare("SELECT id, application_id, amount_php, purpose, status, created_at, submitted_at, paid_at FROM payment_requests WHERE checkout_order_id = ? ORDER BY created_at DESC LIMIT 1")
     .bind(order.id)
     .first();
+
+  // The payment screen needs the staff-configured merchant name/
+  // instructions on every load (a page refresh, a re-visit from the
+  // confirmation email), not only right after confirm-and-pay -- so this
+  // is attached here, from the CURRENT settings, rather than snapshotted
+  // once onto the payment_requests row itself.
+  let payment = null;
+  if (paymentRow) {
+    const settings = await getCurrentPaymentSettings(env.DB);
+    payment = {
+      id: paymentRow.id,
+      applicationId: paymentRow.application_id,
+      amountPhp: paymentRow.amount_php,
+      purpose: paymentRow.purpose,
+      status: paymentRow.status,
+      submittedAt: paymentRow.submitted_at,
+      paidAt: paymentRow.paid_at,
+      merchantDisplayName: settings.merchant_display_name,
+      instructions: settings.customer_instructions,
+    };
+  }
 
   return json({
     order: {
@@ -62,7 +83,7 @@ export async function handleGetOrder(request, env, orderId) {
     service: shaped,
     submissionStatus: submission ? submission.status : null,
     deliveryAddress: deliveryAddress || null,
-    payment: payment || null,
+    payment,
   });
 }
 

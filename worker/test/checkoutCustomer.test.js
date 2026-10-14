@@ -92,14 +92,14 @@ describe("Instant Services: authenticated order routes", () => {
       isInternational: false,
     };
     const resp = await worker.fetch(
-      authedRequest(`/api/instant-services/orders/${order.id}/delivery-address`, { method: "PUT", cookie, body: address }),
+      authedRequest(`/api/instant-services/orders/${order.id}/delivery-address`, { method: "POST", cookie, body: address }),
       env
     );
     expect(resp.status).toBe(200);
 
     const updated = await worker.fetch(
       authedRequest(`/api/instant-services/orders/${order.id}/delivery-address`, {
-        method: "PUT",
+        method: "POST",
         cookie,
         body: { ...address, city: "Taguig" },
       }),
@@ -121,7 +121,7 @@ describe("Instant Services: authenticated order routes", () => {
 
     const resp = await worker.fetch(
       authedRequest(`/api/instant-services/orders/${order.id}/delivery-address`, {
-        method: "PUT",
+        method: "POST",
         cookie,
         body: { recipientName: "X", phone: "X", country: "X", city: "X", addressLine1: "X" },
       }),

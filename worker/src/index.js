@@ -150,7 +150,7 @@ async function route(request, env, path, method, url) {
   if (orderAppMatch && method === "POST") return handleStartApplication(request, env, orderAppMatch[1]);
 
   const orderAddressMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/delivery-address$/);
-  if (orderAddressMatch && method === "PUT") return handleSetDeliveryAddress(request, env, orderAddressMatch[1]);
+  if (orderAddressMatch && method === "POST") return handleSetDeliveryAddress(request, env, orderAddressMatch[1]);
 
   const orderConfirmMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/confirm-and-pay$/);
   if (orderConfirmMatch && method === "POST") return handleConfirmAndPay(request, env, orderConfirmMatch[1]);
