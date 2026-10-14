@@ -77,6 +77,23 @@ export async function getAccessIdentity(request, env) {
 // Cross-checks the Access-verified email against our own staff allow-list —
 // defense in depth, per the plan's two-independent-checks approach.
 export async function requireStaff(request, env) {
+  // DEV-ONLY local preview escape hatch -- never reachable in production.
+  // Cloudflare Access only exists once this Worker is actually deployed
+  // behind a real Access application; a local `wrangler dev` session has
+  // no Access tenant to verify against at all, so /staff/* would be
+  // permanently unreachable in local preview without this. Gated on a var
+  // that can only come from a local .dev.vars file (gitignored, never
+  // read from wrangler.toml or a deployed Worker's bindings) -- nobody
+  // can reach this path by sending a request, only by controlling the
+  // Worker's own local environment file. Do not ever add
+  // DEV_STAFF_BYPASS_EMAIL to wrangler.toml or a deployed environment.
+  if (env.DEV_STAFF_BYPASS_EMAIL) {
+    const staff = await env.DB.prepare("SELECT * FROM staff WHERE email = ? AND active = 1")
+      .bind(env.DEV_STAFF_BYPASS_EMAIL.toLowerCase())
+      .first();
+    return staff || null;
+  }
+
   const email = await getAccessIdentity(request, env);
   if (!email) return null;
   const staff = await env.DB.prepare("SELECT * FROM staff WHERE email = ? AND active = 1")

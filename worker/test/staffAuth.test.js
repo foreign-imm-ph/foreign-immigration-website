@@ -137,4 +137,24 @@ describe("staff authentication (Cloudflare Access JWT verification + allow-list)
     const resp = await worker.fetch(new Request("https://example.test/staff/", { headers: { "Cf-Access-Jwt-Assertion": jwt } }), env);
     expect(resp.status).toBe(200);
   });
+
+  it("DEV_STAFF_BYPASS_EMAIL resolves an active allow-listed staff member with no Access JWT at all, but only when that var is actually set", async () => {
+    const staffRow = await createTestStaff({ email: "dev-bypass-staff@foreignimmigration.ph" });
+    const req = new Request("https://example.test/");
+
+    // Without the var set, a request with no JWT is still rejected --
+    // this dev-only path must never be reachable by accident.
+    const resolvedWithoutVar = await requireStaff(req, env);
+    expect(resolvedWithoutVar).toBeNull();
+
+    const resolved = await requireStaff(req, { ...env, DEV_STAFF_BYPASS_EMAIL: staffRow.email });
+    expect(resolved).not.toBeNull();
+    expect(resolved.id).toBe(staffRow.id);
+  });
+
+  it("DEV_STAFF_BYPASS_EMAIL set to an unknown or deactivated email resolves to null, same as the real Access path", async () => {
+    const req = new Request("https://example.test/");
+    const resolved = await requireStaff(req, { ...env, DEV_STAFF_BYPASS_EMAIL: "nobody-here@foreignimmigration.ph" });
+    expect(resolved).toBeNull();
+  });
 });
