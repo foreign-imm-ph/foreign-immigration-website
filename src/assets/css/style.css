@@ -814,6 +814,30 @@ summary:focus-visible {
   margin-bottom: 1rem;
 }
 
+/* The itemized price breakdown on the Instant Services review/payment
+   screens (instant-services-apply.js) -- a plain, legible table, no
+   strikethrough/discount styling, consistent with "a plain stated price"
+   elsewhere in this feature. */
+.instant-services-price-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+}
+
+.instant-services-price-table td {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(13, 61, 37, 0.12);
+}
+
+.instant-services-price-table td:last-child {
+  text-align: right;
+}
+
+.instant-services-price-table tr:last-child td {
+  border-bottom: none;
+  padding-top: 0.9rem;
+}
+
 /* Feature split (Airport VIP homepage feature) */
 
 .feature-split {
