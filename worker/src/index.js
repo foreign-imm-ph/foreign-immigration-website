@@ -19,6 +19,14 @@ import {
   handleDownloadBiFormDocument,
 } from "./routes/biFormsCustomer.js";
 import { handleListCatalogue, handleGetCatalogueService, handleBeginCheckout } from "./routes/checkoutPublic.js";
+import {
+  handleGetOrder,
+  handleStartApplication,
+  handleSetDeliveryAddress,
+  handleConfirmAndPay,
+  handleGetOrderHistory,
+  handleGetQrPhImage as handleGetInstantServicesQrPhImage,
+} from "./routes/checkoutCustomer.js";
 
 // Requests that change state must come from our own site — checked once,
 // here, rather than repeated in every handler.
@@ -128,6 +136,30 @@ async function route(request, env, path, method, url) {
   const catalogueItemMatch = path.match(/^\/api\/instant-services\/catalogue\/([^/]+)$/);
   if (catalogueItemMatch && method === "GET") return handleGetCatalogueService(request, env, url, catalogueItemMatch[1]);
   if (path === "/api/instant-services/begin" && method === "POST") return handleBeginCheckout(request, env);
+
+  // Instant Services -- authenticated, order-scoped routes. The
+  // questionnaire itself and payment-proof upload are deliberately NOT
+  // duplicated here: once handleStartApplication has created the
+  // application/submission rows, the existing /api/bi-forms/:id/... and
+  // /api/applications/:id/payments/:id/proof routes above already work
+  // unchanged against them.
+  const orderMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)$/);
+  if (orderMatch && method === "GET") return handleGetOrder(request, env, orderMatch[1]);
+
+  const orderAppMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/application$/);
+  if (orderAppMatch && method === "POST") return handleStartApplication(request, env, orderAppMatch[1]);
+
+  const orderAddressMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/delivery-address$/);
+  if (orderAddressMatch && method === "PUT") return handleSetDeliveryAddress(request, env, orderAddressMatch[1]);
+
+  const orderConfirmMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/confirm-and-pay$/);
+  if (orderConfirmMatch && method === "POST") return handleConfirmAndPay(request, env, orderConfirmMatch[1]);
+
+  const orderHistoryMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/history$/);
+  if (orderHistoryMatch && method === "GET") return handleGetOrderHistory(request, env, orderHistoryMatch[1]);
+
+  const orderQrMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/qr-ph-image$/);
+  if (orderQrMatch && method === "GET") return handleGetInstantServicesQrPhImage(request, env, orderQrMatch[1]);
 
   return null;
 }

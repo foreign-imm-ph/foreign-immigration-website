@@ -13,6 +13,15 @@
 // generic `_centavos`, so a future second currency is an additive column,
 // not a silent reinterpretation of an existing one.
 
+// Numeric (not display-string) conversion -- the one place centavos
+// become a peso float, for writing into the existing payment_requests
+// table's `amount_php REAL` column (0001_init.sql, predates this
+// feature's integer-centavo convention and is reused as-is rather than
+// altered).
+export function centavosToPhp(centavos) {
+  return Math.round(Number(centavos) || 0) / 100;
+}
+
 export function centavosToPhpString(centavos) {
   const n = Number(centavos) || 0;
   const sign = n < 0 ? "-" : "";

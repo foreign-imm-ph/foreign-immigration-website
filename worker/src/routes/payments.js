@@ -4,6 +4,7 @@ import { readAndValidateUpload, paymentProofKey, streamObject, HttpError } from 
 import { newId } from "../lib/crypto.js";
 import { json } from "../lib/http.js";
 import { getPaymentDiscrepancyWarning, getTranslatedDescriptionHeading } from "../lib/clientLocaleStrings.js";
+import { getOrderById, transitionOrder } from "../lib/checkout.js";
 
 // No gateway anywhere in this file. A client action can only ever move a
 // payment_request from 'pending' to 'submitted' — never to 'paid'. Only a
@@ -106,6 +107,19 @@ export async function handleUploadPaymentProof(request, env, applicationId, paym
   )
     .bind(paymentId)
     .run();
+
+  // Instant Services: a payment tied to a checkout order also advances
+  // that order's own status, so the Staff Portal's Instant Services
+  // Orders queue reflects "awaiting verification" the moment a proof
+  // lands, rather than staying at "awaiting_payment" until some other
+  // action notices. Every pre-existing (non-checkout) payment request has
+  // checkout_order_id = NULL and is entirely unaffected by this branch.
+  if (payment.checkout_order_id) {
+    const order = await getOrderById(env.DB, payment.checkout_order_id);
+    if (order && order.status === "awaiting_payment") {
+      await transitionOrder(env.DB, order, "awaiting_verification");
+    }
+  }
 
   return json({ status: "submitted" }, { status: 201 });
 }
