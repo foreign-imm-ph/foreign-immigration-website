@@ -169,6 +169,26 @@ describe("Staff Instant Services: orders", () => {
     expect(deliveryStatus.courier).toBe("LBC");
   });
 
+  it("entering a tracking number never auto-marks an order delivered -- staff must explicitly choose that status", async () => {
+    const staff = await createTestStaff();
+    const service = await createTestCheckoutService({ supportsDelivery: 1 });
+    const { order } = await createOrderAwaitingVerification(service);
+
+    const resp = await staffRequest(`/staff/instant-services/orders/${order.id}/delivery-status`, staff, {
+      method: "POST",
+      body: formBody({ status: "dispatched", trackingNumber: "LBC123456789", courier: "LBC" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(resp.status).toBe(303);
+
+    const deliveryStatus = await env.DB
+      .prepare("SELECT status, tracking_number FROM checkout_delivery_status_history WHERE order_id = ? ORDER BY changed_at DESC LIMIT 1")
+      .bind(order.id)
+      .first();
+    expect(deliveryStatus.tracking_number).toBe("LBC123456789");
+    expect(deliveryStatus.status).toBe("dispatched"); // not auto-upgraded to "delivered" just because a tracking number was entered
+  });
+
   it("rejects an unknown delivery status", async () => {
     const staff = await createTestStaff();
     const service = await createTestCheckoutService({ supportsDelivery: 1 });
