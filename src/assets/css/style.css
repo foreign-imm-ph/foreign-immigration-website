@@ -1079,6 +1079,17 @@ summary:focus-visible {
   margin-top: 2.5rem;
 }
 
+/* The Instant Services variant of this panel, inserted near the top of
+   an eligible service page (not just at the bottom) -- a thin gold top
+   border distinguishes it from the page's existing bottom-of-page
+   enquiry CTA, echoing the same accent already used for .tag--available
+   and the nav pill, without introducing a new color. */
+.service-cta--instant {
+  border-top: 3px solid var(--color-gold);
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+}
+
 .service-cta h2 { margin: 0 0 0.5rem; }
 .service-cta p { color: var(--color-grey); }
 .service-cta p:last-child { margin-bottom: 0; }

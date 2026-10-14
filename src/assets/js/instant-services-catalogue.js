@@ -1,12 +1,17 @@
 (function () {
   "use strict";
 
-  // Renders the live Instant Services catalogue into any container with
-  // [data-instant-services-list] on the page -- used by both the
-  // homepage's compact widget (data-limit="3") and the full catalogue
-  // page (no limit). Visible strings only; the catalogue data itself
-  // always comes from the Worker (server-authoritative price/eligibility
-  // text), never hardcoded here -- see worker/src/routes/checkoutPublic.js.
+  // Renders the live Instant Services catalogue in two places on this
+  // site: (1) any container with [data-instant-services-list] (the
+  // homepage's compact widget and the full /instant-services/ catalogue
+  // page), and (2) a single-service CTA block on a service-detail page
+  // via [data-instant-service-cta="<serviceSlug>"] -- e.g. the motions/
+  // blacklist page showing its own eligibility/price/CTA inline, while
+  // leaving that page's existing "Send an Enquiry" path untouched for
+  // any visitor whose situation isn't the fixed/fast-path one. Visible
+  // strings only; the catalogue data itself always comes from the Worker
+  // (server-authoritative price/eligibility text), never hardcoded here
+  // -- see worker/src/routes/checkoutPublic.js.
   var MESSAGES = {
     en: {
       loading: "Loading current Instant Services...",
@@ -15,6 +20,7 @@
       from: "From",
       badge: "Instant Services Available",
       cta: "Apply & Pay Now",
+      detailHeading: "Need This Done Today?",
     },
     "zh-CN": {
       loading: "正在加载当前可办理的即时服务……",
@@ -23,6 +29,7 @@
       from: "起价",
       badge: "可办理即时服务",
       cta: "申请并付款",
+      detailHeading: "需要今天就办理吗？",
     },
     "zh-Hant": {
       loading: "正在載入目前可辦理的即時服務……",
@@ -31,6 +38,7 @@
       from: "起價",
       badge: "可辦理即時服務",
       cta: "申請並付款",
+      detailHeading: "需要今天就辦理嗎？",
     },
     ko: {
       loading: "현재 이용 가능한 즉시 서비스를 불러오는 중입니다...",
@@ -39,6 +47,7 @@
       from: "최소",
       badge: "즉시 서비스 이용 가능",
       cta: "신청 및 결제하기",
+      detailHeading: "오늘 바로 처리하고 싶으신가요?",
     },
     ja: {
       loading: "現在ご利用いただける即時サービスを読み込んでいます...",
@@ -47,6 +56,7 @@
       from: "から",
       badge: "即時サービス利用可能",
       cta: "申請して支払う",
+      detailHeading: "今すぐ手続きを進めたい方へ",
     },
     vi: {
       loading: "Đang tải các Dịch Vụ Nhanh hiện có...",
@@ -55,14 +65,35 @@
       from: "Từ",
       badge: "Có Dịch Vụ Nhanh",
       cta: "Đăng Ký & Thanh Toán Ngay",
+      detailHeading: "Cần hoàn tất ngay hôm nay?",
     },
   };
 
   var containers = document.querySelectorAll("[data-instant-services-list]");
-  if (!containers.length) return;
+  var detailBlocks = document.querySelectorAll("[data-instant-service-cta]");
+  if (!containers.length && !detailBlocks.length) return;
 
   var pageLang = document.documentElement.lang || "en";
   var strings = MESSAGES[pageLang] || MESSAGES.en;
+
+  // Fetched once per page load and shared by every container/detail block
+  // on the page -- a service-detail page only ever has one such block,
+  // but this avoids a second identical request if that ever changes.
+  var catalogueRequest = null;
+  function getCatalogue() {
+    if (!catalogueRequest) {
+      catalogueRequest = window
+        .portalFetch("/api/instant-services/catalogue?lang=" + encodeURIComponent(pageLang), { method: "GET" })
+        .then(function (resp) {
+          if (!resp.ok) return Promise.reject(new Error("request_failed"));
+          return resp.json();
+        })
+        .then(function (data) {
+          return (data && data.services) || [];
+        });
+    }
+    return catalogueRequest;
+  }
 
   function formatPhp(centavos) {
     var pesos = Math.round(Number(centavos) || 0) / 100;
@@ -101,14 +132,8 @@
     container.textContent = strings.loading;
     container.setAttribute("aria-live", "polite");
 
-    window
-      .portalFetch("/api/instant-services/catalogue?lang=" + encodeURIComponent(pageLang), { method: "GET" })
-      .then(function (resp) {
-        if (!resp.ok) return Promise.reject(new Error("request_failed"));
-        return resp.json();
-      })
-      .then(function (data) {
-        var services = (data && data.services) || [];
+    getCatalogue()
+      .then(function (services) {
         if (limit) services = services.slice(0, limit);
 
         if (!services.length) {
@@ -136,6 +161,39 @@
         } else {
           container.textContent = strings.error;
         }
+      });
+  });
+
+  // Service-detail CTA: stays hidden (its markup's own default) unless
+  // the live catalogue has an ACTIVE entry for this exact service slug --
+  // a service not yet onboarded/approved never shows a price or CTA, and
+  // the page's existing enquiry path underneath is untouched either way.
+  detailBlocks.forEach(function (block) {
+    var slug = block.getAttribute("data-instant-service-cta");
+
+    getCatalogue()
+      .then(function (services) {
+        var service = services.filter(function (s) {
+          return s.serviceSlug === slug;
+        })[0];
+        if (!service) return;
+
+        block.querySelector("[data-instant-service-cta-heading]").textContent = strings.detailHeading;
+        block.querySelector("[data-instant-service-cta-title]").textContent = service.title;
+        block.querySelector("[data-instant-service-cta-description]").textContent = service.shortDescription;
+        block.querySelector("[data-instant-service-cta-eligibility]").textContent = service.eligibilityText;
+        block.querySelector("[data-instant-service-cta-price]").textContent = strings.from + " " + formatPhp(service.totalPhpCentavos);
+        var link = block.querySelector("[data-instant-service-cta-link]");
+        link.href = "/instant-services/apply/?service=" + encodeURIComponent(service.id) + "&lang=" + encodeURIComponent(pageLang);
+        link.textContent = strings.cta;
+        var badge = block.querySelector("[data-instant-service-cta-badge]");
+        if (badge) badge.textContent = strings.badge;
+
+        block.hidden = false;
+      })
+      .catch(function () {
+        // Stays hidden -- same fail-closed, fail-quiet posture as the
+        // catalogue list above.
       });
   });
 })();
