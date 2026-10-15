@@ -268,13 +268,23 @@ summary:focus-visible {
    same underline-on-hover/current-page language as every other nav link
    (just in gold instead of green) is what keeps this premium/understated
    rather than reading as a promotional badge. */
-.nav-accent {
+/* ".site-nav a" above sets its own `color` and matches one class plus one
+   element -- the same specificity as ".nav-accent" alone, so without the
+   extra ".site-nav a" prefix here the cascade's one true tiebreaker
+   (source order) would settle it, and ".nav-accent" being declared AFTER
+   should in principle win -- except this selector was accidentally left
+   at the lower, easy-to-lose specificity of a bare single class. Caught
+   only by checking this link's actual computed color in a live page
+   (it was rendering --color-charcoal, not gold, the entire time this
+   looked "done"), not by reading the CSS. Matching ".site-nav a"'s own
+   prefix is the fix that can never again lose this fight by accident. */
+.site-nav a.nav-accent {
   color: var(--color-gold-text);
   font-weight: 600;
 }
 
-.nav-accent:hover,
-.nav-accent[aria-current="page"] {
+.site-nav a.nav-accent:hover,
+.site-nav a.nav-accent[aria-current="page"] {
   color: var(--color-gold-text);
   border-bottom-color: var(--color-gold-text);
 }
