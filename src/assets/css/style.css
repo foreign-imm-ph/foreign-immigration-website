@@ -2189,3 +2189,15 @@ body.language-gateway-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* Printable customer receipt (/instant-services/receipt/) -- "no-print"
+   marks anything that should disappear in a printed/saved-as-PDF copy
+   (nav, footer, the Print button itself), using the site's own existing
+   header/footer chrome rather than a second print-only layout. */
+@media print {
+  .site-header,
+  .site-footer,
+  .no-print {
+    display: none !important;
+  }
+}

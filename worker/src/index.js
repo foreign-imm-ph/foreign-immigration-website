@@ -25,6 +25,7 @@ import {
   handleSetDeliveryAddress,
   handleConfirmAndPay,
   handleGetOrderHistory,
+  handleGetOrderReceipt,
   handleGetQrPhImage as handleGetInstantServicesQrPhImage,
 } from "./routes/checkoutCustomer.js";
 import {
@@ -165,6 +166,9 @@ async function route(request, env, path, method, url) {
 
   const orderHistoryMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/history$/);
   if (orderHistoryMatch && method === "GET") return handleGetOrderHistory(request, env, orderHistoryMatch[1]);
+
+  const orderReceiptMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/receipt$/);
+  if (orderReceiptMatch && method === "GET") return handleGetOrderReceipt(request, env, orderReceiptMatch[1]);
 
   const orderQrMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/qr-ph-image$/);
   if (orderQrMatch && method === "GET") return handleGetInstantServicesQrPhImage(request, env, orderQrMatch[1]);

@@ -40,7 +40,7 @@
       uploadError: "Upload failed. Please check the file type (PDF, JPEG, PNG or WebP) and size (under 15MB), then try again.",
       paymentSubmittedHeading: "Your Payment Has Been Submitted for Verification",
       paymentSubmittedBody: "Thank you! We've received your payment details and will review them shortly. You'll receive a confirmation by email once your payment has been verified. You can also track the status of your request through the FIS Client Portal.",
-      referenceLabel: "Reference", portalLinkText: "Go to the FIS Client Portal",
+      referenceLabel: "Reference", portalLinkText: "Go to the FIS Client Portal", viewReceiptText: "View Receipt",
       paidHeading: "Payment Verified",
       paidBody: "Your payment has been verified. You can track the progress of your request through the FIS Client Portal.",
       bookingHeading: "Airport VIP Meet & Assist — Booking Details",
@@ -95,7 +95,7 @@
       uploadError: "上传失败。请检查文件类型（PDF、JPEG、PNG 或 WebP）及大小（小于 15MB）后重试。",
       paymentSubmittedHeading: "您的付款已提交待核实",
       paymentSubmittedBody: "感谢您！我们已收到您的付款信息，将尽快进行核实。付款核实后，您将收到邮件确认。您也可以通过 FIS 客户门户查询办理进度。",
-      referenceLabel: "参考编号", portalLinkText: "前往 FIS 客户门户",
+      referenceLabel: "参考编号", portalLinkText: "前往 FIS 客户门户", viewReceiptText: "查看收据",
       paidHeading: "付款已核实",
       paidBody: "您的付款已核实。您可以通过 FIS 客户门户查询办理进度。",
       bookingHeading: "机场贵宾接送服务 — 预约详情",
@@ -150,7 +150,7 @@
       uploadError: "上傳失敗。請檢查檔案類型（PDF、JPEG、PNG 或 WebP）及大小（小於 15MB）後再試一次。",
       paymentSubmittedHeading: "您的付款已提交待核實",
       paymentSubmittedBody: "感謝您！我們已收到您的付款資訊，將儘速進行核實。付款核實後，您將收到電子郵件確認。您也可以透過 FIS 客戶專區查詢辦理進度。",
-      referenceLabel: "參考編號", portalLinkText: "前往 FIS 客戶專區",
+      referenceLabel: "參考編號", portalLinkText: "前往 FIS 客戶專區", viewReceiptText: "查看收據",
       paidHeading: "付款已核實",
       paidBody: "您的付款已核實。您可以透過 FIS 客戶專區查詢辦理進度。",
       bookingHeading: "機場貴賓接送服務 — 預約詳情",
@@ -205,7 +205,7 @@
       uploadError: "업로드에 실패했습니다. 파일 형식(PDF, JPEG, PNG 또는 WebP)과 크기(15MB 미만)를 확인한 후 다시 시도해 주십시오.",
       paymentSubmittedHeading: "결제 내역이 확인 대기 중입니다",
       paymentSubmittedBody: "감사합니다! 결제 정보를 수신했으며 곧 확인해 드리겠습니다. 결제가 확인되면 이메일로 안내해 드립니다. FIS 고객 포털에서도 신청 상태를 확인하실 수 있습니다.",
-      referenceLabel: "참조번호", portalLinkText: "FIS 고객 포털로 이동",
+      referenceLabel: "참조번호", portalLinkText: "FIS 고객 포털로 이동", viewReceiptText: "영수증 보기",
       paidHeading: "결제가 확인되었습니다",
       paidBody: "결제가 확인되었습니다. FIS 고객 포털에서 신청 진행 상황을 확인하실 수 있습니다.",
       bookingHeading: "공항 VIP 영접 서비스 — 예약 상세정보",
@@ -260,7 +260,7 @@
       uploadError: "アップロードに失敗しました。ファイル形式（PDF、JPEG、PNG、WebP）とサイズ（15MB未満）をご確認のうえ、再度お試しください。",
       paymentSubmittedHeading: "お支払い内容を確認待ちで送信しました",
       paymentSubmittedBody: "ありがとうございます。お支払い情報を受け取りましたので、確認のうえ対応いたします。確認が完了次第、メールにてご連絡いたします。FISクライアントポータルからも進捗状況をご確認いただけます。",
-      referenceLabel: "参照番号", portalLinkText: "FISクライアントポータルへ",
+      referenceLabel: "参照番号", portalLinkText: "FISクライアントポータルへ", viewReceiptText: "領収書を見る",
       paidHeading: "お支払いが確認されました",
       paidBody: "お支払いが確認されました。進捗状況はFISクライアントポータルよりご確認いただけます。",
       bookingHeading: "空港VIP送迎サービス — 予約詳細",
@@ -315,7 +315,7 @@
       uploadError: "Tải lên không thành công. Vui lòng kiểm tra loại tệp (PDF, JPEG, PNG hoặc WebP) và kích thước (dưới 15MB), sau đó thử lại.",
       paymentSubmittedHeading: "Thanh Toán Của Quý Khách Đã Được Gửi Để Xác Minh",
       paymentSubmittedBody: "Cảm ơn quý khách! Chúng tôi đã nhận được thông tin thanh toán và sẽ sớm xem xét. Quý khách sẽ nhận được email xác nhận ngay khi thanh toán được xác minh. Quý khách cũng có thể theo dõi trạng thái yêu cầu qua Cổng Thông Tin Khách Hàng FIS.",
-      referenceLabel: "Mã Tham Chiếu", portalLinkText: "Đến Cổng Thông Tin Khách Hàng FIS",
+      referenceLabel: "Mã Tham Chiếu", portalLinkText: "Đến Cổng Thông Tin Khách Hàng FIS", viewReceiptText: "Xem Biên Lai",
       paidHeading: "Thanh Toán Đã Được Xác Minh",
       paidBody: "Thanh toán của quý khách đã được xác minh. Quý khách có thể theo dõi tiến trình yêu cầu qua Cổng Thông Tin Khách Hàng FIS.",
       bookingHeading: "Dịch Vụ Đón Tiếp VIP Tại Sân Bay — Chi Tiết Đặt Lịch",
@@ -762,12 +762,17 @@
     return '<p class="instant-service-card__eligibility"><strong>' + escapeHtml(t(lang, "bookingStatusLabel")) + ":</strong> " + escapeHtml(t(lang, key)) + "</p>";
   }
 
+  function receiptUrl(order) {
+    return "/instant-services/receipt/?order=" + encodeURIComponent(order.id) + "&lang=" + encodeURIComponent(lang);
+  }
+
   function renderAwaitingVerification(order, bookingStatus) {
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paymentSubmittedHeading")) + "</h2><p>" + escapeHtml(t(lang, "paymentSubmittedBody")) + "</p>" +
       bookingStatusLine(bookingStatus) +
       "<p>" + escapeHtml(t(lang, "referenceLabel")) + ": <strong>" + escapeHtml(order.id) + "</strong></p>" +
-      '<p><a class="btn btn-secondary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a></p>" +
+      '<p><a class="btn btn-secondary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a> " +
+      '<a class="btn btn-secondary" href="' + receiptUrl(order) + '">' + escapeHtml(t(lang, "viewReceiptText")) + "</a></p>" +
       "</div>";
   }
 
@@ -775,7 +780,8 @@
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paidHeading")) + "</h2><p>" + escapeHtml(t(lang, "paidBody")) + "</p>" +
       bookingStatusLine(bookingStatus) +
-      '<p><a class="btn btn-primary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a></p>" +
+      '<p><a class="btn btn-primary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a> " +
+      '<a class="btn btn-secondary" href="' + receiptUrl(order) + '">' + escapeHtml(t(lang, "viewReceiptText")) + "</a></p>" +
       "</div>";
   }
 

@@ -25,6 +25,7 @@ import { getSubmissionById } from "../lib/biForms.js";
 import { getCurrentPaymentSettings } from "../lib/checkoutPaymentSettings.js";
 import { getProvider } from "../lib/paymentGateway.js";
 import { centavosToPhp } from "../lib/money.js";
+import { getLocalizedBookingStatusLabel, getLocalizedRefundStatusLabel } from "../lib/clientLocaleStrings.js";
 
 async function requireClient(request, env) {
   const client = await getSessionClient(request, env);
@@ -231,6 +232,85 @@ export async function handleGetOrderHistory(request, env, orderId) {
   const order = await requireOwnedOrder(env.DB, client, orderId);
   const history = await getOrderHistory(env.DB, order.id);
   return json({ history: history.map((h) => ({ status: h.status, note: h.note, changedAt: h.changed_at })) });
+}
+
+// Customer-facing receipt/transaction record (Part VII §17 of the Order
+// & Book Online directive). Deliberately reuses everything that already
+// exists rather than building a second reporting surface: the order's
+// own immutable price_snapshot_json (via publicPriceSnapshot -- NEVER
+// the itemized components), the application's reference, the existing
+// payment_requests rows (service fee + delivery, kept separate), and --
+// for Airport VIP -- the booking and any refund record. The one new
+// thing this function does is translate a raw payment/refund status
+// into receipt-safe wording: an unverified payment is never described
+// as paid, and a requested-but-incomplete refund is never described as
+// completed.
+function receiptPaymentStatus(payment) {
+  if (!payment) return "No payment submitted yet";
+  if (payment.status === "paid") return "Payment verified";
+  if (payment.status === "submitted") return "Payment submitted, awaiting verification";
+  return "Payment pending";
+}
+
+export async function handleGetOrderReceipt(request, env, orderId) {
+  const client = await requireClient(request, env);
+  const order = await requireOwnedOrder(env.DB, client, orderId);
+  const service = await getServiceById(env.DB, order.service_id);
+  const shaped = service ? await shapeServiceForCustomer(env.DB, service, client.preferred_communication_language || "en") : null;
+
+  const application = order.application_id
+    ? await env.DB.prepare("SELECT reference FROM applications WHERE id = ?").bind(order.application_id).first()
+    : null;
+
+  const servicePayment = await env.DB
+    .prepare("SELECT status, amount_php, submitted_at, paid_at FROM payment_requests WHERE checkout_order_id = ? AND purpose = 'checkout_service' ORDER BY created_at DESC LIMIT 1")
+    .bind(order.id)
+    .first();
+  const deliveryPayment = await env.DB
+    .prepare("SELECT status, amount_php, submitted_at, paid_at FROM payment_requests WHERE checkout_order_id = ? AND purpose = 'checkout_delivery' ORDER BY created_at DESC LIMIT 1")
+    .bind(order.id)
+    .first();
+
+  let booking = null;
+  if (service && service.offering_type === "bookable_service") {
+    const { getBookingByOrderId, getRefundsForBooking } = await import("../lib/airportVip.js");
+    const bookingRow = await getBookingByOrderId(env.DB, order.id);
+    if (bookingRow) {
+      const refunds = await getRefundsForBooking(env.DB, bookingRow.id);
+      const latestRefund = refunds[0] || null;
+      const lang = client.preferred_communication_language || "en";
+      booking = {
+        direction: bookingRow.direction,
+        airline: bookingRow.airline,
+        flightNumber: bookingRow.flight_number,
+        scheduledLocalDate: bookingRow.scheduled_local_date,
+        scheduledLocalTime: bookingRow.scheduled_local_time,
+        status: bookingRow.status,
+        statusLabel: getLocalizedBookingStatusLabel(bookingRow.status, lang),
+        refundStatus: latestRefund ? latestRefund.status : null,
+        refundStatusLabel: latestRefund ? getLocalizedRefundStatusLabel(latestRefund.status, lang) : null,
+        refundAmountPhpCentavos: latestRefund && latestRefund.approved_amount_php_centavos != null ? latestRefund.approved_amount_php_centavos : null,
+      };
+    }
+  }
+
+  return json({
+    orderId: order.id,
+    reference: application ? application.reference : order.id,
+    createdAt: order.created_at,
+    customerName: client.full_name,
+    service: shaped ? { title: shaped.title, priceLabel: shaped.priceLabel, offeringType: shaped.offeringType } : null,
+    priceSnapshot: order.price_snapshot_json ? publicPriceSnapshot(JSON.parse(order.price_snapshot_json)) : null,
+    payment: {
+      statusText: receiptPaymentStatus(servicePayment),
+      amountPhp: servicePayment ? servicePayment.amount_php : null,
+      paidAt: servicePayment ? servicePayment.paid_at : null,
+    },
+    delivery: deliveryPayment
+      ? { statusText: receiptPaymentStatus(deliveryPayment), amountPhp: deliveryPayment.amount_php, paidAt: deliveryPayment.paid_at }
+      : null,
+    booking,
+  });
 }
 
 // Streams the currently-configured QR Ph image. Reuses CLIENT_FILES (the

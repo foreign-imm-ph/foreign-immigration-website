@@ -196,6 +196,24 @@ export function getLocalizedBookingStatusLabel(status, language) {
   return table[status] || BOOKING_STATUS_LABELS.en[status] || String(status).replace(/_/g, " ");
 }
 
+// airport_vip_refunds.status has its own, separate vocabulary from a
+// booking's own status (which can itself be 'refund_pending'/'refunded'
+// above) -- requested/approved/processing/completed/declined describes
+// the refund WORKFLOW itself, shown on the customer receipt.
+const REFUND_STATUS_LABELS = {
+  en: { requested: "Refund requested", approved: "Refund approved", processing: "Refund processing", completed: "Refund completed", declined: "Refund declined" },
+  "zh-CN": { requested: "已申请退款", approved: "退款已批准", processing: "退款处理中", completed: "退款已完成", declined: "退款已拒绝" },
+  "zh-Hant": { requested: "已申請退款", approved: "退款已核准", processing: "退款處理中", completed: "退款已完成", declined: "退款已拒絕" },
+  ko: { requested: "환불 요청됨", approved: "환불 승인됨", processing: "환불 처리 중", completed: "환불 완료됨", declined: "환불 거부됨" },
+  ja: { requested: "返金申請済み", approved: "返金承認済み", processing: "返金手続き中", completed: "返金完了", declined: "返金却下" },
+  vi: { requested: "Đã yêu cầu hoàn tiền", approved: "Đã duyệt hoàn tiền", processing: "Đang xử lý hoàn tiền", completed: "Đã hoàn tiền", declined: "Từ chối hoàn tiền" },
+};
+
+export function getLocalizedRefundStatusLabel(status, language) {
+  const table = REFUND_STATUS_LABELS[language] || REFUND_STATUS_LABELS.en;
+  return table[status] || REFUND_STATUS_LABELS.en[status] || String(status).replace(/_/g, " ");
+}
+
 export function getPaymentDiscrepancyWarning(language) {
   return PAYMENT_DISCREPANCY_WARNING[language] || PAYMENT_DISCREPANCY_WARNING.en;
 }

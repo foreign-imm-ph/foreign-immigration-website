@@ -251,7 +251,9 @@
     var bookingStatus = appData.bookingStatus;
     var statusLinesHtml =
       '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(application.statusLabel || statusLabel(application.status)) + "</span></p>" +
-      (checkoutOrder ? '<p><strong>Payment:</strong> <span class="status-badge">' + escapeHtml(checkoutOrder.statusLabel) + "</span></p>" : "") +
+      (checkoutOrder
+        ? '<p><strong>Payment:</strong> <span class="status-badge">' + escapeHtml(checkoutOrder.statusLabel) + '</span> &nbsp; <a href="/instant-services/receipt/?order=' + encodeURIComponent(checkoutOrder.id) + '">View Receipt</a></p>'
+        : "") +
       (bookingStatus ? '<p><strong>Airport VIP Booking:</strong> <span class="status-badge">' + escapeHtml(bookingStatus.statusLabel) + "</span></p>" : "");
 
     detailEl.innerHTML =
