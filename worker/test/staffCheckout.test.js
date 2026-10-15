@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import worker from "../src/index.js";
 import { createTestClient, createTestCheckoutService, createTestStaff, SITE_ORIGIN } from "./helpers.js";
 import { generateTestAccessKeypair, signTestAccessJwt, mockAccessJwksEndpoint } from "./access-jwt-helper.js";
-import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, computeAndSnapshotPrice, transitionOrder, getServiceById } from "../src/lib/checkout.js";
+import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, computeAndSnapshotPrice, transitionOrder, getServiceById, getPriceHistory } from "../src/lib/checkout.js";
 import { newId } from "../src/lib/crypto.js";
 import { createBooking, transitionBooking, getBookingByOrderId } from "../src/lib/airportVip.js";
 
@@ -349,6 +349,70 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     expect(activated.active).toBe(1);
   });
 
+  it("records an append-only price history entry -- with the staff actor and an optional reason -- on creation and every subsequent price edit, and never alters an order's already-snapshotted price retroactively", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const createResp = await staffRequest("/staff/instant-services/catalogue", staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: "price-history-regression",
+        offeringType: "document_manual",
+        biFormId: "",
+        serviceFeeAmount: "2000.00",
+        title_en: "Price History Regression",
+        shortDescription_en: "X",
+        eligibilityText_en: "X",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(createResp.status).toBe(303);
+    const serviceId = createResp.headers.get("Location").split("/").pop();
+
+    const historyAfterCreate = await getPriceHistory(env.DB, serviceId);
+    expect(historyAfterCreate).toHaveLength(1);
+    expect(historyAfterCreate[0].total_php_centavos).toBe(200000);
+    expect(historyAfterCreate[0].changed_by_staff_email).toBe(staff.email);
+
+    // A customer orders at the original price; the order's snapshot is taken now.
+    await staffRequest(`/staff/instant-services/catalogue/${serviceId}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "active" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    const service = await getServiceById(env.DB, serviceId);
+    const client = await createTestClient();
+    let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
+    order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    const snapshotBeforePriceChange = await computeAndSnapshotPrice(env.DB, order);
+    expect(snapshotBeforePriceChange.totalPhpCentavos).toBe(200000);
+
+    // Staff then raises the price, recording a reason.
+    const editResp = await staffRequest(`/staff/instant-services/catalogue/${serviceId}`, staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: "price-history-regression",
+        offeringType: "document_manual",
+        biFormId: "",
+        serviceFeeAmount: "3500.00",
+        priceChangeReason: "Cost of supporting documents increased",
+        title_en: "Price History Regression",
+        shortDescription_en: "X",
+        eligibilityText_en: "X",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(editResp.status).toBe(303);
+
+    const historyAfterEdit = await getPriceHistory(env.DB, serviceId);
+    expect(historyAfterEdit).toHaveLength(2);
+    expect(historyAfterEdit[0].total_php_centavos).toBe(350000); // most recent first
+    expect(historyAfterEdit[0].reason).toBe("Cost of supporting documents increased");
+    expect(historyAfterEdit[1].total_php_centavos).toBe(200000); // original entry preserved
+
+    // The already-accepted order's snapshot must be untouched by the later price change.
+    const orderAfterPriceChange = await env.DB.prepare("SELECT price_snapshot_json FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    expect(JSON.parse(orderAfterPriceChange.price_snapshot_json).totalPhpCentavos).toBe(200000);
+  });
+
   it("rejects creating a service with no valid service fee amount", async () => {
     const staff = await createTestStaff({ role: "admin" });
     const resp = await staffRequest("/staff/instant-services/catalogue", staff, {
@@ -357,5 +421,76 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
     expect(resp.status).toBe(400);
+  });
+
+  it("rejects an automated-document offering whose BI Form ID has no approved, tested Forms Library configuration (regression for the October 2026 review finding)", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const resp = await staffRequest("/staff/instant-services/catalogue", staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: "not-a-real-form",
+        offeringType: "document_automated",
+        biFormId: "NOT-A-REAL-FORM-ID",
+        serviceFeeAmount: "5000.00",
+        title_en: "X",
+        shortDescription_en: "X",
+        eligibilityText_en: "X",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(resp.status).toBe(400);
+    const body = await resp.text();
+    expect(body).toMatch(/approved, tested Forms Library configuration/);
+  });
+
+  it("lets a bookable service (Airport VIP) or a staff-processed manual document be created with no BI Form ID at all, never forcing it to reference an unrelated Forms Library entry", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const bookable = await staffRequest("/staff/instant-services/catalogue", staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: "regression-bookable",
+        offeringType: "bookable_service",
+        biFormId: "",
+        serviceFeeAmount: "9900.00",
+        title_en: "Regression Bookable Service",
+        shortDescription_en: "X",
+        eligibilityText_en: "X",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(bookable.status).toBe(303);
+
+    const manual = await staffRequest("/staff/instant-services/catalogue", staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: "regression-manual",
+        offeringType: "document_manual",
+        biFormId: "",
+        serviceFeeAmount: "1500.00",
+        title_en: "Regression Manual Document",
+        shortDescription_en: "X",
+        eligibilityText_en: "X",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(manual.status).toBe(303);
+  });
+
+  it("refuses to activate an offering with no approved price, even via the direct status-change endpoint", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const service = await createTestCheckoutService({ active: 0 });
+    // This fixture service is created inactive with no price components at all.
+    await env.DB.prepare("DELETE FROM checkout_price_components WHERE service_id = ?").bind(service.id).run();
+
+    const resp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "active" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(resp.status).toBe(409);
+
+    const unchanged = await getServiceById(env.DB, service.id);
+    expect(unchanged.active).toBe(0);
+    expect(unchanged.offering_status).not.toBe("active");
   });
 });
