@@ -648,6 +648,11 @@ export async function viewService(env, staff, serviceId) {
      <div class="card">
        <p><strong>Offering type:</strong> ${escapeHtml(OFFERING_TYPE_LABELS[service.offering_type] || service.offering_type)}</p>
        <p><strong>Status:</strong> <span class="status">${escapeHtml(service.offering_status)}</span>${service.active ? ' <span class="status">(customer-visible)</span>' : ""}</p>
+       <p><strong>Business approval:</strong> ${
+         service.approved_at
+           ? `Approved by ${escapeHtml(service.approved_by_staff_email)} on ${escapeHtml(service.approved_at)}`
+           : '<span class="muted">Not yet approved -- cannot be activated until an administrator moves this to "approved".</span>'
+       }</p>
        ${staff.role === "admin" ? statusButtons : '<p class="muted">Only an administrator can change offering status.</p>'}
      </div>
      <form method="POST" action="/staff/instant-services/catalogue/${serviceId}">

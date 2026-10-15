@@ -26,7 +26,15 @@ export const ORDER_STATUSES = ["draft", "awaiting_payment", "awaiting_verificati
 // kept as its own type rather than overloading document_manual's label,
 // since what the customer receives genuinely isn't a document.
 export const OFFERING_TYPES = ["document_automated", "document_manual", "bookable_service", "fixed_price_service"];
-export const OFFERING_STATUSES = ["draft", "ready_for_review", "active", "paused", "archived"];
+// 'approved' (Phase 4, Stage C) sits between 'ready_for_review' and
+// 'active': a distinct business decision ("FIS actually offers this")
+// from a price being set and from the offering going live. Directive's
+// own suggested statuses (Pending business approval / Approved but not
+// priced / Ready for activation / ...) collapse onto this single new
+// state plus the existing price gate below, rather than three new
+// columns -- "ready for activation" is simply approved + a price set,
+// which setOfferingStatus already computes, not a state worth storing.
+export const OFFERING_STATUSES = ["draft", "ready_for_review", "approved", "active", "paused", "archived"];
 
 const DEFAULT_PRICE_LABEL = {
   document_automated: "Document price",
@@ -387,23 +395,46 @@ export async function setServiceActive(db, serviceId, active) {
 }
 
 // The new lifecycle entry point. Setting 'active' is refused outright
-// (not just discouraged) if the service has no approved, non-zero price
-// yet -- "pause purchases where no approved price exists" enforced at
-// the one place that could ever make a service customer-visible, not
-// left to staff remembering to check.
+// (not just discouraged) on two independent grounds -- a business
+// approval decision, and an approved price -- "pause purchases where no
+// approved price exists" AND "require an authorized administrative
+// action before an offering becomes purchasable" both enforced at the
+// one place that could ever make a service customer-visible, not left
+// to staff remembering to check either one.
 export async function setOfferingStatus(db, serviceId, status, staffEmail) {
   if (!OFFERING_STATUSES.includes(status)) throw new HttpError(400, "Unknown offering status");
   if (status === "active") {
+    const service = await getServiceById(db, serviceId);
+    if (!service.approved_at) {
+      throw new HttpError(409, "This offering has not been approved yet. Move it to 'approved' before activating it.");
+    }
     const components = await getPriceComponents(db, serviceId);
     if (!hasApprovedPrice(components)) {
       throw new HttpError(409, "This offering has no approved price yet. Set a price before activating it.");
     }
   }
   const active = status === "active" ? 1 : 0;
-  await db
-    .prepare("UPDATE checkout_services SET offering_status = ?, active = ?, updated_at = datetime('now') WHERE id = ?")
-    .bind(status, active, serviceId)
-    .run();
+  // approved_by_staff_email/approved_at are an append-only fact, set the
+  // first time (and only the first time) an offering is approved --
+  // never cleared by a later pause/archive, so the record of who
+  // approved the product and when survives the rest of its lifecycle.
+  if (status === "approved") {
+    await db
+      .prepare(
+        `UPDATE checkout_services
+         SET offering_status = ?, active = ?, updated_at = datetime('now'),
+             approved_by_staff_email = COALESCE(approved_by_staff_email, ?),
+             approved_at = COALESCE(approved_at, datetime('now'))
+         WHERE id = ?`
+      )
+      .bind(status, active, staffEmail, serviceId)
+      .run();
+  } else {
+    await db
+      .prepare("UPDATE checkout_services SET offering_status = ?, active = ?, updated_at = datetime('now') WHERE id = ?")
+      .bind(status, active, serviceId)
+      .run();
+  }
   return getServiceById(db, serviceId);
 }
 

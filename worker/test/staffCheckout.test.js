@@ -343,10 +343,41 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     expect(components.results).toHaveLength(1);
     expect(components.results[0].amount_php_centavos).toBe(500000);
 
+    // Activation now requires having passed through the business-approval
+    // checkpoint first (Phase 4, Stage C) -- a priced-but-unapproved
+    // offering still can't go live via the legacy toggle.
+    const approveResp = await staffRequest(`/staff/instant-services/catalogue/${serviceId}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "approved" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(approveResp.status).toBe(303);
+    const approved = await getServiceById(env.DB, serviceId);
+    expect(approved.approved_by_staff_email).toBe(staff.email);
+    expect(approved.approved_at).toBeTruthy();
+
     const activateResp = await staffRequest(`/staff/instant-services/catalogue/${serviceId}/active`, staff, { method: "POST" });
     expect(activateResp.status).toBe(303);
     const activated = await getServiceById(env.DB, serviceId);
     expect(activated.active).toBe(1);
+  });
+
+  it("refuses to activate an offering that has a price but was never approved", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const service = await createTestCheckoutService({ active: 0 });
+    // This fixture already has a price component from createTestCheckoutService,
+    // but has never been through the 'approved' status.
+
+    const resp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "active" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(resp.status).toBe(409);
+
+    const unchanged = await getServiceById(env.DB, service.id);
+    expect(unchanged.active).toBe(0);
+    expect(unchanged.offering_status).not.toBe("active");
   });
 
   it("records an append-only price history entry -- with the staff actor and an optional reason -- on creation and every subsequent price edit, and never alters an order's already-snapshotted price retroactively", async () => {
@@ -375,10 +406,17 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     // A customer orders at the original price; the order's snapshot is taken now.
     await staffRequest(`/staff/instant-services/catalogue/${serviceId}/status`, staff, {
       method: "POST",
+      body: formBody({ status: "approved" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    const activateResp = await staffRequest(`/staff/instant-services/catalogue/${serviceId}/status`, staff, {
+      method: "POST",
       body: formBody({ status: "active" }),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
+    expect(activateResp.status).toBe(303);
     const service = await getServiceById(env.DB, serviceId);
+    expect(service.active).toBe(1);
     const client = await createTestClient();
     let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
     order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
@@ -476,11 +514,19 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     expect(manual.status).toBe(303);
   });
 
-  it("refuses to activate an offering with no approved price, even via the direct status-change endpoint", async () => {
+  it("refuses to activate an approved offering with no approved price, even via the direct status-change endpoint", async () => {
     const staff = await createTestStaff({ role: "admin" });
     const service = await createTestCheckoutService({ active: 0 });
     // This fixture service is created inactive with no price components at all.
     await env.DB.prepare("DELETE FROM checkout_price_components WHERE service_id = ?").bind(service.id).run();
+
+    // Approved (isolating this test to the price gate specifically, not
+    // the separate approval gate).
+    await staffRequest(`/staff/instant-services/catalogue/${service.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "approved" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
 
     const resp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/status`, staff, {
       method: "POST",
