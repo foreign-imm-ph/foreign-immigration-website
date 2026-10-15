@@ -27,6 +27,14 @@ import {
   handleGetOrderHistory,
   handleGetQrPhImage as handleGetInstantServicesQrPhImage,
 } from "./routes/checkoutCustomer.js";
+import {
+  handleSaveBooking,
+  handleGetBooking,
+  handleAcceptPolicy,
+  handleGetBookingHistory,
+  handleCreateRescheduleRequest,
+  handleListRescheduleRequests,
+} from "./routes/airportVipCustomer.js";
 
 // Requests that change state must come from our own site — checked once,
 // here, rather than repeated in every handler.
@@ -160,6 +168,22 @@ async function route(request, env, path, method, url) {
 
   const orderQrMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/qr-ph-image$/);
   if (orderQrMatch && method === "GET") return handleGetInstantServicesQrPhImage(request, env, orderQrMatch[1]);
+
+  // Airport VIP Meet & Assist -- booking details, policy acceptance, and
+  // rescheduling requests on top of the same order/service routes above.
+  const orderBookingMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/booking$/);
+  if (orderBookingMatch && method === "GET") return handleGetBooking(request, env, orderBookingMatch[1]);
+  if (orderBookingMatch && method === "POST") return handleSaveBooking(request, env, orderBookingMatch[1]);
+
+  const orderBookingPolicyMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/booking\/accept-policy$/);
+  if (orderBookingPolicyMatch && method === "POST") return handleAcceptPolicy(request, env, orderBookingPolicyMatch[1]);
+
+  const bookingHistoryMatch = path.match(/^\/api\/instant-services\/bookings\/([^/]+)\/history$/);
+  if (bookingHistoryMatch && method === "GET") return handleGetBookingHistory(request, env, bookingHistoryMatch[1]);
+
+  const rescheduleMatch = path.match(/^\/api\/instant-services\/bookings\/([^/]+)\/reschedule-requests$/);
+  if (rescheduleMatch && method === "GET") return handleListRescheduleRequests(request, env, rescheduleMatch[1]);
+  if (rescheduleMatch && method === "POST") return handleCreateRescheduleRequest(request, env, rescheduleMatch[1]);
 
   return null;
 }

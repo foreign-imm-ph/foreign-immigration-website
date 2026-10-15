@@ -29,8 +29,27 @@ describe("Instant Services: public catalogue", () => {
 
     const firstOut = body.services.find((s) => s.id === first.id);
     expect(firstOut.totalPhpCentavos).toBe(350000);
-    expect(firstOut.priceComponents).toHaveLength(2);
     expect(firstOut.title).toBe("First Service");
+    // Order & Book Online business decision: every customer-facing total
+    // is a single all-inclusive figure. The itemized government-fee/
+    // service-fee breakdown must never reach a customer-facing route.
+    expect(firstOut.priceComponents).toBeUndefined();
+    expect(firstOut.hasApprovedPrice).toBe(true);
+    expect(firstOut.priceLabel).toBeTruthy();
+  });
+
+  it("marks a service with no priced components as having no approved price, rather than a zero price", async () => {
+    const service = await createTestCheckoutService({ title: "Unpriced Service", priceComponents: [] });
+    const resp = await worker.fetch(authedRequest("/api/instant-services/catalogue"), env);
+    const body = await resp.json();
+    // An unpriced service should not even be listed as checkout-ready;
+    // this repo's fixture still creates it active for this one test, so
+    // assert the flag the frontend gates Buy/Book Now on directly.
+    const out = body.services.find((s) => s.id === service.id);
+    if (out) {
+      expect(out.hasApprovedPrice).toBe(false);
+      expect(out.totalPhpCentavos).toBe(0);
+    }
   });
 
   it("falls back to English when the requested language has no translation yet, without fabricating content", async () => {

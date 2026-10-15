@@ -10,6 +10,36 @@ import { sumCentavos } from "./money.js";
 
 export const ORDER_STATUSES = ["draft", "awaiting_payment", "awaiting_verification", "paid", "cancelled", "expired"];
 
+// Order & Book Online: offering type distinguishes an automated Forms-
+// Library document (a real questionnaire/coordinate-map pipeline exists)
+// from a staff-processed one (no automated pipeline -- a human prepares
+// and files it after the customer pays) from a bookable service (Airport
+// VIP and similar, see lib/airportVip.js). Offering status is the
+// lifecycle a catalogue row moves through in the Staff Portal; it is
+// kept in lockstep with the pre-existing `active` column (see
+// setOfferingStatus below) so every already-written "WHERE active = 1"
+// query across the codebase keeps working unchanged.
+export const OFFERING_TYPES = ["document_automated", "document_manual", "bookable_service"];
+export const OFFERING_STATUSES = ["draft", "ready_for_review", "active", "paused", "archived"];
+
+const DEFAULT_PRICE_LABEL = {
+  document_automated: "Document price",
+  document_manual: "Document price",
+  bookable_service: "Service price",
+};
+
+export function defaultPriceLabel(offeringType) {
+  return DEFAULT_PRICE_LABEL[offeringType] || "Price";
+}
+
+// A service may only be activated once it actually has an approved,
+// non-zero price -- "pause purchases where no approved price exists" is
+// enforced here, at the one place offering_status can be set to
+// 'active', rather than left to staff discipline.
+export function hasApprovedPrice(components) {
+  return Array.isArray(components) && components.length > 0 && sumCentavos(components) > 0;
+}
+
 // A draft order is still being assembled (service not yet fully
 // configured/reviewed); only draft/awaiting_payment/awaiting_verification
 // are "still open" for the purposes of idempotent reuse below -- paid,
@@ -79,6 +109,16 @@ export async function getPriceComponents(db, serviceId) {
   return results;
 }
 
+// Customer-facing shape. Deliberately does NOT include the itemized
+// government-fee/service-fee breakdown -- per the explicit "one
+// all-inclusive price, no fee breakdown" business decision, every
+// customer-facing surface (catalogue, detail page, checkout, receipts,
+// Client Portal, email) sees only `totalPhpCentavos` and a generic
+// `priceLabel`. The itemized components remain fully available
+// internally (getPriceComponents, used directly by the Staff Portal and
+// by checkout_price_history) -- this function is the one place that
+// deliberately narrows what a customer-facing route is handed, so no
+// future customer route can leak the breakdown by accident.
 async function shapeServiceForCustomer(db, service, lang) {
   const i18n = await getServiceI18n(db, service.id, lang);
   const components = await getPriceComponents(db, service.id);
@@ -86,14 +126,29 @@ async function shapeServiceForCustomer(db, service, lang) {
     id: service.id,
     serviceSlug: service.service_slug,
     biFormId: service.bi_form_id,
+    offeringType: service.offering_type,
+    serviceGroup: service.service_group,
     supportsDelivery: !!service.supports_delivery,
     title: i18n ? i18n.title : service.id,
     shortDescription: i18n ? i18n.short_description : "",
     eligibilityText: i18n ? i18n.eligibility_text : "",
     noticesText: i18n ? i18n.notices_text : null,
-    priceComponents: components.map((c) => ({ type: c.component_type, label: c.label, amountPhpCentavos: c.amount_php_centavos })),
+    priceLabel: service.customer_price_label || defaultPriceLabel(service.offering_type),
+    hasApprovedPrice: hasApprovedPrice(components),
     totalPhpCentavos: sumCentavos(components),
   };
+}
+
+// Strips the itemized breakdown from an (internal, full) price snapshot
+// before it is ever sent to a customer -- used wherever
+// order.price_snapshot_json would otherwise reach a customer-facing JSON
+// response verbatim (e.g. handleGetOrder, handleConfirmAndPay in
+// routes/checkoutCustomer.js). The FULL snapshot (with components) stays
+// in the database for staff/audit use (viewOrder in staffCheckout.js) --
+// this only narrows what leaves the server toward a customer.
+export function publicPriceSnapshot(snapshot) {
+  if (!snapshot) return null;
+  return { totalPhpCentavos: snapshot.totalPhpCentavos, snapshotAt: snapshot.snapshotAt };
 }
 
 export { shapeServiceForCustomer };
@@ -203,6 +258,36 @@ export async function startOrderApplication(db, order, service) {
   return { applicationId, submissionId: submission.id };
 }
 
+// The bookable-service sibling of startOrderApplication above: a
+// booking has no questionnaire/bi_form_submission of its own (its
+// intake is the booking record in lib/airportVip.js), but it still needs
+// an `applications` row so payment_requests.application_id (NOT NULL)
+// and the rest of the existing application-scoped plumbing -- the
+// Client Portal's per-application view, staff messaging, audit --
+// keeps working for an Airport VIP order exactly as it does for a
+// document order, rather than duplicating that machinery. Idempotent,
+// same as startOrderApplication.
+export async function startBookingApplication(db, order, service) {
+  if (order.application_id) return order.application_id;
+
+  const applicationId = newId();
+  const reference = await insertUniqueReference(db, "applications");
+  await db
+    .prepare("INSERT INTO applications (id, reference, client_id, service_slug) VALUES (?, ?, ?, ?)")
+    .bind(applicationId, reference, order.client_id, service.service_slug)
+    .run();
+  await db
+    .prepare("INSERT INTO application_status_history (id, application_id, status) VALUES (?, ?, 'enquiry_received')")
+    .bind(newId(), applicationId)
+    .run();
+  await db
+    .prepare("UPDATE checkout_orders SET application_id = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(applicationId, order.id)
+    .run();
+
+  return applicationId;
+}
+
 // ---------------------------------------------------------------------
 // Catalogue management (staff-only writes) -- the Staff Portal's
 // catalogue section (routes/staffCheckout.js) is the only caller. A new
@@ -210,26 +295,118 @@ export async function startOrderApplication(db, order, service) {
 // migration) -- never silently live the moment it's created, same
 // fail-closed posture QR Ph's settings log uses.
 // ---------------------------------------------------------------------
-export async function createService(db, { serviceSlug, biFormId, supportsDelivery, displayOrder }) {
+// Validates a BI Form ID before it can ever be saved against an
+// offering_type='document_automated' service -- Finding F2 from the
+// October 2026 review ("no validation that a catalogue service's BI Form
+// ID is real"). Dynamically imports biFormEngine.js (rather than a
+// static import) so routes that never touch catalogue creation/edit
+// don't pay for pulling in the Forms Library engine's own import graph.
+// A document_manual offering is explicitly exempt: it has no automated
+// pipeline by design, so its bi_form_id (if any) is a free-text
+// reference code for staff, not validated against the engine registry.
+export async function validateBiFormId(offeringType, biFormId) {
+  if (offeringType !== "document_automated") return;
+  const { KNOWN_BI_FORM_IDS } = await import("./biFormEngine.js");
+  if (!biFormId || !KNOWN_BI_FORM_IDS.includes(biFormId)) {
+    throw new HttpError(
+      400,
+      `"${biFormId || "(empty)"}" is not a BI Form ID with an approved, tested Forms Library configuration. ` +
+        `Known automated form IDs: ${KNOWN_BI_FORM_IDS.join(", ")}. ` +
+        `Choose "Staff-processed document order" instead if this form doesn't have an automated pipeline yet.`
+    );
+  }
+}
+
+// bi_form_id is a legacy NOT NULL column (from before offering_type
+// existed, when every catalogue row WAS an automated form). An empty
+// string -- never a stored NULL -- is the "no form" sentinel for
+// document_manual/bookable_service rows, so this never needs an
+// unsupported ALTER on a column that other tables hold live foreign keys
+// against; every reader of service.bi_form_id already treats it with a
+// falsy check (`|| ""`, `!biFormId`), so "" behaves exactly like "none".
+export async function createService(db, { serviceSlug, biFormId, offeringType = "document_automated", serviceGroup, customerPriceLabel, supportsDelivery, displayOrder }) {
+  await validateBiFormId(offeringType, biFormId);
   const id = newId();
   await db
-    .prepare("INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order) VALUES (?, ?, ?, ?, ?)")
-    .bind(id, serviceSlug, biFormId, supportsDelivery ? 1 : 0, displayOrder || 0)
+    .prepare(
+      `INSERT INTO checkout_services (id, service_slug, bi_form_id, offering_type, service_group, customer_price_label, supports_delivery, display_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(id, serviceSlug, biFormId || "", offeringType, serviceGroup || null, customerPriceLabel || null, supportsDelivery ? 1 : 0, displayOrder || 0)
     .run();
   return getServiceById(db, id);
 }
 
-export async function updateServiceMeta(db, serviceId, { serviceSlug, biFormId, supportsDelivery, displayOrder }) {
+export async function updateServiceMeta(db, serviceId, { serviceSlug, biFormId, offeringType = "document_automated", serviceGroup, customerPriceLabel, supportsDelivery, displayOrder }) {
+  await validateBiFormId(offeringType, biFormId);
   await db
-    .prepare("UPDATE checkout_services SET service_slug = ?, bi_form_id = ?, supports_delivery = ?, display_order = ?, updated_at = datetime('now') WHERE id = ?")
-    .bind(serviceSlug, biFormId, supportsDelivery ? 1 : 0, displayOrder || 0, serviceId)
+    .prepare(
+      `UPDATE checkout_services SET service_slug = ?, bi_form_id = ?, offering_type = ?, service_group = ?, customer_price_label = ?, supports_delivery = ?, display_order = ?, updated_at = datetime('now') WHERE id = ?`
+    )
+    .bind(serviceSlug, biFormId || "", offeringType, serviceGroup || null, customerPriceLabel || null, supportsDelivery ? 1 : 0, displayOrder || 0, serviceId)
     .run();
   return getServiceById(db, serviceId);
 }
 
+// Legacy boolean toggle -- still used by anything that only knows about
+// `active` (kept for compatibility; setOfferingStatus below is the new,
+// richer entry point and keeps this column in sync itself).
 export async function setServiceActive(db, serviceId, active) {
   await db.prepare("UPDATE checkout_services SET active = ?, updated_at = datetime('now') WHERE id = ?").bind(active ? 1 : 0, serviceId).run();
   return getServiceById(db, serviceId);
+}
+
+// The new lifecycle entry point. Setting 'active' is refused outright
+// (not just discouraged) if the service has no approved, non-zero price
+// yet -- "pause purchases where no approved price exists" enforced at
+// the one place that could ever make a service customer-visible, not
+// left to staff remembering to check.
+export async function setOfferingStatus(db, serviceId, status, staffEmail) {
+  if (!OFFERING_STATUSES.includes(status)) throw new HttpError(400, "Unknown offering status");
+  if (status === "active") {
+    const components = await getPriceComponents(db, serviceId);
+    if (!hasApprovedPrice(components)) {
+      throw new HttpError(409, "This offering has no approved price yet. Set a price before activating it.");
+    }
+  }
+  const active = status === "active" ? 1 : 0;
+  await db
+    .prepare("UPDATE checkout_services SET offering_status = ?, active = ?, updated_at = datetime('now') WHERE id = ?")
+    .bind(status, active, serviceId)
+    .run();
+  return getServiceById(db, serviceId);
+}
+
+// ---------------------------------------------------------------------
+// Price history -- append-only archive, written every time staff saves a
+// price change (not every read). "View the current price / view
+// historical prices / identify the staff member / date and time /
+// optional reason" per the dynamic-pricing requirement.
+// ---------------------------------------------------------------------
+export async function updatePriceComponentsWithHistory(db, serviceId, components, staffEmail, reason) {
+  await replacePriceComponents(db, serviceId, components);
+  await db
+    .prepare(
+      `INSERT INTO checkout_price_history (id, service_id, components_json, total_php_centavos, changed_by_staff_email, reason)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      newId(),
+      serviceId,
+      JSON.stringify(components.map((c) => ({ type: c.type, label: c.label, amountPhpCentavos: c.amountPhpCentavos }))),
+      components.reduce((sum, c) => sum + (Number(c.amountPhpCentavos) || 0), 0),
+      staffEmail,
+      reason || null
+    )
+    .run();
+}
+
+export async function getPriceHistory(db, serviceId) {
+  const { results } = await db
+    .prepare("SELECT * FROM checkout_price_history WHERE service_id = ? ORDER BY changed_at DESC")
+    .bind(serviceId)
+    .all();
+  return results.map((r) => ({ ...r, components: JSON.parse(r.components_json) }));
 }
 
 export async function upsertServiceI18n(db, serviceId, lang, { title, shortDescription, eligibilityText, noticesText }) {

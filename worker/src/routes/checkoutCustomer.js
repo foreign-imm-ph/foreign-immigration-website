@@ -17,6 +17,7 @@ import {
   shapeServiceForCustomer,
   startOrderApplication,
   computeAndSnapshotPrice,
+  publicPriceSnapshot,
   transitionOrder,
   getOrderHistory,
 } from "../lib/checkout.js";
@@ -77,7 +78,7 @@ export async function handleGetOrder(request, env, orderId) {
       status: order.status,
       applicationId: order.application_id,
       submissionId: order.bi_form_submission_id,
-      priceSnapshot: order.price_snapshot_json ? JSON.parse(order.price_snapshot_json) : null,
+      priceSnapshot: order.price_snapshot_json ? publicPriceSnapshot(JSON.parse(order.price_snapshot_json)) : null,
       createdAt: order.created_at,
     },
     service: shaped,
@@ -162,10 +163,22 @@ export async function handleConfirmAndPay(request, env, orderId) {
   const service = await getServiceById(env.DB, order.service_id);
   if (!service || !service.active) throw new HttpError(409, "This service is no longer available.");
 
-  if (!order.bi_form_submission_id) throw new HttpError(409, "Please complete the questionnaire before proceeding to payment.");
-  const submission = await getSubmissionById(env.DB, order.bi_form_submission_id);
-  if (!submission || submission.status === "draft") {
-    throw new HttpError(409, "Please submit the questionnaire before proceeding to payment.");
+  if (service.offering_type === "bookable_service") {
+    // A bookable service has no questionnaire -- its gate is a booking
+    // (flight/passenger details) plus an explicit policy acceptance,
+    // both required before payment, mirroring the document flow's own
+    // "questionnaire submitted" + "delivery address present" gates.
+    const { getBookingByOrderId, getPolicyAcceptance } = await import("../lib/airportVip.js");
+    const booking = await getBookingByOrderId(env.DB, order.id);
+    if (!booking) throw new HttpError(409, "Please complete the booking details before proceeding to payment.");
+    const acceptance = await getPolicyAcceptance(env.DB, booking.id);
+    if (!acceptance) throw new HttpError(409, "Please accept the booking policy before proceeding to payment.");
+  } else {
+    if (!order.bi_form_submission_id) throw new HttpError(409, "Please complete the questionnaire before proceeding to payment.");
+    const submission = await getSubmissionById(env.DB, order.bi_form_submission_id);
+    if (!submission || submission.status === "draft") {
+      throw new HttpError(409, "Please submit the questionnaire before proceeding to payment.");
+    }
   }
 
   if (service.supports_delivery) {
@@ -192,8 +205,16 @@ export async function handleConfirmAndPay(request, env, orderId) {
 
   await transitionOrder(env.DB, order, "awaiting_payment");
 
+  if (service.offering_type === "bookable_service") {
+    const { getBookingByOrderId, transitionBooking } = await import("../lib/airportVip.js");
+    const booking = await getBookingByOrderId(env.DB, order.id);
+    if (booking && booking.status === "submitted") {
+      await transitionBooking(env.DB, booking, "awaiting_payment_verification");
+    }
+  }
+
   return json({
-    priceSnapshot: snapshot,
+    priceSnapshot: publicPriceSnapshot(snapshot),
     payment: {
       id: paymentId,
       applicationId: order.application_id,

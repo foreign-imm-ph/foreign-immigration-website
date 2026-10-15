@@ -72,16 +72,17 @@ export async function createBiFormSubmission(client, application, staff, overrid
 export async function createTestCheckoutService(overrides = {}) {
   const id = newId();
   await env.DB.prepare(
-    `INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order, active)
-     VALUES (?, ?, ?, ?, ?, ?)`
+    `INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order, active, offering_type)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
       overrides.serviceSlug || "motions-blacklist",
-      overrides.biFormId || "CCS-A-CDR-2016",
+      overrides.offeringType === "bookable_service" ? "" : overrides.biFormId || "CCS-A-CDR-2016",
       overrides.supportsDelivery === undefined ? 1 : overrides.supportsDelivery,
       overrides.displayOrder || 0,
-      overrides.active === undefined ? 1 : overrides.active
+      overrides.active === undefined ? 1 : overrides.active,
+      overrides.offeringType || "document_automated"
     )
     .run();
   await env.DB.prepare(

@@ -20,6 +20,8 @@ import {
   transitionOrder,
   ORDER_STATUSES,
   DELIVERY_STATUSES,
+  OFFERING_TYPES,
+  OFFERING_STATUSES,
   recordDeliveryStatus,
   getCurrentDeliveryStatus,
   getDeliveryStatusHistory,
@@ -28,8 +30,11 @@ import {
   createService,
   updateServiceMeta,
   setServiceActive,
+  setOfferingStatus,
   upsertServiceI18n,
   replacePriceComponents,
+  updatePriceComponentsWithHistory,
+  getPriceHistory,
 } from "../lib/checkout.js";
 import { getSubmissionById } from "../lib/biForms.js";
 import { getCurrentPaymentSettings, getPaymentSettingsHistory, recordPaymentSettingsChange } from "../lib/checkoutPaymentSettings.js";
@@ -418,18 +423,19 @@ export async function listCatalogue(env, staff) {
       return `<tr>
         <td><a class="ref" href="/staff/instant-services/catalogue/${s.id}">${escapeHtml(i18n ? i18n.title : s.service_slug)}</a></td>
         <td class="muted">${escapeHtml(s.service_slug)}</td>
-        <td class="muted">${escapeHtml(s.bi_form_id)}</td>
-        <td>${s.active ? '<span class="status">Active</span>' : '<span class="muted">Inactive</span>'}</td>
+        <td class="muted">${escapeHtml(OFFERING_TYPE_LABELS[s.offering_type] || s.offering_type)}</td>
+        <td class="muted">${escapeHtml(s.bi_form_id || "")}</td>
+        <td><span class="status">${escapeHtml(s.offering_status)}</span></td>
       </tr>`;
     })
   );
   return staffPage(
-    "Instant Services Catalogue",
-    `<h1>Instant Services Catalogue</h1>
-     <p><a href="/staff/instant-services/catalogue/new">+ Add a new service</a></p>
+    "Order & Book Online Catalogue",
+    `<h1>Order &amp; Book Online Catalogue</h1>
+     <p><a href="/staff/instant-services/catalogue/new">+ Add an offering</a></p>
      <table>
-       <tr><th>Title</th><th>Slug</th><th>BI Form</th><th>Status</th></tr>
-       ${rows.join("") || '<tr><td colspan="4" class="muted">No catalogue services yet.</td></tr>'}
+       <tr><th>Title</th><th>Slug</th><th>Type</th><th>BI Form</th><th>Status</th></tr>
+       ${rows.join("") || '<tr><td colspan="5" class="muted">No catalogue offerings yet.</td></tr>'}
      </table>`,
     staff.email
   );
@@ -456,6 +462,7 @@ function priceComponentFields(components) {
   const byType = {};
   for (const c of components) byType[c.component_type] = c;
   return `
+    <p class="muted">These two amounts are added together into the ONE total a customer ever sees (no itemized breakdown is ever shown to a customer, per the Order &amp; Book Online pricing decision) -- they exist so FIS can internally track the government-fee and FIS-fee components separately.</p>
     <label for="serviceFeeLabel">FIS service fee — label</label>
     <input type="text" name="serviceFeeLabel" id="serviceFeeLabel" value="${escapeHtml(byType.service_fee ? byType.service_fee.label : "FIS Service Fee")}">
     <label for="serviceFeeAmount">FIS service fee — amount (PHP)</label>
@@ -467,27 +474,58 @@ function priceComponentFields(components) {
     <label for="otherFeeLabel">Other charge — label (optional)</label>
     <input type="text" name="otherFeeLabel" id="otherFeeLabel" value="${escapeHtml(byType.other ? byType.other.label : "Other")}">
     <label for="otherFeeAmount">Other charge — amount (PHP, optional)</label>
-    <input type="text" name="otherFeeAmount" id="otherFeeAmount" value="${byType.other ? (byType.other.amount_php_centavos / 100).toFixed(2) : ""}">`;
+    <input type="text" name="otherFeeAmount" id="otherFeeAmount" value="${byType.other ? (byType.other.amount_php_centavos / 100).toFixed(2) : ""}">
+    <label for="priceChangeReason">Reason for this price (optional, kept in the price history)</label>
+    <input type="text" name="priceChangeReason" id="priceChangeReason" placeholder="e.g. Initial approved price">`;
+}
+
+const OFFERING_TYPE_LABELS = {
+  document_automated: "Automated document order (a tested Forms Library form is wired up)",
+  document_manual: "Staff-processed document order (no automated form yet — staff files it by hand)",
+  bookable_service: "Bookable service (e.g. Airport VIP Meet & Assist)",
+};
+
+function offeringTypeField(selected) {
+  return `<label for="offeringType">Offering type</label>
+    <select name="offeringType" id="offeringType">
+      ${OFFERING_TYPES.map((t) => `<option value="${t}" ${t === selected ? "selected" : ""}>${escapeHtml(OFFERING_TYPE_LABELS[t])}</option>`).join("")}
+    </select>`;
+}
+
+function priceHistoryTable(history) {
+  if (!history.length) return '<p class="muted">No price changes recorded yet.</p>';
+  return `<table><tr><th>Changed</th><th>By</th><th>Total (PHP)</th><th>Reason</th></tr>${history
+    .map(
+      (h) =>
+        `<tr><td class="muted">${escapeHtml(h.changed_at)}</td><td>${escapeHtml(h.changed_by_staff_email)}</td><td>${centavosToPhpString(h.total_php_centavos)}</td><td class="muted">${escapeHtml(h.reason || "")}</td></tr>`
+    )
+    .join("")}</table>`;
 }
 
 export async function newServiceForm(env, staff) {
   return staffPage(
-    "Add Instant Services Catalogue Entry",
-    `<h1>Add a Service</h1>
+    "Add a Document Order or Bookable Service",
+    `<h1>Add an Offering</h1>
      <form method="POST" action="/staff/instant-services/catalogue">
+       ${offeringTypeField("document_automated")}
        <label for="serviceSlug">Service slug (matches the existing public service pages)</label>
        <input type="text" name="serviceSlug" id="serviceSlug" required>
-       <label for="biFormId">BI Form ID (must already exist in the approved Forms Library)</label>
-       <input type="text" name="biFormId" id="biFormId" required>
+       <label for="biFormId">BI Form ID</label>
+       <input type="text" name="biFormId" id="biFormId">
+       <p class="muted">Required, and must be a BI Form ID with an approved Forms Library configuration, only for "Automated document order." For a staff-processed order this is just a free-text reference code (optional). Not used for a bookable service.</p>
+       <label for="serviceGroup">Service group (optional — groups related offerings/packages together, e.g. "airport-vip")</label>
+       <input type="text" name="serviceGroup" id="serviceGroup">
+       <label for="customerPriceLabel">Customer-facing price label (optional — defaults to "Document price" or "Service price")</label>
+       <input type="text" name="customerPriceLabel" id="customerPriceLabel">
        <label for="displayOrder">Display order</label>
        <input type="text" name="displayOrder" id="displayOrder" value="0">
-       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" checked> This service involves physical document delivery</label>
+       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" checked> This offering involves physical document delivery</label>
        <h2>Price</h2>
        ${priceComponentFields([])}
        <h2>Customer-facing content</h2>
        ${languageContentFields({})}
-       <p class="muted">New services are created inactive. Activate only once the price, content, and BI Form mapping have been reviewed and approved.</p>
-       <button type="submit">Create (inactive)</button>
+       <p class="muted">New offerings are created in "draft" status. Move to "ready for review", then "active", only once the price, content, and (for an automated document) the BI Form mapping have been reviewed and approved. Activation is refused automatically if no approved price has been set.</p>
+       <button type="submit">Create (draft)</button>
      </form>`,
     staff.email
   );
@@ -516,6 +554,10 @@ function parsePriceComponentsFromForm(form) {
   return components;
 }
 
+function parsePriceChangeReason(form) {
+  return String(form.get("priceChangeReason") || "").trim() || null;
+}
+
 async function saveLanguageContent(db, serviceId, form) {
   for (const lang of CANONICAL_LANGUAGES) {
     const title = String(form.get(`title_${lang}`) || "").trim();
@@ -539,17 +581,25 @@ export async function createServiceHandler(request, env, staff) {
   const form = await request.formData();
   const serviceSlug = String(form.get("serviceSlug") || "").trim();
   const biFormId = String(form.get("biFormId") || "").trim();
-  if (!serviceSlug || !biFormId) throw new HttpError(400, "Service slug and BI Form ID are required");
+  const offeringType = String(form.get("offeringType") || "document_automated");
+  if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
+  if (!serviceSlug) throw new HttpError(400, "Service slug is required");
+  if (offeringType !== "bookable_service" && !biFormId && offeringType === "document_automated") {
+    throw new HttpError(400, "A BI Form ID is required for an automated document order");
+  }
 
   const components = parsePriceComponentsFromForm(form);
 
   const service = await createService(env.DB, {
     serviceSlug,
-    biFormId,
+    biFormId: biFormId || "",
+    offeringType,
+    serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
+    customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
     supportsDelivery: form.get("supportsDelivery") === "on",
     displayOrder: Number(form.get("displayOrder")) || 0,
   });
-  await replacePriceComponents(env.DB, service.id, components);
+  await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
   await saveLanguageContent(env.DB, service.id, form);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: service.id });
 
@@ -560,33 +610,49 @@ export async function viewService(env, staff, serviceId) {
   const service = await getServiceById(env.DB, serviceId);
   if (!service) return notFound();
   const components = await getPriceComponents(env.DB, serviceId);
+  const history = await getPriceHistory(env.DB, serviceId);
   const i18nByLang = {};
   for (const lang of CANONICAL_LANGUAGES) {
     const row = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?").bind(serviceId, lang).first();
     if (row) i18nByLang[lang] = row;
   }
 
+  const statusButtons = OFFERING_STATUSES.map(
+    (s) =>
+      `<form method="POST" action="/staff/instant-services/catalogue/${serviceId}/status" style="display:inline-block;margin-right:0.4rem;">
+         <input type="hidden" name="status" value="${s}">
+         <button class="${s === service.offering_status ? "" : "secondary"}" type="submit" ${s === service.offering_status ? "disabled" : ""}>${s}</button>
+       </form>`
+  ).join("");
+
   return staffPage(
     `Catalogue: ${service.service_slug}`,
     `<h1>${escapeHtml(service.service_slug)}</h1>
      <div class="card">
-       <p><strong>Status:</strong> ${service.active ? '<span class="status">Active</span>' : '<span class="muted">Inactive</span>'}</p>
-       ${staff.role === "admin" ? `<form method="POST" action="/staff/instant-services/catalogue/${serviceId}/active"><button class="${service.active ? "danger" : ""}" type="submit">${service.active ? "Deactivate" : "Activate"}</button></form>` : '<p class="muted">Only an administrator can activate or deactivate a service.</p>'}
+       <p><strong>Offering type:</strong> ${escapeHtml(OFFERING_TYPE_LABELS[service.offering_type] || service.offering_type)}</p>
+       <p><strong>Status:</strong> <span class="status">${escapeHtml(service.offering_status)}</span>${service.active ? ' <span class="status">(customer-visible)</span>' : ""}</p>
+       ${staff.role === "admin" ? statusButtons : '<p class="muted">Only an administrator can change offering status.</p>'}
      </div>
      <form method="POST" action="/staff/instant-services/catalogue/${serviceId}">
+       ${offeringTypeField(service.offering_type)}
        <label for="serviceSlug">Service slug</label>
        <input type="text" name="serviceSlug" id="serviceSlug" value="${escapeHtml(service.service_slug)}" required>
        <label for="biFormId">BI Form ID</label>
-       <input type="text" name="biFormId" id="biFormId" value="${escapeHtml(service.bi_form_id)}" required>
+       <input type="text" name="biFormId" id="biFormId" value="${escapeHtml(service.bi_form_id || "")}">
+       <label for="serviceGroup">Service group (optional)</label>
+       <input type="text" name="serviceGroup" id="serviceGroup" value="${escapeHtml(service.service_group || "")}">
+       <label for="customerPriceLabel">Customer-facing price label (optional)</label>
+       <input type="text" name="customerPriceLabel" id="customerPriceLabel" value="${escapeHtml(service.customer_price_label || "")}">
        <label for="displayOrder">Display order</label>
        <input type="text" name="displayOrder" id="displayOrder" value="${service.display_order}">
-       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${service.supports_delivery ? "checked" : ""}> This service involves physical document delivery</label>
+       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${service.supports_delivery ? "checked" : ""}> This offering involves physical document delivery</label>
        <h2>Price</h2>
        ${priceComponentFields(components)}
        <h2>Customer-facing content</h2>
        ${languageContentFields(i18nByLang)}
        <button type="submit">Save changes</button>
-     </form>`,
+     </form>
+     <div class="card"><h2>Price history</h2>${priceHistoryTable(history)}</div>`,
     staff.email
   );
 }
@@ -600,36 +666,66 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
   const form = await request.formData();
   const serviceSlug = String(form.get("serviceSlug") || "").trim();
   const biFormId = String(form.get("biFormId") || "").trim();
-  if (!serviceSlug || !biFormId) throw new HttpError(400, "Service slug and BI Form ID are required");
+  const offeringType = String(form.get("offeringType") || "document_automated");
+  if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
+  if (!serviceSlug) throw new HttpError(400, "Service slug is required");
 
   const components = parsePriceComponentsFromForm(form);
 
   await updateServiceMeta(env.DB, serviceId, {
     serviceSlug,
-    biFormId,
+    biFormId: biFormId || "",
+    offeringType,
+    serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
+    customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
     supportsDelivery: form.get("supportsDelivery") === "on",
     displayOrder: Number(form.get("displayOrder")) || 0,
   });
-  await replacePriceComponents(env.DB, serviceId, components);
+  await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
   await saveLanguageContent(env.DB, serviceId, form);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
 
   return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
 }
 
+// Legacy single-button toggle -- kept for any caller still posting to
+// the old /active path, but the catalogue edit page itself now posts to
+// /status (setOfferingStatusHandler below), which is the richer,
+// price-gated entry point.
 export async function toggleServiceActive(request, env, staff, serviceId) {
   const denied = adminOnlyResponse(staff);
   if (denied) return denied;
   const service = await getServiceById(env.DB, serviceId);
   if (!service) return notFound();
 
-  await setServiceActive(env.DB, serviceId, !service.active);
+  await setOfferingStatus(env.DB, serviceId, service.active ? "draft" : "active", staff.email);
   await logAudit(env.DB, {
     actorType: "staff",
     actorIdOrEmail: staff.email,
     action: service.active ? "deactivated_instant_services_catalogue_entry" : "activated_instant_services_catalogue_entry",
     targetTable: "checkout_services",
     targetId: serviceId,
+  });
+
+  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+}
+
+export async function setOfferingStatusHandler(request, env, staff, serviceId) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service) return notFound();
+
+  const form = await request.formData();
+  const status = String(form.get("status") || "");
+  await setOfferingStatus(env.DB, serviceId, status, staff.email);
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: "changed_instant_services_offering_status",
+    targetTable: "checkout_services",
+    targetId: serviceId,
+    metadata: JSON.stringify({ status }),
   });
 
   return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);

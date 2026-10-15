@@ -54,6 +54,7 @@ export function staffPage(title, bodyHtml, staffEmail) {
       <a href="/staff/instant-services/orders/">Instant Services Orders</a>
       <a href="/staff/instant-services/catalogue/">Instant Services Catalogue</a>
       <a href="/staff/instant-services/payment-settings/">Instant Services Payment Settings</a>
+      <a href="/staff/airport-vip/bookings/">Airport VIP Bookings</a>
     </nav>
     <span class="muted">${escapeHtml(staffEmail || "")}</span>
   </header>

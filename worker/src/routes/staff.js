@@ -59,7 +59,16 @@ import {
   viewService,
   updateServiceHandler,
   toggleServiceActive,
+  setOfferingStatusHandler,
 } from "./staffCheckout.js";
+import {
+  listBookings as listAirportVipBookings,
+  viewBooking as viewAirportVipBooking,
+  setBookingStatusHandler,
+  decideRescheduleRequestHandler,
+  createRefundHandler,
+  updateRefundStatusHandler,
+} from "./staffAirportVip.js";
 
 // Channels FIS can actually use today for a client's durable Preferred
 // Contact Channel (Phase 3.1 correction, Section 20-24). Same allowlist as
@@ -260,6 +269,27 @@ async function dispatch(request, env, url) {
   if (catalogueMatch && method === "POST") return updateServiceHandler(request, env, staff, catalogueMatch[1]);
   const catalogueActiveMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/active$/);
   if (catalogueActiveMatch && method === "POST") return toggleServiceActive(request, env, staff, catalogueActiveMatch[1]);
+  const catalogueStatusMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/status$/);
+  if (catalogueStatusMatch && method === "POST") return setOfferingStatusHandler(request, env, staff, catalogueStatusMatch[1]);
+
+  // Airport VIP Meet & Assist -- booking availability confirmation,
+  // rescheduling decisions, and refund administration. A booking's own
+  // payment stays on the Instant Services order routes above.
+  if (path === "/airport-vip/bookings/" && method === "GET") return listAirportVipBookings(env, staff, url);
+  const bookingMatch = path.match(/^\/airport-vip\/bookings\/([^/]+)\/?$/);
+  if (bookingMatch && method === "GET") return viewAirportVipBooking(env, staff, bookingMatch[1]);
+
+  const bookingStatusMatch = path.match(/^\/airport-vip\/bookings\/([^/]+)\/status$/);
+  if (bookingStatusMatch && method === "POST") return setBookingStatusHandler(request, env, staff, bookingStatusMatch[1]);
+
+  const rescheduleDecideMatch = path.match(/^\/airport-vip\/bookings\/([^/]+)\/reschedule-requests\/([^/]+)\/decide$/);
+  if (rescheduleDecideMatch && method === "POST") return decideRescheduleRequestHandler(request, env, staff, rescheduleDecideMatch[1], rescheduleDecideMatch[2]);
+
+  const refundCreateMatch = path.match(/^\/airport-vip\/bookings\/([^/]+)\/refunds$/);
+  if (refundCreateMatch && method === "POST") return createRefundHandler(request, env, staff, refundCreateMatch[1]);
+
+  const refundStatusMatch = path.match(/^\/airport-vip\/bookings\/([^/]+)\/refunds\/([^/]+)\/status$/);
+  if (refundStatusMatch && method === "POST") return updateRefundStatusHandler(request, env, staff, refundStatusMatch[1], refundStatusMatch[2]);
 
   return notFound();
 }
