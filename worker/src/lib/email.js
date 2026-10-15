@@ -4,6 +4,15 @@
 // restrained wrapper, not a marketing template.
 
 async function send(env, { to, subject, text, html }) {
+  if (!env.RESEND_API_KEY) {
+    // No key configured (every local/CI/e2e environment today) means
+    // this call can only ever fail -- skip the real network round-trip
+    // to Resend's API entirely rather than making one just to receive a
+    // guaranteed 401. Same observable outcome (no email sent, caller's
+    // try/catch still applies), no real external request.
+    console.error("Resend send skipped: no RESEND_API_KEY configured");
+    throw new Error("email_send_failed");
+  }
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

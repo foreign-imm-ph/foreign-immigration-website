@@ -1,0 +1,68 @@
+name: E2E (Playwright)
+
+# Phase 4 Stage F: runs the committed browser journeys (e2e/README.md) on
+# every push/PR to this branch. Entirely local: both servers under test
+# run with --local/local D1+R2 bindings, no secret is required, and
+# nothing here deploys anything or touches a real Cloudflare resource.
+on:
+  push:
+    branches: [claude/fis-website-planning-r52sii]
+  pull_request:
+    branches: [claude/fis-website-planning-r52sii]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install site dependencies
+        run: npm ci
+
+      - name: Install worker dependencies
+        run: npm ci
+        working-directory: worker
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Write local-only worker dev config
+        # Gitignored, never committed -- same convention
+        # worker/dev-only/README.md documents for manual local testing.
+        # No secret value: DEV_STAFF_BYPASS_EMAIL only works at all
+        # inside a local `wrangler dev` process (worker/src/lib/
+        # staffAuth.js), never in a deployed Worker.
+        run: |
+          cat > worker/.dev.vars <<'EOF'
+          PUBLIC_SITE_URL="http://127.0.0.1:8080"
+          DEV_STAFF_BYPASS_EMAIL="dev-staff@local.test"
+          EOF
+
+      - name: Run Playwright suite
+        run: npx playwright test
+        env:
+          CI: "true"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
