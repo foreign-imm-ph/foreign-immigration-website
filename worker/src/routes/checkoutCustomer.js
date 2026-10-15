@@ -182,10 +182,11 @@ export async function handleConfirmAndPay(request, env, orderId) {
     if (!booking) throw new HttpError(409, "Please complete the booking details before proceeding to payment.");
     const acceptance = await getPolicyAcceptance(env.DB, booking.id);
     if (!acceptance) throw new HttpError(409, "Please accept the booking policy before proceeding to payment.");
-  } else if (service.offering_type === "document_manual") {
-    // A staff-processed document has no automated questionnaire to
-    // submit -- its only gate before payment is the application having
-    // actually been started (see startOrderApplication).
+  } else if (service.offering_type === "document_manual" || service.offering_type === "fixed_price_service") {
+    // A staff-processed document or a fixed-price professional service
+    // has no automated questionnaire to submit -- its only gate before
+    // payment is the application having actually been started (see
+    // startOrderApplication).
     if (!order.application_id) throw new HttpError(409, "Please start your request before proceeding to payment.");
   } else {
     if (!order.bi_form_submission_id) throw new HttpError(409, "Please complete the questionnaire before proceeding to payment.");

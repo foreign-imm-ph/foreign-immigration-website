@@ -314,8 +314,14 @@
     return catalogueRequest;
   }
 
+  // "Bookable" here means the catalogue/presentation sense -- goes in the
+  // "Book Services" section, gets "Book Now" instead of "Order Now" --
+  // not "has a flight/passenger date-time form" (that distinction is
+  // apply.js's own, separate isManual check). A fixed_price_service has
+  // no booking date either, but it's a service, not a document, so it
+  // belongs in the same bucket as bookable_service here.
   function isBookable(service) {
-    return service.offeringType === "bookable_service";
+    return service.offeringType === "bookable_service" || service.offeringType === "fixed_price_service";
   }
 
   function formatPhp(centavos) {

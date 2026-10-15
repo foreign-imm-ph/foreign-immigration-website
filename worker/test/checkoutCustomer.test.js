@@ -273,4 +273,35 @@ describe("Instant Services: authenticated order routes", () => {
     const resp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
     expect(resp.status).toBe(409);
   });
+
+  // Phase 4's new Category C offering type (a fixed-price professional
+  // service with no document deliverable, e.g. an Immigration Status
+  // Review) is deliberately given the exact same no-questionnaire
+  // treatment as document_manual -- confirming that reuse actually holds
+  // for the real route, not just by code inspection.
+  it("a fixed_price_service order also has no questionnaire to complete, and confirm-and-pay succeeds the same way a document_manual order does", async () => {
+    const client = await createTestClient();
+    const service = await createTestCheckoutService({ offeringType: "fixed_price_service", biFormId: "", supportsDelivery: 0 });
+    const order = await createOrderFor(client, service);
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+
+    const startResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/application`, { method: "POST", cookie }), env);
+    expect(startResp.status).toBe(200);
+    const { applicationId, submissionId } = await startResp.json();
+    expect(applicationId).toBeTruthy();
+    expect(submissionId).toBeNull();
+
+    await recordPaymentSettingsChange(env.DB, {
+      changedByStaffEmail: staff.email,
+      changes: { qrImageR2Key: "config/test-qr-ph-fixed-price.png", merchantDisplayName: "FIS Test Merchant", customerInstructions: "Scan and pay.", enabled: true },
+    });
+    await env.CLIENT_FILES.put("config/test-qr-ph-fixed-price.png", new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+
+    const confirmResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
+    expect(confirmResp.status).toBe(200);
+
+    const afterConfirm = await env.DB.prepare("SELECT status FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    expect(afterConfirm.status).toBe("awaiting_payment");
+  });
 });

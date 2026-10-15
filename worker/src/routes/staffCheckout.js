@@ -499,6 +499,7 @@ const OFFERING_TYPE_LABELS = {
   document_automated: "Automated document order (a tested Forms Library form is wired up)",
   document_manual: "Staff-processed document order (no automated form yet — staff files it by hand)",
   bookable_service: "Bookable service (e.g. Airport VIP Meet & Assist)",
+  fixed_price_service: "Fixed-price professional service (no document deliverable, no booking date)",
 };
 
 function offeringTypeField(selected) {

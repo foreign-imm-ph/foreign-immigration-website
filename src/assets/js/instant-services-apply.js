@@ -803,7 +803,7 @@
         var order = data.order;
         var service = data.service;
         var isBooking = service.offeringType === "bookable_service";
-        var isManual = service.offeringType === "document_manual";
+        var isManual = service.offeringType === "document_manual" || service.offeringType === "fixed_price_service";
 
         if (!isBooking) {
           if (order.status === "paid") return renderPaid(order, null);

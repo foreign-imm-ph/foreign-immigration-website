@@ -19,13 +19,20 @@ export const ORDER_STATUSES = ["draft", "awaiting_payment", "awaiting_verificati
 // kept in lockstep with the pre-existing `active` column (see
 // setOfferingStatus below) so every already-written "WHERE active = 1"
 // query across the codebase keeps working unchanged.
-export const OFFERING_TYPES = ["document_automated", "document_manual", "bookable_service"];
+// fixed_price_service: Phase 4's Category C -- a standardized professional
+// service (e.g. a status-review assessment) with no government-form
+// deliverable and no booking date/time, priced and fulfilled exactly like
+// document_manual (customer pays, staff processes and marks complete) but
+// kept as its own type rather than overloading document_manual's label,
+// since what the customer receives genuinely isn't a document.
+export const OFFERING_TYPES = ["document_automated", "document_manual", "bookable_service", "fixed_price_service"];
 export const OFFERING_STATUSES = ["draft", "ready_for_review", "active", "paused", "archived"];
 
 const DEFAULT_PRICE_LABEL = {
   document_automated: "Document price",
   document_manual: "Document price",
   bookable_service: "Service price",
+  fixed_price_service: "Service price",
 };
 
 export function defaultPriceLabel(offeringType) {
@@ -236,7 +243,10 @@ export async function startOrderApplication(db, order, service) {
   // existing application-scoped plumbing still need SOMETHING to point
   // at. Attempting the automated path here used to throw "Unknown BI
   // form id" the moment a customer reached the questionnaire step.
-  const isManual = service.offering_type === "document_manual";
+  // fixed_price_service (Phase 4) has exactly the same shape -- no form,
+  // no questionnaire, staff fulfils it manually -- so it takes the same
+  // no-submission path.
+  const isManual = service.offering_type === "document_manual" || service.offering_type === "fixed_price_service";
 
   if (order.application_id && (isManual || order.bi_form_submission_id)) {
     return { applicationId: order.application_id, submissionId: order.bi_form_submission_id || null };
