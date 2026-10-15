@@ -211,5 +211,66 @@ describe("Instant Services: authenticated order routes", () => {
 
     const paymentRow = await env.DB.prepare("SELECT status FROM payment_requests WHERE id = ?").bind(confirmBody.payment.id).first();
     expect(paymentRow.status).toBe("submitted"); // never auto-"paid" from a customer action
+
+    // The order-detail screen the "payment submitted" confirmation page
+    // reads from must show the customer-facing FIS-#### reference, never
+    // the internal order UUID (caught via live browser testing: the
+    // confirmation page was displaying order.id as "Reference").
+    const orderDetailResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}`, { cookie }), env);
+    const orderDetailBody = await orderDetailResp.json();
+    expect(orderDetailBody.order.reference).toMatch(/^FIS-\d{4}-/);
+    expect(orderDetailBody.order.reference).not.toBe(order.id);
+  });
+
+  // Regression: a document_manual offering (bi_form_id = "", no automated
+  // Forms Library pipeline -- see lib/checkout.js's own comment on that
+  // sentinel) used to be routed through the exact same
+  // startOrderApplication path as an automated document, which tried to
+  // look up a BI form config for an empty id and threw "Unknown BI form
+  // id" the moment a customer reached the questionnaire step. Caught via
+  // live browser testing (Journey B), not by any existing unit test.
+  it("a document_manual order has no questionnaire to complete -- starting it never attempts the automated Forms Library pipeline, and confirm-and-pay succeeds without a bi_form_submission", async () => {
+    const client = await createTestClient();
+    const service = await createTestCheckoutService({ offeringType: "document_manual", biFormId: "", supportsDelivery: 0 });
+    const order = await createOrderFor(client, service);
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+
+    const startResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/application`, { method: "POST", cookie }), env);
+    expect(startResp.status).toBe(200);
+    const { applicationId, submissionId } = await startResp.json();
+    expect(applicationId).toBeTruthy();
+    expect(submissionId).toBeNull();
+
+    const refreshedOrder = await env.DB.prepare("SELECT bi_form_submission_id FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    expect(refreshedOrder.bi_form_submission_id).toBeNull();
+
+    // Calling it again (idempotent, e.g. a page reload) must not try to
+    // create a second application or throw.
+    const again = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/application`, { method: "POST", cookie }), env);
+    expect(again.status).toBe(200);
+    expect((await again.json()).applicationId).toBe(applicationId);
+
+    await recordPaymentSettingsChange(env.DB, {
+      changedByStaffEmail: staff.email,
+      changes: { qrImageR2Key: "config/test-qr-ph-manual.png", merchantDisplayName: "FIS Test Merchant", customerInstructions: "Scan and pay.", enabled: true },
+    });
+    await env.CLIENT_FILES.put("config/test-qr-ph-manual.png", new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+
+    const confirmResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
+    expect(confirmResp.status).toBe(200);
+
+    const afterConfirm = await env.DB.prepare("SELECT status FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    expect(afterConfirm.status).toBe("awaiting_payment");
+  });
+
+  it("refuses confirm-and-pay for a document_manual order before the application has even been started", async () => {
+    const client = await createTestClient();
+    const service = await createTestCheckoutService({ offeringType: "document_manual", biFormId: "" });
+    const order = await createOrderFor(client, service);
+    const cookie = await createSessionCookieFor(client);
+
+    const resp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
+    expect(resp.status).toBe(409);
   });
 });

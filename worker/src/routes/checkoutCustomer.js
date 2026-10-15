@@ -46,6 +46,9 @@ export async function handleGetOrder(request, env, orderId) {
   const shaped = service ? await shapeServiceForCustomer(env.DB, service, client.preferred_communication_language || "en") : null;
 
   const submission = order.bi_form_submission_id ? await getSubmissionById(env.DB, order.bi_form_submission_id) : null;
+  const application = order.application_id
+    ? await env.DB.prepare("SELECT reference FROM applications WHERE id = ?").bind(order.application_id).first()
+    : null;
   const deliveryAddress = await env.DB.prepare("SELECT * FROM checkout_delivery_addresses WHERE order_id = ?").bind(order.id).first();
   const paymentRow = await env.DB
     .prepare("SELECT id, application_id, amount_php, purpose, status, created_at, submitted_at, paid_at FROM payment_requests WHERE checkout_order_id = ? ORDER BY created_at DESC LIMIT 1")
@@ -76,6 +79,11 @@ export async function handleGetOrder(request, env, orderId) {
   return json({
     order: {
       id: order.id,
+      // Customer-facing displays must show this human-readable reference
+      // (e.g. "FIS-2026-KB7T8"), never the internal order UUID -- order.id
+      // remains here only as a fallback for the rare order with no linked
+      // application yet (shouldn't normally be reachable by a customer).
+      reference: application ? application.reference : order.id,
       status: order.status,
       applicationId: order.application_id,
       submissionId: order.bi_form_submission_id,
@@ -174,6 +182,11 @@ export async function handleConfirmAndPay(request, env, orderId) {
     if (!booking) throw new HttpError(409, "Please complete the booking details before proceeding to payment.");
     const acceptance = await getPolicyAcceptance(env.DB, booking.id);
     if (!acceptance) throw new HttpError(409, "Please accept the booking policy before proceeding to payment.");
+  } else if (service.offering_type === "document_manual") {
+    // A staff-processed document has no automated questionnaire to
+    // submit -- its only gate before payment is the application having
+    // actually been started (see startOrderApplication).
+    if (!order.application_id) throw new HttpError(409, "Please start your request before proceeding to payment.");
   } else {
     if (!order.bi_form_submission_id) throw new HttpError(409, "Please complete the questionnaire before proceeding to payment.");
     const submission = await getSubmissionById(env.DB, order.bi_form_submission_id);

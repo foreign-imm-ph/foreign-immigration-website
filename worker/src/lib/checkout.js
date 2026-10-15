@@ -226,8 +226,20 @@ export async function findOrCreateDraftOrder(db, { clientId, serviceId }) {
 // calling this twice for the same order (e.g. a page reload) returns the
 // SAME application/submission rather than creating a second one.
 export async function startOrderApplication(db, order, service) {
-  if (order.application_id && order.bi_form_submission_id) {
-    return { applicationId: order.application_id, submissionId: order.bi_form_submission_id };
+  // A document_manual offering has no automated Forms Library pipeline
+  // by design (bi_form_id is the "" no-form sentinel -- see
+  // validateBiFormId above) -- a human prepares and files it after
+  // payment, so there is no questionnaire for the customer to complete.
+  // It only needs the application row itself (same reason
+  // startBookingApplication below never creates a bi_form_submission
+  // either): payment_requests.application_id and the rest of the
+  // existing application-scoped plumbing still need SOMETHING to point
+  // at. Attempting the automated path here used to throw "Unknown BI
+  // form id" the moment a customer reached the questionnaire step.
+  const isManual = service.offering_type === "document_manual";
+
+  if (order.application_id && (isManual || order.bi_form_submission_id)) {
+    return { applicationId: order.application_id, submissionId: order.bi_form_submission_id || null };
   }
 
   const applicationId = newId();
@@ -240,6 +252,14 @@ export async function startOrderApplication(db, order, service) {
     .prepare("INSERT INTO application_status_history (id, application_id, status) VALUES (?, ?, 'enquiry_received')")
     .bind(newId(), applicationId)
     .run();
+
+  if (isManual) {
+    await db
+      .prepare("UPDATE checkout_orders SET application_id = ?, updated_at = datetime('now') WHERE id = ?")
+      .bind(applicationId, order.id)
+      .run();
+    return { applicationId, submissionId: null };
+  }
 
   const { createSubmission } = await import("./biForms.js");
   const submission = await createSubmission(db, {

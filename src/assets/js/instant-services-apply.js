@@ -770,7 +770,7 @@
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paymentSubmittedHeading")) + "</h2><p>" + escapeHtml(t(lang, "paymentSubmittedBody")) + "</p>" +
       bookingStatusLine(bookingStatus) +
-      "<p>" + escapeHtml(t(lang, "referenceLabel")) + ": <strong>" + escapeHtml(order.id) + "</strong></p>" +
+      "<p>" + escapeHtml(t(lang, "referenceLabel")) + ": <strong>" + escapeHtml(order.reference || order.id) + "</strong></p>" +
       '<p><a class="btn btn-secondary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a> " +
       '<a class="btn btn-secondary" href="' + receiptUrl(order) + '">' + escapeHtml(t(lang, "viewReceiptText")) + "</a></p>" +
       "</div>";
@@ -803,11 +803,29 @@
         var order = data.order;
         var service = data.service;
         var isBooking = service.offeringType === "bookable_service";
+        var isManual = service.offeringType === "document_manual";
 
         if (!isBooking) {
           if (order.status === "paid") return renderPaid(order, null);
           if (order.status === "awaiting_verification") return renderAwaitingVerification(order, null);
           if (order.status === "awaiting_payment") return renderPayment(order, data.payment);
+
+          // A staff-processed document has no automated questionnaire --
+          // once the application exists, go straight to delivery/review,
+          // the same as a document_automated order with its form already
+          // submitted.
+          if (isManual) {
+            if (!order.applicationId) {
+              return window
+                .portalFetch("/api/instant-services/orders/" + order.id + "/application", { method: "POST" })
+                .then(function (r) { return r.json(); })
+                .then(function () { loadOrder(); });
+            }
+            if (service.supportsDelivery && !data.deliveryAddress) {
+              return renderDeliveryAddress(order);
+            }
+            return renderReview(order, service);
+          }
 
           // Still "draft": figure out which step of the application is next.
           if (!order.submissionId) {
