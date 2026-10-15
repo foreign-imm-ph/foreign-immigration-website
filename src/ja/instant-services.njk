@@ -1,21 +1,51 @@
 ---
 layout: layouts/base.njk
-title: 即時決済
-description: 対象となる移民サービスを選択し、見積もりを待つことなくオンラインでお申し込みとお支払いを完了できます。
+title: オンライン注文・予約
+lang: ja
+description: 対象となる移民関連の書類をFISで直接ご注文いただき、選択されたサポートサービスをご予約いただけます。お申し込みとお支払いをオンラインで完了できます。
 ---
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
       <p class="tag">今すぐご利用いただけます</p>
-      <h1>即時決済</h1>
-      <p>対象となる移民サービスを選択し、見積もりを待つことなくオンラインでお申し込みとお支払いを完了できます。FISがお客様に代わって書類を作成し、フィリピン移民局（Bureau of Immigration）への提出を行います。政府への申請費用が発生する場合は、サービス料とは別に、お支払い前に明示いたします。</p>
+      <h1>書類の注文・サービスの予約をオンラインで</h1>
+      <p>対象となる移民関連の書類をFISで直接ご注文いただき、選択されたサポートサービスをご予約いただけます。お申し込みとお支払いをオンラインで完了できます。</p>
+      <p class="muted">表示されている価格には適用される政府手数料が含まれています。配送が必要な場合、配送料は別途ご案内いたします。</p>
     </div>
 
-    <div class="card-grid card-grid--3up" data-instant-services-list></div>
+    <div class="catalogue-controls" data-catalogue-controls>
+      <div class="catalogue-controls__search">
+        <label for="catalogue-search">検索</label>
+        <input type="search" id="catalogue-search" data-catalogue-search placeholder="名称またはキーワードで検索">
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-type-filter">表示</label>
+        <select id="catalogue-type-filter" data-catalogue-type-filter>
+          <option value="all">書類・サービス</option>
+          <option value="document">書類のみ</option>
+          <option value="service">サービスのみ</option>
+        </select>
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-category-filter">カテゴリー</label>
+        <select id="catalogue-category-filter" data-catalogue-category-filter>
+          <option value="all">すべてのカテゴリー</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="order-documents-section">
+      <h2>書類を注文する</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="document"></div>
+    </div>
+
+    <div id="book-services-section">
+      <h2>サービスを予約する</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="service"></div>
+    </div>
 
     <div class="context-note">
       <p>ご希望のサービスが見つからない場合や、ご自身の状況に合った手続きかご不明な場合は <a href="/ja/contact/">お問い合わせをお送りください →</a></p>
     </div>
   </div>
 </section>
-

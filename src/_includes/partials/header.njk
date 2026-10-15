@@ -16,7 +16,7 @@
       <ul>
         {%- for item in nav %}
         {%- set navUrl = (collections.all | equivalentUrl(item.url, lang)) or item.url %}
-        <li><a href="{{ navUrl }}"{% if item.pill %} class="nav-pill"{% endif %}{% if page.url == navUrl %} aria-current="page"{% endif %}>{{ ("nav." + item.key) | t(lang) }}</a></li>
+        <li><a href="{{ navUrl }}"{% if item.accent %} class="nav-accent"{% endif %}{% if page.url == navUrl %} aria-current="page"{% endif %}>{{ ("nav." + item.key) | t(lang) }}</a></li>
         {%- endfor %}
       </ul>
       {% include "partials/language-switcher.njk" %}

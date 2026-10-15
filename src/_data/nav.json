@@ -2,7 +2,7 @@
   { "key": "home", "url": "/" },
   { "key": "about", "url": "/about/" },
   { "key": "services", "url": "/services/" },
-  { "key": "instantServices", "url": "/instant-services/", "pill": true },
+  { "key": "instantServices", "url": "/instant-services/", "accent": true },
   { "key": "accreditation", "url": "/accreditation/" },
   { "key": "clientPortal", "url": "/client-portal/" },
   { "key": "contact", "url": "/contact/" }

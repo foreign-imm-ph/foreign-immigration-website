@@ -3,8 +3,9 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import worker from "../src/index.js";
 import { createTestClient, createTestCheckoutService, createTestStaff, SITE_ORIGIN } from "./helpers.js";
 import { generateTestAccessKeypair, signTestAccessJwt, mockAccessJwksEndpoint } from "./access-jwt-helper.js";
-import { findOrCreateDraftOrder, startOrderApplication, computeAndSnapshotPrice, transitionOrder, getServiceById } from "../src/lib/checkout.js";
+import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, computeAndSnapshotPrice, transitionOrder, getServiceById } from "../src/lib/checkout.js";
 import { newId } from "../src/lib/crypto.js";
+import { createBooking, transitionBooking, getBookingByOrderId } from "../src/lib/airportVip.js";
 
 let keypair;
 let restoreFetch;
@@ -96,6 +97,43 @@ describe("Staff Instant Services: orders", () => {
 
     const updatedOrder = await env.DB.prepare("SELECT status FROM checkout_orders WHERE id = ?").bind(order.id).first();
     expect(updatedOrder.status).toBe("paid");
+  });
+
+  it("verifying payment for an Airport VIP booking advances the booking to payment_verified, never straight to confirmed", async () => {
+    const staff = await createTestStaff();
+    const service = await createTestCheckoutService({ offeringType: "bookable_service", supportsDelivery: 0 });
+    const client = await createTestClient();
+    let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
+    await startBookingApplication(env.DB, order, service);
+    const booking = await createBooking(env.DB, {
+      checkoutOrderId: order.id,
+      clientId: client.id,
+      serviceId: service.id,
+      booking: {
+        direction: "arrival", passengerCount: 1, passengerNames: ["Test Passenger"],
+        airport: "NAIA", airline: "PAL", flightNumber: "PR100",
+        scheduledLocalDate: "2027-01-01", scheduledLocalTime: "10:00", scheduledTimezone: "Asia/Manila",
+      },
+    });
+    await transitionBooking(env.DB, booking, "awaiting_payment_verification");
+
+    order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    const snapshot = await computeAndSnapshotPrice(env.DB, order);
+    const paymentId = newId();
+    await env.DB
+      .prepare("INSERT INTO payment_requests (id, application_id, amount_php, description, checkout_order_id, purpose, status, submitted_at) VALUES (?, ?, ?, ?, ?, 'checkout_service', 'submitted', datetime('now'))")
+      .bind(paymentId, order.application_id, snapshot.totalPhpCentavos / 100, "Airport VIP test", order.id)
+      .run();
+    await transitionOrder(env.DB, order, "awaiting_payment");
+    order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    await transitionOrder(env.DB, order, "awaiting_verification");
+
+    const resp = await staffRequest(`/staff/instant-services/orders/${order.id}/payments/${paymentId}/verify`, staff, { method: "POST" });
+    expect(resp.status).toBe(303);
+
+    const updatedBooking = await getBookingByOrderId(env.DB, order.id);
+    expect(updatedBooking.status).toBe("payment_verified");
+    expect(updatedBooking.status).not.toBe("confirmed");
   });
 
   it("rejecting a submitted payment requires a note and sends the order back to awaiting_payment without marking the payment paid", async () => {

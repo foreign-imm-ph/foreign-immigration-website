@@ -210,6 +210,22 @@ export async function verifyOrderPayment(request, env, staff, orderId, paymentId
 
   if (payment.purpose === "checkout_service" && order.status === "awaiting_verification") {
     await transitionOrder(env.DB, order, "paid", { staffEmail: staff.email });
+
+    // Airport VIP Meet & Assist (and any future bookable service): a
+    // verified payment is NEVER the same thing as a confirmed booking --
+    // it only moves the booking from "awaiting payment verification" to
+    // "payment verified, availability under review". Confirming
+    // availability remains a separate, explicit staff action on the
+    // Airport VIP booking page (staffAirportVip.js setBookingStatusHandler),
+    // never automatic here.
+    const service = await getServiceById(env.DB, order.service_id);
+    if (service && service.offering_type === "bookable_service") {
+      const { getBookingByOrderId, transitionBooking } = await import("../lib/airportVip.js");
+      const booking = await getBookingByOrderId(env.DB, order.id);
+      if (booking && booking.status === "awaiting_payment_verification") {
+        await transitionBooking(env.DB, booking, "payment_verified", { staffEmail: staff.email, note: "Payment verified" });
+      }
+    }
   } else if (payment.purpose === "checkout_delivery") {
     await recordDeliveryStatus(env.DB, { orderId, status: "ready_for_shipment", staffEmail: staff.email, note: "Delivery payment verified" });
   }

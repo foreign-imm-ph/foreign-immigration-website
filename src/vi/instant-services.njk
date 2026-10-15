@@ -1,21 +1,51 @@
 ---
 layout: layouts/base.njk
-title: Thanh Toán Nhanh
-description: Chọn một dịch vụ di trú đủ điều kiện, hoàn tất yêu cầu và thanh toán trực tuyến ngay mà không cần chờ báo giá.
+title: Đặt Hàng & Đặt Lịch Trực Tuyến
+lang: vi
+description: Đặt các tài liệu di trú đủ điều kiện và đặt lịch các dịch vụ hỗ trợ được chọn trực tiếp qua FIS. Hoàn tất yêu cầu và thanh toán trực tuyến.
 ---
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
       <p class="tag">Hiện có sẵn, trực tuyến</p>
-      <h1>Thanh Toán Nhanh</h1>
-      <p>Chọn một dịch vụ di trú đủ điều kiện, hoàn tất yêu cầu và thanh toán trực tuyến ngay mà không cần chờ báo giá. FIS chuẩn bị và nộp hồ sơ của quý khách cho Cục Di trú (Bureau of Immigration) xử lý. Phí nộp hồ sơ của chính phủ, nếu có, sẽ được tính riêng và thông báo rõ trước khi thanh toán.</p>
+      <h1>Đặt Tài Liệu &amp; Đặt Lịch Dịch Vụ Trực Tuyến</h1>
+      <p>Đặt các tài liệu di trú đủ điều kiện và đặt lịch các dịch vụ hỗ trợ được chọn trực tiếp qua FIS. Hoàn tất yêu cầu và thanh toán trực tuyến.</p>
+      <p class="muted">Giá niêm yết đã bao gồm các phí chính phủ áp dụng. Phí giao hàng, nếu có, sẽ được báo giá riêng.</p>
     </div>
 
-    <div class="card-grid card-grid--3up" data-instant-services-list></div>
+    <div class="catalogue-controls" data-catalogue-controls>
+      <div class="catalogue-controls__search">
+        <label for="catalogue-search">Tìm kiếm</label>
+        <input type="search" id="catalogue-search" data-catalogue-search placeholder="Tìm theo tên hoặc từ khóa">
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-type-filter">Hiển thị</label>
+        <select id="catalogue-type-filter" data-catalogue-type-filter>
+          <option value="all">Tài liệu &amp; Dịch vụ</option>
+          <option value="document">Chỉ tài liệu</option>
+          <option value="service">Chỉ dịch vụ</option>
+        </select>
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-category-filter">Danh mục</label>
+        <select id="catalogue-category-filter" data-catalogue-category-filter>
+          <option value="all">Tất cả danh mục</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="order-documents-section">
+      <h2>Đặt Tài Liệu</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="document"></div>
+    </div>
+
+    <div id="book-services-section">
+      <h2>Đặt Dịch Vụ</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="service"></div>
+    </div>
 
     <div class="context-note">
       <p>Không tìm thấy dịch vụ quý khách cần, hoặc không chắc đây có phải quy trình phù hợp với trường hợp của mình? <a href="/vi/contact/">Hãy gửi yêu cầu tư vấn cho chúng tôi →</a></p>
     </div>
   </div>
 </section>
-

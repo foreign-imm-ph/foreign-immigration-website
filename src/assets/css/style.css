@@ -259,26 +259,24 @@ summary:focus-visible {
   border-bottom-color: var(--color-gold-text);
 }
 
-/* Instant Services is the one nav entry styled as an action, not a plain
-   page link -- same solid-green/white treatment as .btn-primary, scaled
-   down to sit comfortably in the nav row. Reuses .site-nav a's own
-   hover/current-page color logic is deliberately overridden here: an
-   action pill reads as "pressed/active" via background, not an
-   underline, so aria-current="page" still applies (for assistive tech)
-   but doesn't need its own visual treatment on top of the pill. */
-.nav-pill {
-  background: var(--color-green);
-  color: var(--color-white) !important;
-  border-radius: var(--radius);
-  padding: 0.45rem 0.9rem !important;
-  border-bottom: none !important;
+/* Order & Book Online is the one nav entry marked as a priority action,
+   but -- per the Order & Book Online directive's explicit instruction --
+   as understated gold TEXT, not a solid-green/white pill. Reusing
+   --color-gold-text (already the contrast-checked 4.5:1+ gold used for
+   link hover and the credential underline elsewhere on this page) keeps
+   it legible on the white header without a new token, and keeping the
+   same underline-on-hover/current-page language as every other nav link
+   (just in gold instead of green) is what keeps this premium/understated
+   rather than reading as a promotional badge. */
+.nav-accent {
+  color: var(--color-gold-text);
+  font-weight: 600;
 }
 
-.nav-pill:hover,
-.nav-pill[aria-current="page"] {
-  background: var(--color-gold-text);
-  color: var(--color-white) !important;
-  border-bottom: none !important;
+.nav-accent:hover,
+.nav-accent[aria-current="page"] {
+  color: var(--color-gold-text);
+  border-bottom-color: var(--color-gold-text);
 }
 
 .nav-toggle,
@@ -822,6 +820,59 @@ summary:focus-visible {
   margin-bottom: 1rem;
 }
 
+/* An offering identified in the inventory but not yet staff-approved
+   with a real price -- deliberately muted/neutral, never styled like a
+   discount or a glitch, and paired with no Order Now/Book Now action
+   (instant-services-catalogue.js omits that button entirely for these). */
+.instant-service-card__price--tba {
+  color: var(--color-grey);
+  font-weight: 400;
+}
+
+/* Search/filter bar on the "Order Documents & Book Services Online"
+   catalogue page -- plain form controls, consistent with every other
+   form on the site, laid out in a single row once there's room and
+   stacked on narrow viewports. */
+.catalogue-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(13, 61, 37, 0.12);
+}
+
+.catalogue-controls label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-grey);
+  margin-bottom: 0.3rem;
+}
+
+.catalogue-controls__search {
+  flex: 1 1 260px;
+}
+
+.catalogue-controls__search input,
+.catalogue-controls__filter select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(13, 61, 37, 0.25);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  background: var(--color-white);
+}
+
+.catalogue-controls__filter {
+  flex: 0 1 200px;
+}
+
+#order-documents-section,
+#book-services-section {
+  margin-bottom: 2.5rem;
+}
+
 /* Instant Checkout availability block injected into an existing
    Core/Specialised service card (instant-services-catalogue.js). Sits
    between the card's own description and its "Learn more" link, so it
@@ -918,6 +969,15 @@ summary:focus-visible {
   font-size: 1.1rem;
   font-style: italic;
   color: var(--color-white);
+}
+
+/* Airport VIP's "Book Now" (JS-injected once the catalogue confirms an
+   approved price exists) sits alongside the existing "Send an Enquiry"
+   action in one row -- never a second, duplicate homepage section. */
+.feature-split__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 /* Compact variant for the Property Transfer featured banner only (used on

@@ -1,21 +1,51 @@
 ---
 layout: layouts/base.njk
-title: 即時結帳
-description: 選擇符合資格的移民服務，完成申請並線上付款，無需等待報價。
+title: 線上訂購與預約
+lang: zh-Hant
+description: 直接透過 FIS 訂購符合資格的移民文件，並預約指定的協助服務。線上完成您的申請並支付款項。
 ---
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
       <p class="tag">現已上線，隨時辦理</p>
-      <h1>即時結帳</h1>
-      <p>選擇符合資格的移民服務，完成申請並線上付款，無需等待報價。FIS 將代您準備文件並提交至菲律賓移民局（Bureau of Immigration）處理。若涉及政府申請規費，將與服務費分開列示，並於付款前明確告知。</p>
+      <h1>線上訂購文件與預約服務</h1>
+      <p>直接透過 FIS 訂購符合資格的移民文件，並預約指定的協助服務。線上完成您的申請並支付款項。</p>
+      <p class="muted">所列價格已包含適用的政府費用。如需郵寄，郵寄費用將另行報價。</p>
     </div>
 
-    <div class="card-grid card-grid--3up" data-instant-services-list></div>
+    <div class="catalogue-controls" data-catalogue-controls>
+      <div class="catalogue-controls__search">
+        <label for="catalogue-search">搜尋</label>
+        <input type="search" id="catalogue-search" data-catalogue-search placeholder="依名稱或關鍵字搜尋">
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-type-filter">顯示</label>
+        <select id="catalogue-type-filter" data-catalogue-type-filter>
+          <option value="all">文件與服務</option>
+          <option value="document">僅文件</option>
+          <option value="service">僅服務</option>
+        </select>
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-category-filter">類別</label>
+        <select id="catalogue-category-filter" data-catalogue-category-filter>
+          <option value="all">所有類別</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="order-documents-section">
+      <h2>訂購文件</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="document"></div>
+    </div>
+
+    <div id="book-services-section">
+      <h2>預約服務</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="service"></div>
+    </div>
 
     <div class="context-note">
       <p>找不到您需要的服務，或不確定這是否適合您的情況？<a href="/zh-hant/contact/">請改為向我們傳送查詢 →</a></p>
     </div>
   </div>
 </section>
-

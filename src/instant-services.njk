@@ -1,22 +1,51 @@
 ---
 layout: layouts/base.njk
-title: Instant Checkout
+title: Order & Book Online
 lang: en
-description: Select an eligible immigration service, complete your request and submit payment online without waiting for a quotation.
+description: Order eligible immigration documents and book selected assistance services directly through FIS. Complete your requirements and submit payment online.
 ---
 <section class="section">
   <div class="wrap">
     <div class="section__intro">
       <p class="tag">Available Now, Online</p>
-      <h1>Instant Checkout</h1>
-      <p>Select an eligible immigration service, complete your request and submit payment online without waiting for a quotation. FIS prepares and submits your document for Bureau of Immigration processing. Government filing fees, if any, are separate and disclosed before payment.</p>
+      <h1>Order Documents &amp; Book Services Online</h1>
+      <p>Order eligible immigration documents and book selected assistance services directly through FIS. Complete your requirements and submit payment online.</p>
+      <p class="muted">Listed prices include applicable government fees. Delivery charges, where applicable, are quoted separately.</p>
     </div>
 
-    <div class="card-grid card-grid--3up" data-instant-services-list></div>
+    <div class="catalogue-controls" data-catalogue-controls>
+      <div class="catalogue-controls__search">
+        <label for="catalogue-search">Search</label>
+        <input type="search" id="catalogue-search" data-catalogue-search placeholder="Search by name or keyword">
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-type-filter">Show</label>
+        <select id="catalogue-type-filter" data-catalogue-type-filter>
+          <option value="all">Documents &amp; Services</option>
+          <option value="document">Documents only</option>
+          <option value="service">Services only</option>
+        </select>
+      </div>
+      <div class="catalogue-controls__filter">
+        <label for="catalogue-category-filter">Category</label>
+        <select id="catalogue-category-filter" data-catalogue-category-filter>
+          <option value="all">All categories</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="order-documents-section">
+      <h2>Order Documents</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="document"></div>
+    </div>
+
+    <div id="book-services-section">
+      <h2>Book Services</h2>
+      <div class="card-grid card-grid--3up" data-catalogue-list="service"></div>
+    </div>
 
     <div class="context-note">
       <p>Don't see what you need, or not sure this is the right process for your situation? <a href="/contact/">Send us an enquiry instead →</a></p>
     </div>
   </div>
 </section>
-
