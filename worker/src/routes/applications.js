@@ -1,7 +1,34 @@
 import { getSessionClient } from "../lib/session.js";
 import { json } from "../lib/http.js";
 import { HttpError } from "../lib/storage.js";
-import { getLocalizedStatusLabel } from "../lib/clientLocaleStrings.js";
+import { getLocalizedStatusLabel, getLocalizedOrderStatusLabel, getLocalizedBookingStatusLabel } from "../lib/clientLocaleStrings.js";
+import { publicPriceSnapshot } from "../lib/checkout.js";
+
+// Fixes the October review's Finding F1: an application's own status
+// (the document-processing/enquiry pipeline above) is a DIFFERENT thing
+// from whether its linked Order & Book Online order has been paid, or
+// whether an Airport VIP booking tied to that order has been confirmed.
+// Returns null (not an empty object) when the application has no linked
+// checkout order at all -- e.g. a plain enquiry -- so the frontend can
+// tell "not applicable" apart from "status not yet known".
+async function getCheckoutContext(env, applicationId, language) {
+  const order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE application_id = ?").bind(applicationId).first();
+  if (!order) return null;
+
+  const checkoutOrder = {
+    id: order.id,
+    status: order.status,
+    statusLabel: getLocalizedOrderStatusLabel(order.status, language),
+    priceSnapshot: order.price_snapshot_json ? publicPriceSnapshot(JSON.parse(order.price_snapshot_json)) : null,
+  };
+
+  const booking = await env.DB.prepare("SELECT * FROM airport_vip_bookings WHERE checkout_order_id = ?").bind(order.id).first();
+  const bookingStatus = booking
+    ? { status: booking.status, statusLabel: getLocalizedBookingStatusLabel(booking.status, language) }
+    : null;
+
+  return { checkoutOrder, bookingStatus };
+}
 
 // The invariant this whole file exists to enforce: every query that
 // touches an application (or anything hanging off one) includes
@@ -35,7 +62,12 @@ export async function handleListApplications(request, env) {
     .bind(client.id)
     .all();
   const language = client.preferred_communication_language || "en";
-  const applications = results.map((a) => ({ ...a, statusLabel: getLocalizedStatusLabel(a.status, language) }));
+  const applications = await Promise.all(
+    results.map(async (a) => {
+      const checkoutContext = await getCheckoutContext(env, a.id, language);
+      return { ...a, statusLabel: getLocalizedStatusLabel(a.status, language), ...(checkoutContext || { checkoutOrder: null, bookingStatus: null }) };
+    })
+  );
   return json({ applications });
 }
 
@@ -65,8 +97,12 @@ export async function handleGetApplication(request, env, applicationId) {
     changedAt: row.changed_at,
   }));
 
+  const checkoutContext = await getCheckoutContext(env, applicationId, language);
+
   return json({
     application: { ...application, statusLabel: getLocalizedStatusLabel(application.status, language) },
+    checkoutOrder: checkoutContext ? checkoutContext.checkoutOrder : null,
+    bookingStatus: checkoutContext ? checkoutContext.bookingStatus : null,
     history,
   });
 }

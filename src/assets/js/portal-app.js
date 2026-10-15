@@ -115,7 +115,17 @@
       var btn = node.querySelector(".portal-application-item");
       btn.querySelector(".portal-application-item__ref").textContent = application.reference;
       btn.querySelector(".portal-application-item__service").textContent = application.service_slug.replace(/-/g, " ");
-      btn.querySelector(".portal-application-item__status").textContent = application.statusLabel || statusLabel(application.status);
+      // The compact list row has room for one badge -- prefer whichever
+      // status is most consequential to the customer right now (a
+      // booking's own status, then payment, then the generic enquiry/
+      // document status), rather than always defaulting to the latter.
+      // The full detail view (renderApplicationDetail) always shows all
+      // three separately -- this is a space-constrained summary, not a
+      // second place the dimensions get merged into one.
+      var badgeLabel = (application.bookingStatus && application.bookingStatus.statusLabel) ||
+        (application.checkoutOrder && application.checkoutOrder.statusLabel) ||
+        application.statusLabel || statusLabel(application.status);
+      btn.querySelector(".portal-application-item__status").textContent = badgeLabel;
       btn.addEventListener("click", function () { loadApplicationDetail(application.id); });
       listEl.appendChild(node);
     });
@@ -230,12 +240,27 @@
       })
       .join("") || '<li class="muted">No payments requested yet.</li>';
 
+    // Finding F1 (October review): application.status is the document/
+    // enquiry-processing pipeline ONLY -- a linked Order & Book Online
+    // order's payment status, and an Airport VIP booking's own status,
+    // are each a DIFFERENT dimension and are shown as their own line,
+    // never merged into or replacing the line above. A customer whose
+    // payment is verified but whose booking availability is still under
+    // review must see BOTH facts, not one overwriting the other.
+    var checkoutOrder = appData.checkoutOrder;
+    var bookingStatus = appData.bookingStatus;
+    var statusLinesHtml =
+      '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(application.statusLabel || statusLabel(application.status)) + "</span></p>" +
+      (checkoutOrder ? '<p><strong>Payment:</strong> <span class="status-badge">' + escapeHtml(checkoutOrder.statusLabel) + "</span></p>" : "") +
+      (bookingStatus ? '<p><strong>Airport VIP Booking:</strong> <span class="status-badge">' + escapeHtml(bookingStatus.statusLabel) + "</span></p>" : "");
+
     detailEl.innerHTML =
       '<div class="card portal-detail-card">' +
       '<h2>' + escapeHtml(application.reference) + '</h2>' +
-      '<p><strong>Service:</strong> ' + escapeHtml(application.service_slug.replace(/-/g, " ")) + ' &nbsp; <strong>Status:</strong> <span class="status-badge">' + escapeHtml(application.statusLabel || statusLabel(application.status)) + "</span></p>" +
+      statusLinesHtml +
       (historyHtml ? '<h3>Status History</h3><ul class="portal-history">' + historyHtml + "</ul>" : "") +
       '<div id="portal-bi-forms-section"></div>' +
+      (bookingStatus ? '<div id="portal-airport-vip-section"></div>' : "") +
       '<h3>Documents</h3><ul class="portal-doc-requests">' + docRequestsHtml + "</ul>" +
       '<h3>Messages</h3><div class="portal-messages">' + messagesHtml + '</div>' +
       '<form class="portal-message-form"><textarea placeholder="Write a message..." required></textarea><button type="submit" class="btn btn-secondary">Send</button></form>' +
@@ -253,6 +278,146 @@
       var ownForms = (biFormsData.submissions || []).filter(function (s) { return s.applicationId === applicationId; });
       wireBiFormsSection(applicationId, ownForms);
     }
+
+    if (bookingStatus && checkoutOrder) {
+      wireAirportVipSection(checkoutOrder.id);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Airport VIP booking details + rescheduling (Stage 4C/§12 of the Order
+  // & Book Online directive). Flight/passenger details and the reschedule-
+  // request history come from the SAME customer-facing booking routes the
+  // guest application flow uses (worker/src/routes/airportVipCustomer.js)
+  // -- nothing about a booking's data is duplicated here. The 120-hour
+  // eligibility wording is always whatever the backend just computed;
+  // this file never calculates or guesses it.
+  // ---------------------------------------------------------------------
+  function wireAirportVipSection(orderId) {
+    var sectionEl = document.getElementById("portal-airport-vip-section");
+    if (!sectionEl) return;
+    sectionEl.innerHTML = '<p class="muted">Loading booking details...</p>';
+
+    window
+      .portalFetch("/api/instant-services/orders/" + orderId + "/booking")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var booking = data.booking;
+        if (!booking) {
+          sectionEl.innerHTML = "";
+          return;
+        }
+        renderAirportVipSection(sectionEl, booking);
+      })
+      .catch(function () {
+        sectionEl.innerHTML = '<p class="muted">Booking details could not be loaded right now.</p>';
+      });
+  }
+
+  var RESCHEDULABLE_BOOKING_STATUSES = ["confirmed", "rescheduled"];
+
+  function renderAirportVipSection(sectionEl, booking) {
+    var flightHtml =
+      '<p><strong>Flight:</strong> ' + escapeHtml(booking.airline) + " " + escapeHtml(booking.flightNumber) +
+      (booking.flightRoute ? " (" + escapeHtml(booking.flightRoute) + ")" : "") + "<br>" +
+      '<strong>Scheduled:</strong> ' + escapeHtml(booking.scheduledLocalDate) + " " + escapeHtml(booking.scheduledLocalTime) + " (" + escapeHtml(booking.scheduledTimezone) + ")<br>" +
+      '<strong>Passengers:</strong> ' + escapeHtml(booking.passengerNames.join(", ")) + "</p>";
+
+    var canReschedule = RESCHEDULABLE_BOOKING_STATUSES.indexOf(booking.status) !== -1;
+    var rescheduleFormHtml = canReschedule
+      ? '<form class="portal-reschedule-form enquiry-form">' +
+        '<h4>Request a Flight Change</h4>' +
+        '<div class="form-field"><label for="reschedAirline">Airline</label><input type="text" id="reschedAirline" required></div>' +
+        '<div class="form-field"><label for="reschedFlightNumber">Flight Number</label><input type="text" id="reschedFlightNumber" required></div>' +
+        '<div class="form-field"><label for="reschedRoute">Flight Origin / Destination (optional)</label><input type="text" id="reschedRoute"></div>' +
+        '<div class="form-field"><label for="reschedDate">New Scheduled Flight Date</label><input type="date" id="reschedDate" required></div>' +
+        '<div class="form-field"><label for="reschedTime">New Scheduled Flight Time</label><input type="time" id="reschedTime" required></div>' +
+        '<div class="form-field form-field--full"><label for="reschedNote">Note (optional)</label><textarea id="reschedNote"></textarea></div>' +
+        '<div class="enquiry-form-actions"><button type="submit" class="btn btn-secondary">Submit Flight Change Request</button><p class="form-status" aria-live="polite"></p></div>' +
+        "</form>"
+      : '<p class="muted">Rescheduling can be requested once this booking has been confirmed.</p>';
+
+    sectionEl.innerHTML =
+      '<h3>Airport VIP Booking</h3>' +
+      '<div class="card">' + flightHtml + rescheduleFormHtml +
+      '<div class="portal-reschedule-requests"></div>' +
+      "</div>";
+
+    loadRescheduleRequests(sectionEl, booking.id);
+
+    var form = sectionEl.querySelector(".portal-reschedule-form");
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var status = form.querySelector(".form-status");
+        var button = form.querySelector("button[type=submit]");
+        button.disabled = true;
+        status.textContent = "Submitting...";
+
+        window
+          .portalFetch("/api/instant-services/bookings/" + booking.id + "/reschedule-requests", {
+            method: "POST",
+            body: JSON.stringify({
+              airline: document.getElementById("reschedAirline").value.trim(),
+              flightNumber: document.getElementById("reschedFlightNumber").value.trim(),
+              flightRoute: document.getElementById("reschedRoute").value.trim(),
+              scheduledLocalDate: document.getElementById("reschedDate").value,
+              scheduledLocalTime: document.getElementById("reschedTime").value,
+              scheduledTimezone: booking.scheduledTimezone,
+              customerNote: document.getElementById("reschedNote").value.trim(),
+            }),
+          })
+          .then(function (resp) {
+            if (!resp.ok) return resp.json().then((data) => Promise.reject(data));
+            return resp.json();
+          })
+          .then(function (result) {
+            // Never a guarantee -- surfaces exactly what the backend
+            // decided from the 120-hour rule, in the directive's own
+            // required wording, and nothing stronger.
+            status.textContent = result.eligible
+              ? "Request submitted. Eligible for rescheduling, subject to availability."
+              : "Request submitted. This change was notified less than 120 hours before the originally scheduled departure, so it does not qualify for rescheduling under the standard policy.";
+            form.reset();
+            button.disabled = false;
+            loadRescheduleRequests(sectionEl, booking.id);
+          })
+          .catch(function (data) {
+            status.textContent = (data && data.error) || "Something went wrong. Please try again.";
+            button.disabled = false;
+          });
+      });
+    }
+  }
+
+  function loadRescheduleRequests(sectionEl, bookingId) {
+    var listEl = sectionEl.querySelector(".portal-reschedule-requests");
+    if (!listEl) return;
+    window
+      .portalFetch("/api/instant-services/bookings/" + bookingId + "/reschedule-requests")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var requests = data.requests || [];
+        if (!requests.length) {
+          listEl.innerHTML = "";
+          return;
+        }
+        var decisionLabel = { pending: "Awaiting staff review", approved: "Approved", exception_approved: "Approved (exception)", rejected: "Not approved" };
+        listEl.innerHTML =
+          "<h4>Flight Change Requests</h4><ul class=\"portal-history\">" +
+          requests
+            .map(function (r) {
+              var pf = r.proposedFlight;
+              return "<li><strong>" + escapeHtml(pf.airline) + " " + escapeHtml(pf.flightNumber) + "</strong> &rarr; " +
+                escapeHtml(pf.scheduledLocalDate) + " " + escapeHtml(pf.scheduledLocalTime) +
+                "<br><span class=\"status-badge\">" + escapeHtml(decisionLabel[r.staffDecision] || r.staffDecision) + "</span></li>";
+            })
+            .join("") +
+          "</ul>";
+      })
+      .catch(function () {
+        listEl.innerHTML = "";
+      });
   }
 
   function wireBiFormsSection(applicationId, submissions) {

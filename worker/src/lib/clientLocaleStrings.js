@@ -106,6 +106,96 @@ const PAYMENT_DISCREPANCY_WARNING = {
   vi: "Nếu phần mô tả đã dịch có vẻ không khớp với bản gốc tiếng Anh, vui lòng liên hệ Foreign Immigration Services trước khi thanh toán.",
 };
 
+// Order & Book Online: payment/fulfilment status (checkout_orders.status)
+// and Airport VIP booking status (airport_vip_bookings.status) are each
+// their OWN status machine -- deliberately never merged with
+// applications.status above. This is the fix for the October review's
+// Finding F1 ("a verified checkout order could still display 'Enquiry
+// Received'"): the Client Portal shows these as separate, clearly
+// labelled lines (worker/src/routes/applications.js), never one
+// overwriting or standing in for another.
+const ORDER_STATUS_LABELS = {
+  en: {
+    draft: "Draft", awaiting_payment: "Awaiting payment", awaiting_verification: "Payment submitted, awaiting verification",
+    paid: "Payment verified", cancelled: "Cancelled", expired: "Expired",
+  },
+  "zh-CN": {
+    draft: "草稿", awaiting_payment: "等待付款", awaiting_verification: "付款已提交，等待核实",
+    paid: "付款已核实", cancelled: "已取消", expired: "已过期",
+  },
+  "zh-Hant": {
+    draft: "草稿", awaiting_payment: "等待付款", awaiting_verification: "付款已提交，等待核實",
+    paid: "付款已核實", cancelled: "已取消", expired: "已過期",
+  },
+  ko: {
+    draft: "임시 저장", awaiting_payment: "결제 대기 중", awaiting_verification: "결제 제출됨, 확인 대기 중",
+    paid: "결제 확인됨", cancelled: "취소됨", expired: "만료됨",
+  },
+  ja: {
+    draft: "下書き", awaiting_payment: "お支払い待ち", awaiting_verification: "お支払い送信済み、確認待ち",
+    paid: "お支払い確認済み", cancelled: "キャンセル済み", expired: "期限切れ",
+  },
+  vi: {
+    draft: "Bản nháp", awaiting_payment: "Đang chờ thanh toán", awaiting_verification: "Đã gửi thanh toán, đang chờ xác minh",
+    paid: "Đã xác minh thanh toán", cancelled: "Đã hủy", expired: "Đã hết hạn",
+  },
+};
+
+export function getLocalizedOrderStatusLabel(status, language) {
+  const table = ORDER_STATUS_LABELS[language] || ORDER_STATUS_LABELS.en;
+  return table[status] || ORDER_STATUS_LABELS.en[status] || String(status).replace(/_/g, " ");
+}
+
+const BOOKING_STATUS_LABELS = {
+  en: {
+    submitted: "Booking submitted", awaiting_payment_verification: "Booking submitted, awaiting payment verification",
+    payment_verified: "Payment verified, availability under review", availability_under_review: "Availability under review",
+    confirmed: "Booking confirmed", reschedule_requested: "Reschedule requested, booking confirmed pending review",
+    rescheduled: "Booking confirmed (rescheduled)", completed: "Service completed", cancelled: "Booking cancelled",
+    refund_pending: "Refund pending", refunded: "Refunded",
+  },
+  "zh-CN": {
+    submitted: "预约已提交", awaiting_payment_verification: "预约已提交，等待付款核实",
+    payment_verified: "付款已核实，可用性审核中", availability_under_review: "可用性审核中",
+    confirmed: "预约已确认", reschedule_requested: "已申请改期，预约确认状态待审核",
+    rescheduled: "预约已确认（已改期）", completed: "服务已完成", cancelled: "预约已取消",
+    refund_pending: "退款处理中", refunded: "已退款",
+  },
+  "zh-Hant": {
+    submitted: "預約已提交", awaiting_payment_verification: "預約已提交，等待付款核實",
+    payment_verified: "付款已核實，可用性審核中", availability_under_review: "可用性審核中",
+    confirmed: "預約已確認", reschedule_requested: "已申請改期，預約確認狀態待審核",
+    rescheduled: "預約已確認（已改期）", completed: "服務已完成", cancelled: "預約已取消",
+    refund_pending: "退款處理中", refunded: "已退款",
+  },
+  ko: {
+    submitted: "예약 제출됨", awaiting_payment_verification: "예약 제출됨, 결제 확인 대기 중",
+    payment_verified: "결제 확인됨, 가능 여부 검토 중", availability_under_review: "가능 여부 검토 중",
+    confirmed: "예약 확정됨", reschedule_requested: "일정 변경 요청됨, 예약 확정 상태 검토 대기 중",
+    rescheduled: "예약 확정됨(일정 변경됨)", completed: "서비스 완료됨", cancelled: "예약 취소됨",
+    refund_pending: "환불 처리 중", refunded: "환불 완료됨",
+  },
+  ja: {
+    submitted: "予約送信済み", awaiting_payment_verification: "予約送信済み、お支払い確認待ち",
+    payment_verified: "お支払い確認済み、空き状況確認中", availability_under_review: "空き状況確認中",
+    confirmed: "予約確定済み", reschedule_requested: "予約変更リクエスト中、予約確定状況は確認待ち",
+    rescheduled: "予約確定済み（変更済み）", completed: "サービス完了", cancelled: "予約キャンセル済み",
+    refund_pending: "返金手続き中", refunded: "返金済み",
+  },
+  vi: {
+    submitted: "Đã gửi đặt lịch", awaiting_payment_verification: "Đã gửi đặt lịch, đang chờ xác minh thanh toán",
+    payment_verified: "Đã xác minh thanh toán, đang xem xét tình trạng chỗ trống", availability_under_review: "Đang xem xét tình trạng chỗ trống",
+    confirmed: "Đặt lịch đã được xác nhận", reschedule_requested: "Đã yêu cầu đổi lịch, tình trạng xác nhận đang chờ xem xét",
+    rescheduled: "Đặt lịch đã được xác nhận (đã đổi lịch)", completed: "Dịch vụ đã hoàn tất", cancelled: "Đặt lịch đã bị hủy",
+    refund_pending: "Đang chờ hoàn tiền", refunded: "Đã hoàn tiền",
+  },
+};
+
+export function getLocalizedBookingStatusLabel(status, language) {
+  const table = BOOKING_STATUS_LABELS[language] || BOOKING_STATUS_LABELS.en;
+  return table[status] || BOOKING_STATUS_LABELS.en[status] || String(status).replace(/_/g, " ");
+}
+
 export function getPaymentDiscrepancyWarning(language) {
   return PAYMENT_DISCREPANCY_WARNING[language] || PAYMENT_DISCREPANCY_WARNING.en;
 }
