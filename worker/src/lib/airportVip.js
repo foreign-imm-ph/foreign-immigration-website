@@ -32,7 +32,12 @@ const ALLOWED_BOOKING_TRANSITIONS = {
   availability_under_review: ["confirmed", "cancelled", "refund_pending"],
   confirmed: ["reschedule_requested", "completed", "cancelled", "refund_pending"],
   reschedule_requested: ["rescheduled", "confirmed", "cancelled"],
-  rescheduled: ["confirmed", "reschedule_requested", "completed", "cancelled"],
+  // A rescheduled booking is still a live, paid booking -- FIS being
+  // unable to accommodate it applies exactly as it does to a booking
+  // that was never rescheduled (the policy draws no such distinction),
+  // so refund_pending must be reachable from here too. Missing until a
+  // live Journey E (refund) test tried it and got a 409.
+  rescheduled: ["confirmed", "reschedule_requested", "completed", "cancelled", "refund_pending"],
   completed: [],
   cancelled: ["refund_pending"],
   refund_pending: ["refunded"],

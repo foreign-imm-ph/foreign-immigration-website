@@ -154,6 +154,59 @@ describe("Staff Airport VIP: reschedule decisions", () => {
     expect(request.staff_decided_by).toBe(staff.email);
   });
 
+  // Regression: a rescheduled booking is still a live, paid booking, so
+  // "FIS unable to accommodate -> full refund" must reach it exactly like
+  // any other confirmed booking. ALLOWED_BOOKING_TRANSITIONS left
+  // "rescheduled" without a path to "refund_pending" -- caught via live
+  // Journey E (refund) testing, which hit a 409 trying this exact move.
+  it("a rescheduled booking can still be moved to refund_pending and refunded (FIS unable to accommodate after a reschedule)", async () => {
+    const staff = await createTestStaff();
+    const { booking, requestId } = await confirmedBookingWithRequest();
+
+    const decideResp = await staffRequest(`/staff/airport-vip/bookings/${booking.id}/reschedule-requests/${requestId}/decide`, staff, {
+      method: "POST",
+      body: formBody({ decision: "approved" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(decideResp.status).toBe(303);
+    const rescheduled = await env.DB.prepare("SELECT * FROM airport_vip_bookings WHERE id = ?").bind(booking.id).first();
+    expect(rescheduled.status).toBe("rescheduled");
+
+    const statusResp = await staffRequest(`/staff/airport-vip/bookings/${booking.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "refund_pending" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(statusResp.status).toBe(303);
+
+    const refundResp = await staffRequest(`/staff/airport-vip/bookings/${booking.id}/refunds`, staff, {
+      method: "POST",
+      body: formBody({ reason: "fis_unable_to_accommodate", requestedAmountPhp: "5000.00" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(refundResp.status).toBe(303);
+
+    const refund = await env.DB.prepare("SELECT * FROM airport_vip_refunds WHERE booking_id = ?").bind(booking.id).first();
+    await staffRequest(`/staff/airport-vip/bookings/${booking.id}/refunds/${refund.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "approved", approvedAmountPhp: "5000.00" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    await staffRequest(`/staff/airport-vip/bookings/${booking.id}/refunds/${refund.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "processing" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    await staffRequest(`/staff/airport-vip/bookings/${booking.id}/refunds/${refund.id}/status`, staff, {
+      method: "POST",
+      body: formBody({ status: "completed" }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    const finalBooking = await env.DB.prepare("SELECT * FROM airport_vip_bookings WHERE id = ?").bind(booking.id).first();
+    expect(finalBooking.status).toBe("refunded");
+  });
+
   it("rejecting a reschedule request leaves the original flight untouched and returns the booking to 'confirmed'", async () => {
     const staff = await createTestStaff();
     const { booking, requestId } = await confirmedBookingWithRequest();
