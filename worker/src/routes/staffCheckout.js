@@ -92,10 +92,10 @@ export async function listOrders(env, staff, url) {
        <a href="/staff/instant-services/orders/">All</a> |
        ${ORDER_STATUSES.map((s) => `<a href="/staff/instant-services/orders/?status=${s}"${status === s ? ' class="filter-active"' : ""}>${s}</a>`).join(" ")}
      </div>
-     <table>
+     <div class="table-scroll"><table>
        <tr><th>Order</th><th>Client</th><th>Status</th><th>Updated</th></tr>
        ${rows || '<tr><td colspan="4" class="muted">No Instant Services orders yet.</td></tr>'}
-     </table>`,
+     </table></div>`,
     staff.email
   );
 }
@@ -449,10 +449,10 @@ export async function listCatalogue(env, staff) {
     "Order & Book Online Catalogue",
     `<h1>Order &amp; Book Online Catalogue</h1>
      <p><a href="/staff/instant-services/catalogue/new">+ Add an offering</a></p>
-     <table>
+     <div class="table-scroll"><table>
        <tr><th>Title</th><th>Slug</th><th>Type</th><th>BI Form</th><th>Status</th></tr>
        ${rows.join("") || '<tr><td colspan="5" class="muted">No catalogue offerings yet.</td></tr>'}
-     </table>`,
+     </table></div>`,
     staff.email
   );
 }

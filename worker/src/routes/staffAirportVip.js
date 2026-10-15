@@ -63,10 +63,10 @@ export async function listBookings(env, staff, url) {
        <a href="/staff/airport-vip/bookings/">All</a> |
        ${BOOKING_STATUSES.map((s) => `<a href="/staff/airport-vip/bookings/?status=${s}"${status === s ? ' class="filter-active"' : ""}>${s}</a>`).join(" ")}
      </div>
-     <table>
+     <div class="table-scroll"><table>
        <tr><th>Booking</th><th>Client</th><th>Flight</th><th>Status</th><th>Updated</th></tr>
        ${rows || '<tr><td colspan="5" class="muted">No Airport VIP bookings yet.</td></tr>'}
-     </table>`,
+     </table></div>`,
     staff.email
   );
 }
