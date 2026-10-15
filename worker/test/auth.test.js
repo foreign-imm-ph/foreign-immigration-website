@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, it, expect } from "vitest";
 import worker from "../src/index.js";
-import { createTestClient, authedRequest, SITE_ORIGIN } from "./helpers.js";
+import { createTestClient, createSessionCookieFor, authedRequest, SITE_ORIGIN } from "./helpers.js";
 
 describe("customer authentication (magic link + session)", () => {
   it("requesting a magic link for an unknown email returns the same generic message as a known one (no account enumeration)", async () => {
@@ -53,11 +53,26 @@ describe("customer authentication (magic link + session)", () => {
     const meBody = await respMe.json();
     expect(meBody.authenticated).toBe(true);
     expect(meBody.client.id).toBe(client.id);
+    // Null until the client has ever set one (Phase 4, Stage D: the
+    // portal shell reads this to decide whether to sync its own
+    // displayed language onto the client's stored preference).
+    expect(meBody.client.preferredCommunicationLanguage).toBeNull();
 
     // Single-use: the same raw token must not work a second time.
     const reqVerifyAgain = authedRequest("/api/auth/verify", { method: "POST", body: { token: rawToken } });
     const respVerifyAgain = await worker.fetch(reqVerifyAgain, env);
     expect(respVerifyAgain.status).toBe(400);
+  });
+
+  it("/api/auth/me reflects the client's stored preferred_communication_language once set", async () => {
+    const client = await createTestClient();
+    await env.DB.prepare("UPDATE clients SET preferred_communication_language = ? WHERE id = ?").bind("ja", client.id).run();
+    const cookie = await createSessionCookieFor(client);
+
+    const resp = await worker.fetch(authedRequest("/api/auth/me", { cookie }), env);
+    expect(resp.status).toBe(200);
+    const body = await resp.json();
+    expect(body.client.preferredCommunicationLanguage).toBe("ja");
   });
 
   it("logging out clears the session so /api/auth/me is no longer authenticated", async () => {

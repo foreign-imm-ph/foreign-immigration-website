@@ -83,6 +83,16 @@ export async function handleMe(request, env) {
   if (!client) return json({ authenticated: false }, { status: 401 });
   return json({
     authenticated: true,
-    client: { id: client.id, fullName: client.full_name, email: client.email },
+    client: {
+      id: client.id,
+      fullName: client.full_name,
+      email: client.email,
+      // Phase 4, Stage D: the Client Portal shell needs this to know
+      // whether the language it's about to render differs from the
+      // client's stored preference (and should sync it) -- without this,
+      // the shell would have to make a second /api/profile round trip
+      // just to read one field.
+      preferredCommunicationLanguage: client.preferred_communication_language || null,
+    },
   });
 }

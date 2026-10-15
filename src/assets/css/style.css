@@ -1835,6 +1835,28 @@ summary:focus-visible {
   margin-bottom: 1.5rem;
 }
 
+.portal-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.portal-lang-switcher-label {
+  font-size: 0.85rem;
+  color: var(--color-muted, #5a6b5f);
+}
+
+.portal-lang-switcher {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(13, 61, 37, 0.25);
+  border-radius: 4px;
+  background: #fff;
+  color: inherit;
+}
+
 .portal-tabs {
   display: flex;
   gap: 0.5rem;

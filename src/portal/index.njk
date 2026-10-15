@@ -8,18 +8,29 @@ description: Your Foreign Immigration Services applications, documents, messages
   <div class="wrap">
     <div class="portal-header">
       <div>
-        <p class="tag">Client Portal</p>
-        <h1 id="portal-welcome">Welcome</h1>
+        <p class="tag" data-i18n-key="portalTag">Client Portal</p>
+        <h1 id="portal-welcome" data-i18n-key="welcomeDefault">Welcome</h1>
       </div>
-      <button id="portal-logout" class="btn btn-secondary" type="button">Sign Out</button>
+      <div class="portal-header__actions">
+        <label class="portal-lang-switcher-label" for="portal-lang-switcher" data-i18n-key="languageSwitcherLabel">Language</label>
+        <select id="portal-lang-switcher" class="portal-lang-switcher">
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-Hant">繁體中文</option>
+          <option value="ko">한국어</option>
+          <option value="ja">日本語</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+        <button id="portal-logout" class="btn btn-secondary" type="button" data-i18n-key="signOut">Sign Out</button>
+      </div>
     </div>
 
-    <div id="portal-loading" class="muted">Loading your account...</div>
+    <div id="portal-loading" class="muted" data-i18n-key="loadingAccount">Loading your account...</div>
 
     <div id="portal-app" hidden>
       <nav class="portal-tabs" role="tablist">
-        <button type="button" class="portal-tab" data-tab="applications" aria-selected="true">Applications &amp; Services</button>
-        <button type="button" class="portal-tab" data-tab="profile" aria-selected="false">Profile</button>
+        <button type="button" class="portal-tab" data-tab="applications" aria-selected="true" data-i18n-key="tabApplications">Applications &amp; Services</button>
+        <button type="button" class="portal-tab" data-tab="profile" aria-selected="false" data-i18n-key="tabProfile">Profile</button>
       </nav>
 
       <div id="portal-panel-applications" class="portal-panel">
@@ -31,53 +42,53 @@ description: Your Foreign Immigration Services applications, documents, messages
       <div id="portal-panel-profile" class="portal-panel" hidden>
         <form id="portal-profile-form" class="enquiry-form portal-form--profile">
           <div class="form-field form-field--full">
-            <label for="profile-fullName">Full Name</label>
+            <label for="profile-fullName" data-i18n-key="fullNameLabel">Full Name</label>
             <input type="text" id="profile-fullName" name="fullName" required>
           </div>
           <div class="form-field">
-            <label for="profile-email">Email Address</label>
+            <label for="profile-email" data-i18n-key="emailLabel">Email Address</label>
             <input type="email" id="profile-email" name="email" disabled>
-            <span class="hint">Contact us to change your sign-in email.</span>
+            <span class="hint" data-i18n-key="emailChangeHint">Contact us to change your sign-in email.</span>
           </div>
           <div class="form-field">
-            <label for="profile-phone">Phone</label>
+            <label for="profile-phone" data-i18n-key="phoneLabel">Phone</label>
             <input type="text" id="profile-phone" name="phone">
           </div>
           <div class="form-field form-field--full">
-            <label for="profile-nationality">Nationality</label>
+            <label for="profile-nationality" data-i18n-key="nationalityLabel">Nationality</label>
             <input type="text" id="profile-nationality" name="nationality">
           </div>
           <div class="form-field">
-            <label for="profile-preferredLanguage">Preferred Communication Language</label>
+            <label for="profile-preferredLanguage" data-i18n-key="preferredLanguageLabel">Preferred Communication Language</label>
             <select id="profile-preferredLanguage" name="preferredCommunicationLanguage">
-              <option value="">Not specified</option>
-              <option value="en">English</option>
-              <option value="zh-CN">Simplified Chinese</option>
-              <option value="zh-Hant">Traditional Chinese</option>
-              <option value="ko">Korean</option>
-              <option value="ja">Japanese</option>
-              <option value="vi">Vietnamese</option>
-              <option value="other">Other</option>
+              <option value="" data-i18n-key="notSpecifiedOption">Not specified</option>
+              <option value="en" data-i18n-key="languageEnglish">English</option>
+              <option value="zh-CN" data-i18n-key="languageSimplifiedChinese">Simplified Chinese</option>
+              <option value="zh-Hant" data-i18n-key="languageTraditionalChinese">Traditional Chinese</option>
+              <option value="ko" data-i18n-key="languageKorean">Korean</option>
+              <option value="ja" data-i18n-key="languageJapanese">Japanese</option>
+              <option value="vi" data-i18n-key="languageVietnamese">Vietnamese</option>
+              <option value="other" data-i18n-key="otherOption">Other</option>
             </select>
           </div>
           <div class="form-field">
-            <label for="profile-preferredChannel">Preferred Contact Channel</label>
+            <label for="profile-preferredChannel" data-i18n-key="preferredChannelLabel">Preferred Contact Channel</label>
             <select id="profile-preferredChannel" name="preferredCommunicationChannel">
-              <option value="">Not specified</option>
-              <option value="email">Email</option>
-              <option value="portal">Client Portal</option>
+              <option value="" data-i18n-key="notSpecifiedOption">Not specified</option>
+              <option value="email" data-i18n-key="channelEmail">Email</option>
+              <option value="portal" data-i18n-key="channelPortal">Client Portal</option>
             </select>
-            <span class="hint">Only channels FIS can use today are listed here. See Future Messaging Permissions below for other channels.</span>
+            <span class="hint" data-i18n-key="channelHint">Only channels FIS can use today are listed here. See Future Messaging Permissions below for other channels.</span>
           </div>
           <div class="form-field">
-            <label for="profile-mobileNumber">Mobile Number</label>
+            <label for="profile-mobileNumber" data-i18n-key="mobileNumberLabel">Mobile Number</label>
             <input type="text" id="profile-mobileNumber" name="mobileNumber" placeholder="e.g. +63 917 123 4567">
-            <span class="hint">Used only for SMS/WhatsApp/Telegram/WeChat if you enable them below. Separate from the Phone field above.</span>
+            <span class="hint" data-i18n-key="mobileNumberHint">Used only for SMS/WhatsApp/Telegram/WeChat if you enable them below. Separate from the Phone field above.</span>
           </div>
           <div class="form-field">
-            <label for="profile-mobileCountry">Mobile Number Country</label>
+            <label for="profile-mobileCountry" data-i18n-key="mobileCountryLabel">Mobile Number Country</label>
             <select id="profile-mobileCountry" name="mobileCountry">
-              <option value="">Not needed if you typed a "+" country code</option>
+              <option value="" data-i18n-key="mobileCountryNotNeeded">Not needed if you typed a "+" country code</option>
               <option value="PH">Philippines</option>
               <option value="AU">Australia</option>
               <option value="US">United States</option>
@@ -91,19 +102,19 @@ description: Your Foreign Immigration Services applications, documents, messages
             </select>
           </div>
           <div class="enquiry-form-actions">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="submit" class="btn btn-primary" data-i18n-key="saveChangesButton">Save Changes</button>
             <p id="portal-profile-status" class="form-status" aria-live="polite"></p>
           </div>
         </form>
 
         <div class="portal-form--consents">
-          <h2>Future Messaging Permissions</h2>
-          <p class="muted">These channels are not yet active for messaging. Recording your permission here allows Foreign Immigration Services to contact you this way as soon as each channel becomes available, regarding your enquiry, application, documents, appointments, and service updates. Each channel is independent, optional, and can be changed at any time.</p>
+          <h2 data-i18n-key="futureMessagingHeading">Future Messaging Permissions</h2>
+          <p class="muted" data-i18n-key="futureMessagingDescription">These channels are not yet active for messaging. Recording your permission here allows Foreign Immigration Services to contact you this way as soon as each channel becomes available, regarding your enquiry, application, documents, appointments, and service updates. Each channel is independent, optional, and can be changed at any time.</p>
           <div class="form-field form-field--full">
-            <label><input type="checkbox" id="consent-sms" data-channel="sms"> SMS</label>
-            <label><input type="checkbox" id="consent-whatsapp" data-channel="whatsapp"> WhatsApp</label>
-            <label><input type="checkbox" id="consent-telegram" data-channel="telegram"> Telegram</label>
-            <label><input type="checkbox" id="consent-wechat" data-channel="wechat"> WeChat</label>
+            <label><input type="checkbox" id="consent-sms" data-channel="sms"> <span data-i18n-key="channelSms">SMS</span></label>
+            <label><input type="checkbox" id="consent-whatsapp" data-channel="whatsapp"> <span data-i18n-key="channelWhatsapp">WhatsApp</span></label>
+            <label><input type="checkbox" id="consent-telegram" data-channel="telegram"> <span data-i18n-key="channelTelegram">Telegram</span></label>
+            <label><input type="checkbox" id="consent-wechat" data-channel="wechat"> <span data-i18n-key="channelWechat">WeChat</span></label>
           </div>
           <p id="portal-consent-status" class="form-status" aria-live="polite"></p>
         </div>
