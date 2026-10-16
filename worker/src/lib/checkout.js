@@ -7,6 +7,7 @@
 import { newId, generateReference } from "./crypto.js";
 import { HttpError } from "./storage.js";
 import { sumCentavos } from "./money.js";
+import { hashEnglishContent, hashEnglishFields } from "./checkoutTranslation.js";
 
 export const ORDER_STATUSES = ["draft", "awaiting_payment", "awaiting_verification", "paid", "cancelled", "expired"];
 
@@ -106,12 +107,20 @@ export async function getServiceById(db, serviceId) {
   return db.prepare("SELECT * FROM checkout_services WHERE id = ?").bind(serviceId).first();
 }
 
+// Customer-facing read. A row flagged needs_review (a manually authored
+// translation whose English source has since changed -- see
+// lib/checkoutTranslation.js) is treated exactly like a MISSING row:
+// falls back to English rather than ever risking a customer seeing
+// eligibility/pricing/document-requirement text that might no longer
+// match the current English source. The flag is cleared only by an
+// explicit staff "Keep" or "Update automatically" decision, never by
+// this read path.
 export async function getServiceI18n(db, serviceId, lang) {
   const row = await db
     .prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?")
     .bind(serviceId, lang)
     .first();
-  if (row) return row;
+  if (row && !row.needs_review) return row;
   if (lang === "en") return null;
   return db.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = 'en'").bind(serviceId).first();
 }
@@ -477,17 +486,43 @@ export async function getPriceHistory(db, serviceId) {
 // when it OVERWRITES a previously machine-generated row (checked here via
 // the explicit SET on conflict, not just the INSERT default) so a manual
 // correction can never later be silently replaced again.
+//
+// For a non-English language, the save is also stamped as RECONCILED
+// against the current English content (field_hashes_json/source_hash set
+// from the English row as it stands right now -- English is always saved
+// first in the same request, see staffCheckout.js saveLanguageContent, so
+// this reads the just-saved English text) and needs_review is cleared --
+// the owner typing a translation IS the review, so no stale warning can
+// linger from before this save.
 export async function upsertServiceI18n(db, serviceId, lang, { title, shortDescription, eligibilityText, noticesText }) {
+  let fieldHashesJson = null;
+  let sourceHash = null;
+  if (lang !== "en") {
+    const enRow = await db.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = 'en'").bind(serviceId).first();
+    if (enRow) {
+      fieldHashesJson = JSON.stringify(hashEnglishFields(enRow));
+      sourceHash = hashEnglishContent({
+        title: enRow.title,
+        shortDescription: enRow.short_description,
+        eligibilityText: enRow.eligibility_text,
+        noticesText: enRow.notices_text,
+      });
+    }
+  }
   await db
     .prepare(
-      `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text, notices_text, auto_generated, source_hash, translation_status, generated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, NULL, 'ready', NULL)
+      `INSERT INTO checkout_service_i18n
+         (service_id, lang, title, short_description, eligibility_text, notices_text,
+          auto_generated, source_hash, translation_status, generated_at,
+          field_hashes_json, needs_review, review_changed_fields)
+       VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'ready', NULL, ?, 0, NULL)
        ON CONFLICT(service_id, lang) DO UPDATE SET
          title = excluded.title, short_description = excluded.short_description,
          eligibility_text = excluded.eligibility_text, notices_text = excluded.notices_text,
-         auto_generated = 0, source_hash = NULL, translation_status = 'ready', generated_at = NULL`
+         auto_generated = 0, source_hash = excluded.source_hash, translation_status = 'ready', generated_at = NULL,
+         field_hashes_json = excluded.field_hashes_json, needs_review = 0, review_changed_fields = NULL`
     )
-    .bind(serviceId, lang, title, shortDescription, eligibilityText, noticesText || null)
+    .bind(serviceId, lang, title, shortDescription, eligibilityText, noticesText || null, sourceHash, fieldHashesJson)
     .run();
 }
 

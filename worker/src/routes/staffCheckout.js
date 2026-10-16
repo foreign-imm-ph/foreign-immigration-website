@@ -36,7 +36,7 @@ import {
   updatePriceComponentsWithHistory,
   getPriceHistory,
 } from "../lib/checkout.js";
-import { ensureServiceTranslations } from "../lib/checkoutTranslation.js";
+import { ensureServiceTranslations, generateTranslationPreview, reconcileKeep, applyRegeneratedTranslation } from "../lib/checkoutTranslation.js";
 import { getSubmissionById } from "../lib/biForms.js";
 import { getCurrentPaymentSettings, getPaymentSettingsHistory, recordPaymentSettingsChange } from "../lib/checkoutPaymentSettings.js";
 import { getProvider } from "../lib/paymentGateway.js";
@@ -464,16 +464,59 @@ export async function listCatalogue(env, staff) {
 // status ever being mandatory reading before saving.
 function translationStatusBadge(row) {
   if (!row || !row.title) return '<span class="status">not yet generated</span>';
+  if (row.auto_generated === 0 && row.needs_review) return '<span class="priority-badge priority-badge--urgent">review needed — English source changed</span>';
   if (row.auto_generated === 0) return '<span class="status">manually approved</span>';
   if (row.translation_status === "failed") return '<span class="priority-badge priority-badge--urgent">translation failed — showing last good version</span>';
   return '<span class="status">auto-translated</span>';
 }
 
-function languageContentFields(i18nByLang) {
+const REVIEW_FIELD_LABELS = {
+  title: "Title",
+  short_description: "Short description",
+  eligibility_text: "Eligibility",
+  notices_text: "Notices",
+};
+
+// The prominent warning panel for a manually authored translation whose
+// English source has since changed -- shown instead of silently letting
+// the (possibly now-inaccurate) manual text sit there unflagged. Lets
+// staff compare the current English against what the translation still
+// says, see exactly which fields moved, and choose one of the two
+// required actions. Customers never see this row while it is flagged --
+// lib/checkout.js getServiceI18n falls back to English in the meantime.
+function reviewNeededPanel(serviceId, lang, row, enRow) {
+  const changedCols = (row.review_changed_fields || "").split(",").filter(Boolean);
+  const changedLabel = changedCols.map((c) => REVIEW_FIELD_LABELS[c] || c).join(", ") || "its English source";
+  const compareRows = ["title", "short_description", "eligibility_text", "notices_text"]
+    .map((col) => {
+      const changed = changedCols.includes(col);
+      return `<tr${changed ? ' style="background:#fbf1dc;"' : ""}>
+        <td><strong>${escapeHtml(REVIEW_FIELD_LABELS[col])}</strong>${changed ? ' <span class="muted">(changed)</span>' : ""}</td>
+        <td>${escapeHtml(enRow ? enRow[col] || "" : "")}</td>
+        <td>${escapeHtml(row[col] || "")}</td>
+      </tr>`;
+    })
+    .join("");
+
+  return `<div class="card" style="border-color:#e8c876;background:#fffaf0;">
+    <p><strong>Review needed — English source changed (${escapeHtml(changedLabel)}).</strong></p>
+    <p class="muted">This ${escapeHtml(LANGUAGE_LABELS[lang])} translation was manually approved, but the English content it was approved against has since changed. Customers currently see the English version for this language until this is resolved -- the saved translation below is not shown to them.</p>
+    <div class="table-scroll"><table><tr><th>Field</th><th>Current English</th><th>Saved ${escapeHtml(LANGUAGE_LABELS[lang])} translation</th></tr>${compareRows}</table></div>
+    <form method="POST" action="/staff/instant-services/catalogue/${serviceId}/i18n/${lang}/keep" style="display:inline-block;margin-right:0.5rem;">
+      <button type="submit" class="secondary">Keep my translation</button>
+    </form>
+    <form method="POST" action="/staff/instant-services/catalogue/${serviceId}/i18n/${lang}/regenerate-preview" style="display:inline-block;">
+      <button type="submit">Update translation automatically</button>
+    </form>
+  </div>`;
+}
+
+function languageContentFields(i18nByLang, serviceId) {
   return CANONICAL_LANGUAGES
     .map((lang) => {
       const row = i18nByLang[lang] || {};
-      return `<fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
+      return `${serviceId && lang !== "en" && row.needs_review ? reviewNeededPanel(serviceId, lang, row, i18nByLang.en) : ""}
+      <fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
         <legend>${escapeHtml(LANGUAGE_LABELS[lang])}${
           lang === "en"
             ? " (required — this is the source every other language is automatically translated from)"
@@ -695,7 +738,7 @@ export async function viewService(env, staff, serviceId) {
        <h2>Price</h2>
        ${priceComponentFields(components)}
        <h2>Customer-facing content</h2>
-       ${languageContentFields(i18nByLang)}
+       ${languageContentFields(i18nByLang, serviceId)}
        <button type="submit">Save changes</button>
      </form>
      <div class="card"><h2>Price history</h2>${priceHistoryTable(history)}</div>`,
@@ -732,6 +775,113 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
   await ensureServiceTranslations(env, serviceId);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
 
+  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+}
+
+// "Keep my translation": the owner reviewed the warning above and
+// confirms the existing manual translation is still appropriate despite
+// the English change. Content is never touched -- only the review flag
+// and the reconciliation hashes.
+export async function reconcileKeepHandler(request, env, staff, serviceId, lang) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const changed = await reconcileKeep(env, serviceId, lang);
+  if (changed) {
+    await logAudit(env.DB, {
+      actorType: "staff",
+      actorIdOrEmail: staff.email,
+      action: "kept_catalogue_translation_after_review",
+      targetTable: "checkout_service_i18n",
+      targetId: `${serviceId}:${lang}`,
+    });
+  }
+  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+}
+
+// "Update translation automatically", step 1: generates a fresh
+// translation from the CURRENT English content and shows it for
+// comparison against both the current English and the existing manual
+// translation -- nothing is saved yet. The generated text travels to the
+// confirmation step as hidden form fields rather than being persisted
+// early, so an abandoned preview never leaves a half-applied row behind.
+export async function regeneratePreviewHandler(request, env, staff, serviceId, lang) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service) return notFound();
+  const enRow = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = 'en'").bind(serviceId).first();
+  if (!enRow) throw new HttpError(400, "English content must be saved before a translation can be generated");
+  const existing = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?").bind(serviceId, lang).first();
+
+  const preview = await generateTranslationPreview(env, enRow, lang);
+  if (!preview.ok) {
+    return staffPage(
+      "Translation preview failed",
+      `<div class="card"><p>Automatic translation into ${escapeHtml(LANGUAGE_LABELS[lang])} failed. The existing manual translation has not been changed.</p>
+       <p><a class="btn-link" href="/staff/instant-services/catalogue/${serviceId}">Back to ${escapeHtml(service.service_slug)}</a></p></div>`,
+      staff.email
+    );
+  }
+
+  const fields = ["title", "shortDescription", "eligibilityText", "noticesText"];
+  const hiddenInputs = fields.map((f) => `<input type="hidden" name="${f}" value="${escapeHtml(preview[f] || "")}">`).join("");
+  const compareRows = [
+    ["title", "Title"],
+    ["short_description", "Short description"],
+    ["eligibility_text", "Eligibility"],
+    ["notices_text", "Notices"],
+  ]
+    .map(([col, label], i) => {
+      const previewValue = preview[fields[i]] || "";
+      return `<tr>
+        <td><strong>${escapeHtml(label)}</strong></td>
+        <td>${escapeHtml(enRow[col] || "")}</td>
+        <td>${escapeHtml(existing ? existing[col] || "" : "")}</td>
+        <td>${escapeHtml(previewValue)}</td>
+      </tr>`;
+    })
+    .join("");
+
+  return staffPage(
+    `Preview translation: ${service.service_slug}`,
+    `<h1>Preview automatically generated ${escapeHtml(LANGUAGE_LABELS[lang])} translation</h1>
+     <div class="card">
+       <p class="muted">Nothing has been saved yet. Review the generated translation below, then confirm to replace the current manual translation with it.</p>
+       <div class="table-scroll"><table><tr><th>Field</th><th>Current English</th><th>Current (manual) translation</th><th>New preview</th></tr>${compareRows}</table></div>
+       <form method="POST" action="/staff/instant-services/catalogue/${serviceId}/i18n/${lang}/regenerate-apply">
+         ${hiddenInputs}
+         <button type="submit">Replace with this translation</button>
+       </form>
+       <p><a class="btn-link" href="/staff/instant-services/catalogue/${serviceId}">Cancel, keep existing translation</a></p>
+     </div>`,
+    staff.email
+  );
+}
+
+// "Update translation automatically", step 2: applies the previewed text
+// (round-tripped from the form above, not re-generated) in place of the
+// manual translation, and clears the review flag.
+export async function regenerateApplyHandler(request, env, staff, serviceId, lang) {
+  const denied = adminOnlyResponse(staff);
+  if (denied) return denied;
+  const form = await request.formData();
+  const content = {
+    title: String(form.get("title") || "").trim(),
+    shortDescription: String(form.get("shortDescription") || "").trim(),
+    eligibilityText: String(form.get("eligibilityText") || "").trim(),
+    noticesText: String(form.get("noticesText") || "").trim() || null,
+  };
+  if (!content.title || !content.shortDescription || !content.eligibilityText) {
+    throw new HttpError(400, "Incomplete previewed translation -- nothing was applied");
+  }
+  await applyRegeneratedTranslation(env, serviceId, lang, content);
+  await logAudit(env.DB, {
+    actorType: "staff",
+    actorIdOrEmail: staff.email,
+    action: "regenerated_catalogue_translation_after_review",
+    targetTable: "checkout_service_i18n",
+    targetId: `${serviceId}:${lang}`,
+  });
   return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
 }
 

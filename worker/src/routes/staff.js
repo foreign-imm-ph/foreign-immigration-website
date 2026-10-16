@@ -60,6 +60,9 @@ import {
   updateServiceHandler,
   toggleServiceActive,
   setOfferingStatusHandler,
+  reconcileKeepHandler,
+  regeneratePreviewHandler,
+  regenerateApplyHandler,
 } from "./staffCheckout.js";
 import {
   listBookings as listAirportVipBookings,
@@ -271,6 +274,16 @@ async function dispatch(request, env, url) {
   if (catalogueActiveMatch && method === "POST") return toggleServiceActive(request, env, staff, catalogueActiveMatch[1]);
   const catalogueStatusMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/status$/);
   if (catalogueStatusMatch && method === "POST") return setOfferingStatusHandler(request, env, staff, catalogueStatusMatch[1]);
+
+  // Translation accuracy refinement: reconciling a manually approved
+  // catalogue translation flagged needs_review after its English source
+  // changed -- see worker/src/lib/checkoutTranslation.js.
+  const i18nKeepMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/i18n\/([^/]+)\/keep$/);
+  if (i18nKeepMatch && method === "POST") return reconcileKeepHandler(request, env, staff, i18nKeepMatch[1], i18nKeepMatch[2]);
+  const i18nPreviewMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/i18n\/([^/]+)\/regenerate-preview$/);
+  if (i18nPreviewMatch && method === "POST") return regeneratePreviewHandler(request, env, staff, i18nPreviewMatch[1], i18nPreviewMatch[2]);
+  const i18nApplyMatch = path.match(/^\/instant-services\/catalogue\/([^/]+)\/i18n\/([^/]+)\/regenerate-apply$/);
+  if (i18nApplyMatch && method === "POST") return regenerateApplyHandler(request, env, staff, i18nApplyMatch[1], i18nApplyMatch[2]);
 
   // Airport VIP Meet & Assist -- booking availability confirmation,
   // rescheduling decisions, and refund administration. A booking's own

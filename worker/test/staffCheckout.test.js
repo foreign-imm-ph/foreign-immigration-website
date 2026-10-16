@@ -539,4 +539,74 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     expect(unchanged.active).toBe(0);
     expect(unchanged.offering_status).not.toBe("active");
   });
+
+  // Translation accuracy refinement: a manually corrected translation must
+  // be flagged -- never silently overwritten or silently left stale --
+  // once its English source changes, and the owner's "Keep" decision must
+  // actually clear that flag. This drives the real HTTP save path twice
+  // (no AI call needed for drift *detection*, only for generation, which
+  // is not exercised here -- see checkoutTranslation.test.js for the
+  // AI-independent reconciliation-logic coverage).
+  it("flags a manually approved translation needs_review when its English source changes, shows the warning, and 'Keep my translation' clears it without altering content", async () => {
+    const staff = await createTestStaff({ role: "admin" });
+    const service = await createTestCheckoutService({ title: "Original English Title" });
+
+    // Manually approve a zh-CN translation (an "optional override" save).
+    await env.DB.prepare(
+      `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text, auto_generated, field_hashes_json, source_hash, needs_review)
+       VALUES (?, 'zh-CN', '人工审核标题', '人工审核说明', '人工审核资格', 0,
+         '{"title":"orig","shortDescription":"orig","eligibilityText":"orig","noticesText":"orig"}', 'orig-whole-hash', 0)`
+    )
+      .bind(service.id)
+      .run();
+
+    // Owner changes the English title through the real catalogue edit form.
+    const updateResp = await staffRequest(`/staff/instant-services/catalogue/${service.id}`, staff, {
+      method: "POST",
+      body: formBody({
+        serviceSlug: service.service_slug,
+        offeringType: service.offering_type,
+        biFormId: service.bi_form_id || "",
+        displayOrder: "0",
+        serviceFeeAmount: "1000.00",
+        title_en: "Updated English Title",
+        shortDescription_en: "Test service description",
+        eligibilityText_en: "Eligible for testing",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    expect(updateResp.status).toBe(303);
+
+    const flagged = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = 'zh-CN'").bind(service.id).first();
+    expect(flagged.needs_review).toBe(1);
+    expect(flagged.review_changed_fields).toContain("title");
+    // Content is completely untouched.
+    expect(flagged.title).toBe("人工审核标题");
+
+    // The warning is shown prominently in the catalogue editor.
+    const editPage = await staffRequest(`/staff/instant-services/catalogue/${service.id}`, staff);
+    const editHtml = await editPage.text();
+    expect(editHtml).toContain("Review needed");
+    expect(editHtml).toContain("人工审核标题");
+    expect(editHtml).toContain("Updated English Title");
+
+    // Owner chooses "Keep my translation".
+    const keepResp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/i18n/zh-CN/keep`, staff, { method: "POST" });
+    expect(keepResp.status).toBe(303);
+
+    const reconciled = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = 'zh-CN'").bind(service.id).first();
+    expect(reconciled.needs_review).toBe(0);
+    expect(reconciled.review_changed_fields).toBeNull();
+    expect(reconciled.title).toBe("人工审核标题"); // still untouched
+    expect(reconciled.auto_generated).toBe(0); // still manually controlled
+  });
+
+  it("a non-admin cannot keep or regenerate a flagged translation", async () => {
+    const staff = await createTestStaff({ role: "staff" });
+    const service = await createTestCheckoutService();
+    const keepResp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/i18n/zh-CN/keep`, staff, { method: "POST" });
+    expect(keepResp.status).toBe(403);
+    const previewResp = await staffRequest(`/staff/instant-services/catalogue/${service.id}/i18n/zh-CN/regenerate-preview`, staff, { method: "POST" });
+    expect(previewResp.status).toBe(403);
+  });
 });
