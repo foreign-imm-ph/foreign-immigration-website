@@ -395,3 +395,119 @@ the owner's decision, nothing here activates any of it): which draft
 offerings to sell and at what price, Airport VIP package pricing/
 activation, the real QR Ph payment image, and whether to tighten the
 payment-verification/refund staff-permission recommendation.
+
+---
+
+## 11. Second Release — Automatic Multilingual Catalogue, Bilingual
+Messaging, Translation Accuracy & UI Refinements (2026-10-16)
+
+Authorized and executed 2026-10-16, covering commits `9fe8c14` (compact
+navigation, Staff Portal wordmark correction, automatic catalogue
+translation, bilingual customer correspondence, conditional catalogue
+empty state) and `c60cfa2` (translation accuracy safeguards: field-level
+change detection, manual-translation review flagging, safe customer-
+facing fallback, Keep/Regenerate reconciliation actions).
+
+**Release commit**: `c60cfa2` (both approved commits; `9fe8c14` is an
+ancestor of `c60cfa2`, so deploying the latter deploys both in full).
+
+### Step 1 — Baseline
+
+Branch `claude/fis-website-planning-r52sii`, working tree clean, local
+`HEAD` matched `origin` exactly at `c60cfa2` — both `9fe8c14` and
+`c60cfa2` confirmed present before proceeding.
+
+### Step 2 — Production backup
+
+Pre-migration row counts recorded directly from production: `enquiries`=7,
+`clients`=2, `staff`=1, `applications`=4, `audit_log`=43,
+`checkout_services`=19, `checkout_service_i18n`=19,
+`communication_messages`=5, `document_requests`=4, `documents`=1,
+`conversations`=4, `messages`=4, `payment_requests`=3, `auth_tokens`=6,
+`sessions`=3 — identical to the first release's post-deployment state,
+confirming no unexpected production activity occurred between the two
+releases.
+
+Full SQL export via `wrangler d1 export fis-backend --remote`: 82,056
+bytes, 36 `CREATE TABLE` statements, every table's `INSERT` row count
+matching the baseline above exactly. SHA-256:
+`9fe81324769e5c2f13294a69c0b7239646c8646ab60ff411f360a590f9f6b1fd`.
+Stored outside the repository in this session's private scratch storage
+(`db-backups/fis-backend-pre-0014-0015-20261016T055632Z.sql`) — not
+committed, not printed in full.
+
+### Step 3 — Migrations applied
+
+`wrangler d1 migrations list --remote` confirmed exactly `0014_catalogue_
+translation_automation.sql` and `0015_catalogue_translation_review.sql`
+pending (0001–0013 already applied and correctly recorded, unlike the
+first release's ledger gap — no correction was needed this time).
+`wrangler d1 migrations apply fis-backend --remote` applied both ✅.
+`wrangler d1 migrations list --remote` afterward: "No migrations to
+apply."
+
+**Post-migration verification**: `checkout_service_i18n` now has
+`auto_generated`, `source_hash`, `translation_status`, `generated_at`
+(from 0014) and `field_hashes_json`, `needs_review`,
+`review_changed_fields` (from 0015). All pre-existing row counts
+unchanged (re-queried, matched exactly). `checkout_services`: still
+exactly 19 rows, all `offering_status='draft'`, `active=0` — zero
+exceptions.
+
+### Step 4 — Worker deployed
+
+`wrangler deploy` from `worker/`. **Version ID
+`34e9d0e4-994d-4d27-8871-ca66308d1dd7`**. All bindings unchanged from the
+first release's deployment (`DB`, `CLIENT_FILES`, `BI_FORMS_LIBRARY`,
+`AI`, Access/email environment variables, route). No new provider, no new
+paid resource.
+
+### Step 5 — Website published
+
+Diff against `main` (`1598947` → `c60cfa2`) inspected: 23 files, exactly
+the contents of the two approved commits (one pre-existing locale file
+touched only by the already-reviewed nav-tag change). `git merge-base
+--is-ancestor` confirmed a clean fast-forward — no 3-way merge, no
+conflict risk. Pushed to `main`; GitHub Actions "Build and Deploy" run
+[`38858525287`](https://github.com/foreign-imm-ph/foreign-immigration-website/actions/runs/38858525287)
+completed with `conclusion: success`.
+
+### Step 6–7 — Production smoke tests
+
+- Homepage, `/instant-services/`, `/client-portal/`: HTTP 200.
+- `/instant-services/` in all five non-English locales: HTTP 200 (one
+  transient 503 on `zh-cn` immediately post-deploy, self-resolved within
+  seconds on retry — the same propagation-timing pattern observed and
+  documented in the first release, not a defect).
+- Public catalogue API: `{"services":[],"lang":"en"}` — still empty, as
+  required.
+- Direct access to a known draft offering ID (`svc-cdr`): HTTP 404 — still
+  not purchasable.
+- Staff Portal (`/staff/enquiries/`) and the new catalogue admin route:
+  both HTTP 302 (Cloudflare Access challenge) — alive, still protected.
+- Compact header CSS confirmed live (`padding-top/bottom: 0.4rem`, logo
+  `height: 68px` desktop / `52px` mobile via the `max-width: 600px` rule).
+- Catalogue empty-state hook (`data-catalogue-availability-tag`) and its
+  `unavailableTag` swap string confirmed present in the published markup
+  and JS.
+- The Staff Portal wordmark fix and the translation-review UI are part of
+  the same deployed Worker version verified above; not independently
+  re-screenshotted against production since Cloudflare Access correctly
+  prevented an unauthenticated fetch from rendering the protected page
+  (confirmed by the 302 itself) — already visually verified locally
+  against this exact commit before release (see the first release's
+  documented screenshot pass) and covered by the fresh 269-test suite run
+  immediately before this deployment.
+- No real payment, refund, booking, catalogue activation, or customer
+  email occurred during this verification.
+
+### Step 8 — This document
+
+Updated and committed as this section (no new planning document created).
+
+**Outstanding business configuration** (unchanged): which draft offerings
+to sell and at what price, Airport VIP package pricing/activation, the
+real QR Ph payment image, and the payment-verification/refund staff-
+permission recommendation. The catalogue translation infrastructure is
+now live and automatic — no further owner action is needed for
+translation itself once English content is entered or edited.
