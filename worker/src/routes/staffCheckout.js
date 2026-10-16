@@ -36,6 +36,7 @@ import {
   updatePriceComponentsWithHistory,
   getPriceHistory,
 } from "../lib/checkout.js";
+import { ensureServiceTranslations } from "../lib/checkoutTranslation.js";
 import { getSubmissionById } from "../lib/biForms.js";
 import { getCurrentPaymentSettings, getPaymentSettingsHistory, recordPaymentSettingsChange } from "../lib/checkoutPaymentSettings.js";
 import { getProvider } from "../lib/paymentGateway.js";
@@ -457,18 +458,34 @@ export async function listCatalogue(env, staff) {
   );
 }
 
+// Per-language status shown next to the (optional) override fields below
+// -- so staff can see at a glance whether a language was filled in
+// automatically, is still up to date, or needs attention, without that
+// status ever being mandatory reading before saving.
+function translationStatusBadge(row) {
+  if (!row || !row.title) return '<span class="status">not yet generated</span>';
+  if (row.auto_generated === 0) return '<span class="status">manually approved</span>';
+  if (row.translation_status === "failed") return '<span class="priority-badge priority-badge--urgent">translation failed — showing last good version</span>';
+  return '<span class="status">auto-translated</span>';
+}
+
 function languageContentFields(i18nByLang) {
   return CANONICAL_LANGUAGES
     .map((lang) => {
       const row = i18nByLang[lang] || {};
       return `<fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
-        <legend>${escapeHtml(LANGUAGE_LABELS[lang])}${lang === "en" ? " (required)" : " (optional — falls back to English until translated)"}</legend>
+        <legend>${escapeHtml(LANGUAGE_LABELS[lang])}${
+          lang === "en"
+            ? " (required — this is the source every other language is automatically translated from)"
+            : ` (optional override — ${translationStatusBadge(row)})`
+        }</legend>
         <label for="title-${lang}">Title</label>
         <input type="text" name="title_${lang}" id="title-${lang}" value="${escapeHtml(row.title || "")}" ${lang === "en" ? "required" : ""}>
         <label for="desc-${lang}">Short description</label>
         <textarea name="shortDescription_${lang}" id="desc-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.short_description || "")}</textarea>
         <label for="elig-${lang}">Eligibility</label>
         <textarea name="eligibilityText_${lang}" id="elig-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.eligibility_text || "")}</textarea>
+        ${lang !== "en" ? `<p class="muted">Filled in automatically from the English content above. Type here only to permanently override the automatic translation for this language.</p>` : ""}
       </fieldset>`;
     })
     .join("");
@@ -618,6 +635,13 @@ export async function createServiceHandler(request, env, staff) {
   });
   await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
   await saveLanguageContent(env.DB, service.id, form);
+  // Automatic catalogue translation: fills in the five non-English
+  // languages from the English content just saved, so the owner never has
+  // to type five separate translations. Bounded to this one offering, run
+  // synchronously as part of this save (not on a customer page load) --
+  // see worker/src/lib/checkoutTranslation.js for the caching/staleness
+  // rules that make repeat saves cheap.
+  await ensureServiceTranslations(env, service.id);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: service.id });
 
   return redirectTo(request, `/staff/instant-services/catalogue/${service.id}`);
@@ -705,6 +729,7 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
   });
   await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
   await saveLanguageContent(env.DB, serviceId, form);
+  await ensureServiceTranslations(env, serviceId);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
 
   return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);

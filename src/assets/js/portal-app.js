@@ -14,6 +14,23 @@
   var CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
   var LOCALE_STORAGE_KEY = "fisPreferredLocale";
 
+  // Bilingual correspondence requirement: each message card labels its
+  // two blocks by the language THAT MESSAGE is actually in (source_language
+  // for a client message, target_language for a translated staff reply) --
+  // not by the portal UI's own active language, which is a separate,
+  // only loosely related setting. Native self-names, not translated.
+  var LANGUAGE_SELF_LABELS = {
+    en: "English",
+    "zh-CN": "中文",
+    "zh-Hant": "繁體中文",
+    ko: "한국어",
+    ja: "日本語",
+    vi: "Tiếng Việt",
+  };
+  function languageSelfLabel(code) {
+    return LANGUAGE_SELF_LABELS[code] || "";
+  }
+
   // Phase 4, Stage D: the Client Portal shell is localized the same way
   // the Order & Book Online apply flow already is (instant-services-
   // apply.js) -- one shared dynamic page, a STRINGS dictionary, a t(lang,
@@ -36,6 +53,8 @@
       viewApplicationHidden: "View application ",
       statusHistoryHeading: "Status History",
       showEnglishOriginal: "Show English original",
+      englishLabel: "English",
+      translationUnavailable: "Translation temporarily unavailable. Our team can still read your original message.",
       documentsHeading: "Documents",
       noDocumentsYet: "No documents requested yet.",
       uploadLabel: "Upload",
@@ -129,6 +148,8 @@
       viewApplicationHidden: "查看申请 ",
       statusHistoryHeading: "状态历史",
       showEnglishOriginal: "查看英文原文",
+      englishLabel: "English",
+      translationUnavailable: "翻译暂时不可用。我们的团队仍可阅读您的原始留言。",
       documentsHeading: "文件",
       noDocumentsYet: "尚无需要提交的文件。",
       uploadLabel: "上传",
@@ -222,6 +243,8 @@
       viewApplicationHidden: "查看申請 ",
       statusHistoryHeading: "狀態歷程",
       showEnglishOriginal: "查看英文原文",
+      englishLabel: "English",
+      translationUnavailable: "翻譯暫時無法使用。我們的團隊仍可閱讀您的原始留言。",
       documentsHeading: "文件",
       noDocumentsYet: "目前尚無需要提交的文件。",
       uploadLabel: "上傳",
@@ -315,6 +338,8 @@
       viewApplicationHidden: "신청 내역 보기 ",
       statusHistoryHeading: "상태 이력",
       showEnglishOriginal: "영어 원문 보기",
+      englishLabel: "English",
+      translationUnavailable: "번역을 일시적으로 이용할 수 없습니다. 저희 팀은 원문을 계속 확인할 수 있습니다.",
       documentsHeading: "서류",
       noDocumentsYet: "아직 요청된 서류가 없습니다.",
       uploadLabel: "업로드",
@@ -408,6 +433,8 @@
       viewApplicationHidden: "申請を表示 ",
       statusHistoryHeading: "ステータス履歴",
       showEnglishOriginal: "英語原文を表示",
+      englishLabel: "English",
+      translationUnavailable: "翻訳は現在ご利用いただけません。担当チームは元のメッセージを引き続き確認できます。",
       documentsHeading: "書類",
       noDocumentsYet: "まだご依頼している書類はありません。",
       uploadLabel: "アップロード",
@@ -501,6 +528,8 @@
       viewApplicationHidden: "Xem hồ sơ ",
       statusHistoryHeading: "Lịch Sử Trạng Thái",
       showEnglishOriginal: "Xem bản gốc tiếng Anh",
+      englishLabel: "English",
+      translationUnavailable: "Bản dịch tạm thời không khả dụng. Đội ngũ của chúng tôi vẫn có thể đọc được tin nhắn gốc của quý khách.",
       documentsHeading: "Hồ Sơ Giấy Tờ",
       noDocumentsYet: "Chưa có yêu cầu hồ sơ nào.",
       uploadLabel: "Tải lên",
@@ -879,13 +908,31 @@
 
     var messagesHtml = msgData.messages
       .map(function (m) {
-        // english_original is present only for a translated staff reply
-        // (never for the client's own messages) — a native <details>
-        // disclosure keeps the toggle simple, accessible, and JS-free.
-        var originalHtml = m.english_original
-          ? '<details class="portal-message-original"><summary>' + escapeHtml(t("showEnglishOriginal")) + '</summary><p>' + escapeHtml(m.english_original) + '</p></details>'
-          : '';
-        return '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span><p>' + escapeHtml(m.body) + '</p>' + originalHtml + '</div>';
+        // Bilingual correspondence: the customer's own language appears
+        // first (m.body is already in that language for both sender
+        // types — the client's own original text, or a staff reply
+        // translated for them), with the English version directly
+        // underneath in the same card by default — no longer a collapsed
+        // "show original" disclosure. Labels name the language the
+        // message/translation is actually IN, not the portal UI's own
+        // active language. English is shown once, never duplicated, when
+        // the message is itself in English.
+        var englishText = m.english_original || m.english_translation || null;
+        var bodyHtml;
+        if (englishText) {
+          var selfLabel = languageSelfLabel(m.body_language);
+          bodyHtml =
+            (selfLabel ? '<p class="portal-message-lang-label">' + escapeHtml(selfLabel) + '</p>' : '') +
+            '<p>' + escapeHtml(m.body) + '</p>' +
+            '<p class="portal-message-lang-label">' + escapeHtml(t("englishLabel")) + '</p>' +
+            '<p>' + escapeHtml(englishText) + '</p>';
+        } else {
+          bodyHtml = '<p>' + escapeHtml(m.body) + '</p>';
+          if (m.translation_unavailable) {
+            bodyHtml += '<p class="muted">' + escapeHtml(t("translationUnavailable")) + '</p>';
+          }
+        }
+        return '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span>' + bodyHtml + '</div>';
       })
       .join("") || '<p class="muted">' + escapeHtml(t("noMessagesYet")) + '</p>';
 

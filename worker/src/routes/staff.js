@@ -652,6 +652,7 @@ async function sendReply(request, env, staff, enquiryId, messageId) {
       fullName: enquiry.full_name,
       reference: enquiry.reference,
       replyText,
+      englishOriginal: message.source_text,
     });
     await updateMessageDeliveryStatus(env.DB, { id: messageId, deliveryStatus: "sent" });
     await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_enquiry_reply", targetTable: "communication_messages", targetId: messageId });

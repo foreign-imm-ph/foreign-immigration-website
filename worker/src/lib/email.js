@@ -128,14 +128,22 @@ ${link}`;
 // email in this file, the actual message content is the point of this
 // email — there is no portal account yet for the client to sign into, so
 // the translated reply itself must be the email body. Never mentions
-// translation or AI involvement, and never includes the English original
-// unless targetLanguage is itself English (i.e. there is no separate
-// original to withhold).
-export async function sendEnquiryReplyEmail(env, { to, fullName, reference, replyText }) {
+// translation or AI involvement.
+//
+// Bilingual correspondence requirement: when the reply was translated
+// (englishOriginal provided and different from replyText), the email shows
+// the customer's selected language first and the English original directly
+// underneath, matching the same presentation the Client Portal and Staff
+// Portal now use for a translated staff reply. If targetLanguage is itself
+// English (no separate original to show) or no original was passed at all,
+// the email is unchanged from before — just the one language, once.
+export async function sendEnquiryReplyEmail(env, { to, fullName, reference, replyText, englishOriginal }) {
+  const showBoth = englishOriginal && englishOriginal !== replyText;
+
   const text = `Dear ${fullName},
 
 ${replyText}
-
+${showBoth ? `\nEnglish\n\n${englishOriginal}\n` : ""}
 Reference: ${reference}
 
 If you have any questions, reply to this email or contact us at ${env.EMAIL_REPLY_TO}.
@@ -146,6 +154,12 @@ Bureau of Immigration Accredited Consultancy`;
   const html = wrap(`
     <p>Dear ${escapeHtml(fullName)},</p>
     <p>${escapeHtml(replyText).replace(/\n/g, "<br>")}</p>
+    ${
+      showBoth
+        ? `<p style="margin:16px 0 2px;font-size:12px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:#5b6b62;">English</p>
+           <p>${escapeHtml(englishOriginal).replace(/\n/g, "<br>")}</p>`
+        : ""
+    }
     <p style="font-family:monospace;background:#eef1ec;padding:10px 14px;border-radius:4px;display:inline-block;">Reference: <strong>${escapeHtml(reference)}</strong></p>
     <p>If you have any questions, reply to this email.</p>
   `);

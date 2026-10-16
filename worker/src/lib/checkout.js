@@ -470,14 +470,22 @@ export async function getPriceHistory(db, serviceId) {
   return results.map((r) => ({ ...r, components: JSON.parse(r.components_json) }));
 }
 
+// This is the MANUAL save path (the staff catalogue form) for every
+// language, English included. A row saved this way is always
+// auto_generated = 0 -- "this is staff-authored/approved content, the
+// automatic translator must never regenerate it" -- which matters most
+// when it OVERWRITES a previously machine-generated row (checked here via
+// the explicit SET on conflict, not just the INSERT default) so a manual
+// correction can never later be silently replaced again.
 export async function upsertServiceI18n(db, serviceId, lang, { title, shortDescription, eligibilityText, noticesText }) {
   await db
     .prepare(
-      `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text, notices_text)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text, notices_text, auto_generated, source_hash, translation_status, generated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NULL, 'ready', NULL)
        ON CONFLICT(service_id, lang) DO UPDATE SET
          title = excluded.title, short_description = excluded.short_description,
-         eligibility_text = excluded.eligibility_text, notices_text = excluded.notices_text`
+         eligibility_text = excluded.eligibility_text, notices_text = excluded.notices_text,
+         auto_generated = 0, source_hash = NULL, translation_status = 'ready', generated_at = NULL`
     )
     .bind(serviceId, lang, title, shortDescription, eligibilityText, noticesText || null)
     .run();

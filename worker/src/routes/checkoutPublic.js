@@ -8,8 +8,9 @@ import { HttpError } from "../lib/storage.js";
 import { newId, newToken, sha256Hex } from "../lib/crypto.js";
 import { getClientByEmail, createClient } from "../lib/db.js";
 import { checkHoneypot, checkRateLimit } from "../lib/abuse.js";
-import { listActiveCatalogue, getServiceById, findOrCreateDraftOrder, shapeServiceForCustomer } from "../lib/checkout.js";
+import { listActiveCatalogue, getServiceById, findOrCreateDraftOrder, shapeServiceForCustomer, getServiceI18n } from "../lib/checkout.js";
 import { sendInstantServicesVerification } from "../lib/email.js";
+import { ensureServiceTranslations } from "../lib/checkoutTranslation.js";
 
 const CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
 const VERIFICATION_TTL_MINUTES = 15;
@@ -33,6 +34,27 @@ export async function handleGetCatalogueService(request, env, url, serviceId) {
   const lang = resolveLang(url);
   const service = await getServiceById(env.DB, serviceId);
   if (!service || !service.active) throw new HttpError(404, "Not found");
+
+  // Bounded, first-request fallback: a save-time translation (the primary
+  // path -- see staffCheckout.js) should already have this ready, but if
+  // this specific language is genuinely missing for this one service
+  // (e.g. generated before this language existed, or a prior attempt
+  // failed), generate it now rather than silently showing English forever.
+  // Scoped to a single service's five languages, never the whole
+  // catalogue, so this can never balloon into an unbounded Workers AI
+  // bill or block a customer browsing the LIST (listActiveCatalogue,
+  // above, never does this).
+  if (lang !== "en") {
+    const existing = await getServiceI18n(env.DB, service.id, lang);
+    if (!existing || existing.lang !== lang) {
+      try {
+        await ensureServiceTranslations(env, service.id);
+      } catch (err) {
+        console.error("First-request catalogue translation failed:", err.message);
+      }
+    }
+  }
+
   return json({ service: await shapeServiceForCustomer(env.DB, service, lang) });
 }
 

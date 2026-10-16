@@ -42,19 +42,35 @@ export async function handleListMessages(request, env, applicationId) {
         return { id: item.id, sender_type: item.senderType, sender_label: item.senderLabel, body: item.originalText, created_at: item.createdAt };
       }
       if (item.senderType === "client") {
-        // The client always sees exactly what they wrote — never a
-        // round-tripped translation of their own words.
-        return { id: item.id, sender_type: "client", sender_label: client.full_name, body: item.originalText, created_at: item.createdAt };
+        // The client always sees exactly what they wrote as the primary
+        // text — never a round-tripped translation of their own words.
+        // When they wrote in a non-English language, the English
+        // translation staff will see is now shown underneath (bilingual
+        // correspondence requirement) purely for transparency; English
+        // is never shown twice for an English-authored message.
+        const isEnglish = item.originalLanguage === "en";
+        return {
+          id: item.id,
+          sender_type: "client",
+          sender_label: client.full_name,
+          body: item.originalText,
+          body_language: item.originalLanguage,
+          english_translation: !isEnglish && item.translationStatus === "ready" ? item.translationText : null,
+          translation_unavailable: !isEnglish && item.translationStatus === "failed",
+          created_at: item.createdAt,
+        };
       }
-      // Staff reply: the client's own language is the primary text; the
-      // English original is offered separately for an optional "show
-      // original" control, never as a second message in the list.
+      // Staff reply: the client's own selected language is the primary
+      // text; the English original is now shown underneath in the same
+      // card by default (bilingual correspondence requirement), not
+      // behind a "show original" disclosure.
       const translated = item.translationText || item.originalText;
       return {
         id: item.id,
         sender_type: "staff",
         sender_label: "Foreign Immigration Services",
         body: translated,
+        body_language: item.translationLanguage,
         english_original: translated !== item.originalText ? item.originalText : null,
         created_at: item.createdAt,
       };

@@ -20,12 +20,16 @@ export function staffPage(title, bodyHtml, staffEmail) {
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", sans-serif; background: var(--fis-cream); color: #1c2620; margin: 0; padding: 0 0 3rem; }
   .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
-  .site-bar { background: var(--fis-green); color: #fff; padding: 0.6rem 0; margin-bottom: 1.5rem; }
-  .site-bar .wrap { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; }
-  .site-bar__brand { font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
-  .site-bar__brand .accent { color: var(--fis-gold); }
-  nav { display: flex; flex-wrap: wrap; gap: 0.2rem 1.1rem; }
-  nav a { color: rgba(255,255,255,0.88); text-decoration: none; font-size: 0.85rem; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
+  .site-bar { background: var(--fis-green); color: #fff; padding: 0.5rem 0; margin-bottom: 1.5rem; }
+  .site-bar .wrap { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.35rem; }
+  .site-bar__brand { font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; font-size: 0.95rem; }
+  /* Previously gold (var(--fis-gold)) -- per the navigation-refinement
+     directive, "IMMIGRATION" no longer gets its own emphasis color and
+     instead matches the rest of the wordmark (inherits the bar's white),
+     which already carries sufficient contrast against the green bar. */
+  .site-bar__brand .accent { color: inherit; }
+  nav { display: flex; flex-wrap: wrap; gap: 0.15rem 0.85rem; }
+  nav a { color: rgba(255,255,255,0.88); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
   nav a:hover, nav a:focus-visible { color: #fff; border-bottom-color: var(--fis-gold); }
   .staff-email { font-size: 0.78rem; color: rgba(255,255,255,0.75); white-space: nowrap; }
   h1 { font-size: 1.4rem; margin: 0 0 1rem; color: var(--fis-green); }

@@ -41,6 +41,7 @@
       loading: "Loading the current catalogue...",
       empty: "Nothing matches your search right now.",
       emptyAll: "No documents or services are available to order or book online right now. Please send us an enquiry instead.",
+      unavailableTag: "Online Ordering Not Currently Available",
       error: "We couldn't load the catalogue right now. Please try again shortly, or send us an enquiry.",
       searchPlaceholder: "Search by name or keyword",
       searchLabel: "Search the catalogue",
@@ -67,6 +68,7 @@
       loading: "正在加载当前目录……",
       empty: "没有符合您搜索条件的结果。",
       emptyAll: "目前暂无可在线订购或预约的文件或服务，请改为向我们发送咨询。",
+      unavailableTag: "暂未开放在线订购",
       error: "暂时无法加载目录，请稍后重试，或向我们发送咨询。",
       searchPlaceholder: "按名称或关键字搜索",
       searchLabel: "搜索目录",
@@ -93,6 +95,7 @@
       loading: "正在載入目前的目錄……",
       empty: "沒有符合您搜尋條件的結果。",
       emptyAll: "目前暫無可線上訂購或預約的文件或服務，請改為向我們傳送查詢。",
+      unavailableTag: "暫未開放線上訂購",
       error: "暫時無法載入目錄，請稍後再試，或向我們傳送查詢。",
       searchPlaceholder: "依名稱或關鍵字搜尋",
       searchLabel: "搜尋目錄",
@@ -119,6 +122,7 @@
       loading: "현재 목록을 불러오는 중입니다...",
       empty: "검색 조건에 맞는 항목이 없습니다.",
       emptyAll: "현재 온라인으로 주문 또는 예약 가능한 문서나 서비스가 없습니다. 대신 문의를 보내주세요.",
+      unavailableTag: "현재 온라인 주문 불가",
       error: "목록을 불러오지 못했습니다. 잠시 후 다시 시도하시거나 문의를 보내주세요.",
       searchPlaceholder: "이름 또는 키워드로 검색",
       searchLabel: "목록 검색",
@@ -145,6 +149,7 @@
       loading: "現在のカタログを読み込んでいます...",
       empty: "検索条件に一致する項目がありません。",
       emptyAll: "現在オンラインでご注文・ご予約いただける書類やサービスはありません。お問い合わせをお送りください。",
+      unavailableTag: "現在オンライン注文は受け付けておりません",
       error: "カタログを読み込めませんでした。しばらくしてから再度お試しいただくか、お問い合わせをお送りください。",
       searchPlaceholder: "名称またはキーワードで検索",
       searchLabel: "カタログを検索",
@@ -171,6 +176,7 @@
       loading: "Đang tải danh mục hiện tại...",
       empty: "Không có mục nào phù hợp với tìm kiếm của quý khách.",
       emptyAll: "Hiện chưa có tài liệu hoặc dịch vụ nào có thể đặt hoặc đặt lịch trực tuyến. Vui lòng gửi yêu cầu tư vấn cho chúng tôi.",
+      unavailableTag: "Hiện Chưa Hỗ Trợ Đặt Hàng Trực Tuyến",
       error: "Không thể tải danh mục lúc này. Vui lòng thử lại sau hoặc gửi yêu cầu tư vấn cho chúng tôi.",
       searchPlaceholder: "Tìm theo tên hoặc từ khóa",
       searchLabel: "Tìm trong danh mục",
@@ -398,7 +404,15 @@
 
     getCatalogue()
       .then(function (services) {
+        var availabilityTag = document.querySelector("[data-catalogue-availability-tag]");
         if (!services.length) {
+          // Nothing is active -- the hero tag's default "Available Now,
+          // Online" text would otherwise keep claiming purchasability
+          // against an empty catalogue. Swapped here, not removed from the
+          // template, so it reverts to the normal claim automatically the
+          // moment staff activate anything (next page load).
+          if (availabilityTag) availabilityTag.textContent = strings.unavailableTag;
+          if (controls) controls.style.display = "none";
           if (documentList) documentList.textContent = strings.emptyAll;
           if (serviceList) serviceList.textContent = "";
           var svcSection = document.getElementById("book-services-section");
