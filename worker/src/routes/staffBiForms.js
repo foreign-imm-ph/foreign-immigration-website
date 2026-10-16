@@ -1,6 +1,7 @@
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
 import { HttpError } from "../lib/storage.js";
 import { newId } from "../lib/crypto.js";
+import { logAudit } from "../lib/db.js";
 import {
   getFormConfig,
   KNOWN_BI_FORM_IDS,
@@ -16,7 +17,9 @@ import {
   listSubmissionsForStaff,
   transitionStatus,
   updateStaffAnswers,
+  updateCustomerAnswers,
   getHistory,
+  getFriendlyFormInfo,
 } from "../lib/biForms.js";
 
 function notFound() {
@@ -103,24 +106,68 @@ async function requireSubmission(env, submissionId) {
   return submission;
 }
 
+// Directive section 7: a field the customer marked "I'm not sure -- let
+// FIS help me" is recorded in the SAME customer_answers_json blob as a
+// reserved top-level `__unsureFields` array of dataKeys -- no migration,
+// no second answers table. Never treated as any substantive answer
+// ("No"/"None"/etc.); it's simply absent from validation's required-field
+// check (see relaxRequiredForUnsureFields in biFormsCustomer.js) until
+// staff supplies it here.
+function unsureFieldSet(answers) {
+  return new Set(Array.isArray(answers.__unsureFields) ? answers.__unsureFields : []);
+}
+
 function renderAnswers(questionnaire, answersJson) {
   const answers = answersJson ? JSON.parse(answersJson) : {};
+  const unsure = unsureFieldSet(answers);
   function renderQuestion(q) {
     if (q.type === "repeatable-group") {
       const items = Array.isArray(answers[q.groupDataKey]) ? answers[q.groupDataKey] : [];
-      return `<p><strong>${escapeHtml(q.labels.en)}</strong></p>` + items.map((item, i) =>
+      const flagged = unsure.has(q.groupDataKey) ? ' <span class="priority-badge priority-badge--priority">assistance requested</span>' : "";
+      return `<p><strong>${escapeHtml(q.labels.en)}</strong>${flagged}</p>` + items.map((item, i) =>
         `<p class="muted">Entry ${i + 1}: ${(q.subQuestions || []).map((sub) => `${escapeHtml(sub.labels.en)}: ${escapeHtml(item[sub.dataKey] || "")}`).join(", ")}</p>`
       ).join("");
     }
     const v = answers[q.dataKey];
-    return `<p><strong>${escapeHtml(q.labels.en)}:</strong> ${escapeHtml(typeof v === "boolean" ? (v ? "Yes" : "No") : v ?? "")}</p>`;
+    const flagged = unsure.has(q.dataKey) ? ' <span class="priority-badge priority-badge--priority">assistance requested</span>' : "";
+    return `<p><strong>${escapeHtml(q.labels.en)}:</strong> ${escapeHtml(typeof v === "boolean" ? (v ? "Yes" : "No") : v ?? "")}${flagged}</p>`;
   }
   return questionnaire.questions.map(renderQuestion).join("");
+}
+
+// The customer-field completion/correction form (directive section 9:
+// "complete missing fields", "correct errors with an audit record").
+// Scoped to text/date/select questions -- the vast majority of a typical
+// BI form's customer fields, and every field CCS-A-CDR-2016 has today.
+// A yes/no or repeatable-group field is shown read-only above (via
+// renderAnswers) but is not yet editable through this form; see the
+// final report's "Outstanding Dependencies" for why this is a deliberate
+// scope boundary, not an oversight.
+function customerScalarQuestions(questionnaire) {
+  return (questionnaire.questions || []).filter((q) => q.type === "text" || q.type === "date" || q.type === "select");
+}
+
+function customerFieldsFormHtml(questionnaire, answers) {
+  const unsure = unsureFieldSet(answers);
+  return customerScalarQuestions(questionnaire)
+    .map((q) => {
+      const flagged = unsure.has(q.dataKey) ? ' <span class="priority-badge priority-badge--priority">assistance requested</span>' : "";
+      const current = answers[q.dataKey] || "";
+      if (q.type === "select") {
+        const options = (q.options || [])
+          .map((opt) => `<option value="${escapeHtml(opt)}" ${opt === current ? "selected" : ""}>${escapeHtml(opt)}</option>`)
+          .join("");
+        return `<label for="cf-${escapeHtml(q.dataKey)}">${escapeHtml(q.labels.en)}${flagged}</label><select name="${escapeHtml(q.dataKey)}" id="cf-${escapeHtml(q.dataKey)}"><option value="">(leave as not yet provided)</option>${options}</select>`;
+      }
+      return `<label for="cf-${escapeHtml(q.dataKey)}">${escapeHtml(q.labels.en)}${flagged}</label><input type="text" name="${escapeHtml(q.dataKey)}" id="cf-${escapeHtml(q.dataKey)}" value="${escapeHtml(current)}">`;
+    })
+    .join("");
 }
 
 export async function viewBiForm(env, staff, submissionId) {
   const submission = await requireSubmission(env, submissionId);
   const { coordinateMap, questionnaire } = getFormConfig(submission.bi_form_id);
+  const friendly = await getFriendlyFormInfo(env.DB, submission.bi_form_id, submission.id, "en");
   const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(submission.client_id).first();
   const history = await getHistory(env.DB, submissionId);
   const { results: documents } = await env.DB.prepare(
@@ -134,6 +181,18 @@ export async function viewBiForm(env, staff, submissionId) {
   const staffFieldsFormHtml = staffFields
     .map((f) => `<label for="sf-${escapeHtml(f.key)}">${escapeHtml(f.label)}</label><input type="text" name="${escapeHtml(f.key)}" id="sf-${escapeHtml(f.key)}" value="${escapeHtml(staffAnswers[f.key] || "")}">`)
     .join("");
+
+  // Directive section 7/9: a submission with any field marked "I'm not
+  // sure" is an assisted-completion request -- surfaced here as a clear,
+  // impossible-to-miss badge, and completed through the SAME existing
+  // staff workflow (the form below), never a second dashboard.
+  const customerAnswers = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
+  const unsureCount = unsureFieldSet(customerAnswers).size;
+  const assistanceBadge = unsureCount
+    ? ` <span class="priority-badge priority-badge--urgent">Assistance Requested (${unsureCount} field${unsureCount > 1 ? "s" : ""})</span>`
+    : "";
+  const customerFieldsEditableNow = ["under_review", "revision_requested"].includes(submission.status);
+  const customerFieldsFormHtmlStr = customerFieldsFormHtml(questionnaire, customerAnswers);
 
   const historyHtml = history
     .map((h) => `<p class="muted">${escapeHtml(h.changed_at)} — <span class="status">${escapeHtml(h.status)}</span>${h.note ? `: ${escapeHtml(h.note)}` : ""}</p>`)
@@ -150,6 +209,9 @@ export async function viewBiForm(env, staff, submissionId) {
   if (["under_review", "revision_requested"].includes(submission.status)) {
     actions.push(`<form method="POST" action="/staff/bi-forms/${submissionId}/staff-fields">${staffFieldsFormHtml}<button type="submit">Save staff fields</button></form>`);
   }
+  if (customerFieldsEditableNow) {
+    actions.push(`<form method="POST" action="/staff/bi-forms/${submissionId}/customer-fields">${customerFieldsFormHtmlStr}<button type="submit">Save customer field completions/corrections</button></form>`);
+  }
   if (["submitted", "under_review", "approved", "published"].includes(submission.status)) {
     actions.push(`<form method="POST" action="/staff/bi-forms/${submissionId}/request-revision"><label for="note">Note to client</label><textarea name="note" id="note" required></textarea><button class="secondary" type="submit">Request revision</button></form>`);
   }
@@ -164,11 +226,12 @@ export async function viewBiForm(env, staff, submissionId) {
   }
 
   return staffPage(
-    `BI Form ${submission.bi_form_id}`,
-    `<h1>${escapeHtml(submission.bi_form_id)}</h1>
+    `${friendly.title} (${submission.bi_form_id})`,
+    `<h1>${escapeHtml(friendly.title)}</h1>
+     <p class="muted">Bureau of Immigration Form No. ${escapeHtml(submission.bi_form_id)}</p>
      <div class="card">
        <p><strong>${escapeHtml(client ? client.full_name : "")}</strong> &lt;${escapeHtml(client ? client.email : "")}&gt;</p>
-       <p><strong>Status:</strong> <span class="status">${escapeHtml(submission.status)}</span></p>
+       <p><strong>Status:</strong> <span class="status">${escapeHtml(submission.status)}</span>${assistanceBadge}</p>
      </div>
      <div class="card"><h2>Customer answers</h2>${renderAnswers(questionnaire, submission.customer_answers_json)}</div>
      <div class="card"><h2>Staff-controlled fields</h2>${staffFieldsFormHtml ? "" : '<p class="muted">This form has no staff-controlled fields.</p>'}</div>
@@ -202,6 +265,49 @@ export async function saveStaffFields(request, env, staff, submissionId) {
     if (form.has(key)) existing[key] = String(form.get(key) || "");
   }
   await updateStaffAnswers(env.DB, submissionId, JSON.stringify(existing));
+  return redirectToSubmission(request, submissionId);
+}
+
+// Directive section 9: staff completing a field the customer marked "I'm
+// not sure" on, or correcting an error in one they did answer -- distinct
+// from saveStaffFields above, which only ever touches STAFF-exclusive
+// fields (suppliedBy: "staff"). This writes into customer_answers_json
+// itself (never staff_answers_json), so field-bindings.js's existing
+// {...customerAnswers, ...staffAnswers} merge at generation time needs no
+// change at all to pick up a staff correction. Every change is written to
+// the audit log by field name -- "do not silently change customer
+// declarations" means never doing this invisibly, not never doing it.
+export async function saveCustomerFields(request, env, staff, submissionId) {
+  const submission = await requireSubmission(env, submissionId);
+  if (!["under_review", "revision_requested", "approved"].includes(submission.status)) {
+    throw new HttpError(409, `Customer answers cannot be completed or corrected in status "${submission.status}".`);
+  }
+  const { questionnaire } = getFormConfig(submission.bi_form_id);
+  const allowedKeys = new Set(customerScalarQuestions(questionnaire).map((q) => q.dataKey));
+  const form = await request.formData();
+  const existing = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
+  const unsure = unsureFieldSet(existing);
+  const changed = [];
+  for (const key of allowedKeys) {
+    if (!form.has(key)) continue;
+    const value = String(form.get(key) || "");
+    if (!value) continue; // blank means "staff hasn't supplied this yet either" -- never overwrite a real answer with blank
+    if (existing[key] !== value) changed.push(key);
+    existing[key] = value;
+    unsure.delete(key); // now supplied -- no longer outstanding
+  }
+  existing.__unsureFields = Array.from(unsure);
+  await updateCustomerAnswers(env.DB, submissionId, JSON.stringify(existing));
+  if (changed.length) {
+    await logAudit(env.DB, {
+      actorType: "staff",
+      actorIdOrEmail: staff.email,
+      action: "completed_or_corrected_bi_form_customer_answers",
+      targetTable: "bi_form_submissions",
+      targetId: submissionId,
+      metadata: JSON.stringify({ fields: changed }),
+    });
+  }
   return redirectToSubmission(request, submissionId);
 }
 

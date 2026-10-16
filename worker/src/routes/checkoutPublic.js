@@ -8,9 +8,10 @@ import { HttpError } from "../lib/storage.js";
 import { newId, newToken, sha256Hex } from "../lib/crypto.js";
 import { getClientByEmail, createClient } from "../lib/db.js";
 import { checkHoneypot, checkRateLimit } from "../lib/abuse.js";
-import { listActiveCatalogue, getServiceById, findOrCreateDraftOrder, shapeServiceForCustomer, getServiceI18n } from "../lib/checkout.js";
+import { listActiveCatalogue, getServiceById, findOrCreateDraftOrder, shapeServiceForCustomer, getServiceI18n, usesProcessingTiers } from "../lib/checkout.js";
 import { sendInstantServicesVerification } from "../lib/email.js";
 import { ensureServiceTranslations } from "../lib/checkoutTranslation.js";
+import { KNOWN_BI_FORM_IDS, getFormConfig, originalTemplateKey, buildWatermarkedFormPreview } from "../lib/biFormEngine.js";
 
 const CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
 const VERIFICATION_TTL_MINUTES = 15;
@@ -20,9 +21,17 @@ function resolveLang(url) {
   return CANONICAL_LANGUAGES.includes(lang) ? lang : "en";
 }
 
+// Whether the "Preview Official BI Form" button (handlePreviewOfficialForm
+// below) has anything to show for this service -- computed from the
+// already-shaped service's own offeringType/biFormId fields, not a second
+// DB read, so listing the whole catalogue never costs anything extra.
+function withFormPreviewFlag(shaped) {
+  return { ...shaped, hasOfficialFormPreview: usesProcessingTiers(shaped.offeringType) && !!shaped.biFormId && KNOWN_BI_FORM_IDS.includes(shaped.biFormId) };
+}
+
 export async function handleListCatalogue(request, env, url) {
   const lang = resolveLang(url);
-  const services = await listActiveCatalogue(env.DB, lang);
+  const services = (await listActiveCatalogue(env.DB, lang)).map(withFormPreviewFlag);
   return json({ services, lang });
 }
 
@@ -55,7 +64,42 @@ export async function handleGetCatalogueService(request, env, url, serviceId) {
     }
   }
 
-  return json({ service: await shapeServiceForCustomer(env.DB, service, lang) });
+  return json({ service: withFormPreviewFlag(await shapeServiceForCustomer(env.DB, service, lang)) });
+}
+
+// "Preview Official BI Form" (directive section 5): the ORIGINAL official
+// PDF, watermarked "PREVIEW ONLY", for a prospective customer to view
+// BEFORE starting the questionnaire -- never the customer's own answers
+// (that's a different, authenticated route entirely). Deliberately
+// public, same reasoning as the rest of this file: a blank government
+// form is not private information, and requiring sign-in just to preview
+// it would defeat the point of showing it before the customer commits to
+// anything. 404s (not a confusing blank page) for a service with no
+// engine-mapped BI form -- directive: "show an appropriate service
+// explanation instead of a misleading PDF preview button" is the
+// customer-facing frontend's job once it sees this 404, not this route's.
+export async function handlePreviewOfficialForm(request, env, serviceId) {
+  const service = await getServiceById(env.DB, serviceId);
+  if (!service || !service.active) throw new HttpError(404, "Not found");
+  if (!usesProcessingTiers(service.offering_type) || !service.bi_form_id || !KNOWN_BI_FORM_IDS.includes(service.bi_form_id)) {
+    throw new HttpError(404, "No official form preview is available for this service.");
+  }
+
+  const { coordinateMap } = getFormConfig(service.bi_form_id);
+  const originalObject = await env.BI_FORMS_LIBRARY.get(originalTemplateKey(service.bi_form_id));
+  if (!originalObject) {
+    throw new HttpError(501, "The official form template is not currently available. Please contact FIS directly.");
+  }
+  const originalBytes = new Uint8Array(await originalObject.arrayBuffer());
+  const watermarked = await buildWatermarkedFormPreview(originalBytes, coordinateMap);
+
+  return new Response(watermarked, {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="${service.bi_form_id}-preview.pdf"`,
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
 }
 
 // Begins (or resumes) a guest Instant Services request. Deliberately

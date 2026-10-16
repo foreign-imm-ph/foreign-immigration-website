@@ -31,6 +31,13 @@
       status: { draft: "Draft", submitted: "Submitted", under_review: "Under review", revision_requested: "Revision requested", approved: "Approved", published: "Ready", cancelled: "Cancelled" },
       backToApplication: "← Back", languageLabel: "Language", loading: "Loading...",
       instructions: "Please complete this form. Only you can see your answers until you submit them.",
+      technicalReferenceLabel: "Bureau of Immigration Form No.",
+      imNotSureLabel: "I'm not sure — let FIS help me",
+      optionChooseHeading: "Before you begin",
+      optionSelfLabel: "I'll provide the details myself",
+      optionAssistLabel: "I'm not sure — let FIS help me (quick start)",
+      optionAssistHelp: "We'll mark anything you haven't filled in as needing our assistance and submit your request now with just what you've already provided. FIS will contact you to complete the rest.",
+      assistanceRequestedNotice: "We've marked the unanswered questions as needing FIS assistance and submitted your request. FIS will contact you to complete the remaining details.",
       revisionNotice: "Our staff has requested changes to this form. Please review the note below, update your answers, and submit again.",
       historyLabel: "History", requiredMark: "*", yes: "Yes", no: "No",
       saveDraft: "Save Draft", submit: "Submit", saving: "Saving...", saved: "Saved.",
@@ -48,6 +55,13 @@
       status: { draft: "草稿", submitted: "已提交", under_review: "审核中", revision_requested: "需要修改", approved: "已批准", published: "已就绪", cancelled: "已取消" },
       backToApplication: "← 返回", languageLabel: "语言", loading: "加载中...",
       instructions: "请填写此表格。在您提交之前，只有您本人可以查看您的答案。",
+      technicalReferenceLabel: "菲律宾移民局表格编号",
+      imNotSureLabel: "不确定——请FIS协助我",
+      optionChooseHeading: "开始之前",
+      optionSelfLabel: "我自己填写详细信息",
+      optionAssistLabel: "不确定——请FIS协助我（快速开始）",
+      optionAssistHelp: "我们会将您尚未填写的内容标记为需要我们协助，并立即以您已提供的信息提交您的申请。FIS将与您联系以完成其余部分。",
+      assistanceRequestedNotice: "我们已将未回答的问题标记为需要FIS协助，并已提交您的申请。FIS将与您联系以完成剩余细节。",
       revisionNotice: "我们的工作人员已要求对此表格进行修改。请查看下方备注，更新您的答案后重新提交。",
       historyLabel: "历史记录", requiredMark: "*", yes: "是", no: "否",
       saveDraft: "保存草稿", submit: "提交", saving: "保存中...", saved: "已保存。",
@@ -65,6 +79,13 @@
       status: { draft: "草稿", submitted: "已提交", under_review: "審核中", revision_requested: "需要修改", approved: "已批准", published: "已就緒", cancelled: "已取消" },
       backToApplication: "← 返回", languageLabel: "語言", loading: "載入中...",
       instructions: "請填寫此表格。在您提交之前，只有您本人可以查看您的答案。",
+      technicalReferenceLabel: "菲律賓移民局表格編號",
+      imNotSureLabel: "不確定——請FIS協助我",
+      optionChooseHeading: "開始之前",
+      optionSelfLabel: "我自己填寫詳細資料",
+      optionAssistLabel: "不確定——請FIS協助我（快速開始）",
+      optionAssistHelp: "我們會將您尚未填寫的內容標記為需要我們協助，並立即以您已提供的資訊提交您的申請。FIS將與您聯繫以完成其餘部分。",
+      assistanceRequestedNotice: "我們已將未回答的問題標記為需要FIS協助，並已提交您的申請。FIS將與您聯繫以完成剩餘細節。",
       revisionNotice: "我們的工作人員已要求對此表格進行修改。請查看下方備註，更新您的答案後重新提交。",
       historyLabel: "歷史記錄", requiredMark: "*", yes: "是", no: "否",
       saveDraft: "儲存草稿", submit: "提交", saving: "儲存中...", saved: "已儲存。",
@@ -82,6 +103,13 @@
       status: { draft: "임시 저장", submitted: "제출됨", under_review: "검토 중", revision_requested: "수정 요청됨", approved: "승인됨", published: "준비 완료", cancelled: "취소됨" },
       backToApplication: "← 뒤로", languageLabel: "언어", loading: "불러오는 중...",
       instructions: "이 양식을 작성해 주십시오. 제출하기 전까지는 본인만 답변을 볼 수 있습니다.",
+      technicalReferenceLabel: "필리핀 출입국관리청 서식 번호",
+      imNotSureLabel: "잘 모르겠어요 — FIS의 도움을 받고 싶어요",
+      optionChooseHeading: "시작하기 전에",
+      optionSelfLabel: "제가 직접 작성하겠습니다",
+      optionAssistLabel: "잘 모르겠어요 — FIS의 도움을 받고 싶어요 (빠른 시작)",
+      optionAssistHelp: "아직 작성하지 않은 항목은 FIS의 도움이 필요한 것으로 표시하고, 지금까지 입력하신 정보만으로 신청서를 바로 제출합니다. FIS가 연락드려 나머지 내용을 완성하겠습니다.",
+      assistanceRequestedNotice: "답변하지 않은 질문을 FIS 도움이 필요한 것으로 표시하고 신청서를 제출했습니다. FIS가 연락드려 나머지 세부 정보를 완성하겠습니다.",
       revisionNotice: "담당 직원이 이 양식의 수정을 요청했습니다. 아래 메모를 확인하고 답변을 수정한 후 다시 제출해 주십시오.",
       historyLabel: "이력", requiredMark: "*", yes: "예", no: "아니요",
       saveDraft: "임시 저장", submit: "제출", saving: "저장 중...", saved: "저장되었습니다.",
@@ -99,6 +127,13 @@
       status: { draft: "下書き", submitted: "提出済み", under_review: "確認中", revision_requested: "修正依頼あり", approved: "承認済み", published: "準備完了", cancelled: "キャンセル済み" },
       backToApplication: "← 戻る", languageLabel: "言語", loading: "読み込み中...",
       instructions: "このフォームにご記入ください。提出するまで、回答はご本人のみが閲覧できます。",
+      technicalReferenceLabel: "フィリピン入国管理局 様式番号",
+      imNotSureLabel: "わからない — FISに手伝ってほしい",
+      optionChooseHeading: "ご記入の前に",
+      optionSelfLabel: "自分で情報を入力します",
+      optionAssistLabel: "わからない — FISに手伝ってほしい（クイックスタート）",
+      optionAssistHelp: "未記入の項目はFISのサポートが必要として記録し、現在入力済みの情報のみで今すぐ申請を送信します。残りの項目についてはFISがご連絡いたします。",
+      assistanceRequestedNotice: "未回答の質問をFISのサポートが必要として記録し、申請を送信しました。残りの詳細についてはFISがご連絡いたします。",
       revisionNotice: "担当者よりこのフォームの修正を依頼されました。下記のメモをご確認のうえ回答を修正し、再度提出してください。",
       historyLabel: "履歴", requiredMark: "*", yes: "はい", no: "いいえ",
       saveDraft: "下書きを保存", submit: "提出", saving: "保存中...", saved: "保存しました。",
@@ -116,6 +151,13 @@
       status: { draft: "Bản nháp", submitted: "Đã nộp", under_review: "Đang xem xét", revision_requested: "Yêu cầu chỉnh sửa", approved: "Đã phê duyệt", published: "Đã sẵn sàng", cancelled: "Đã hủy" },
       backToApplication: "← Quay lại", languageLabel: "Ngôn ngữ", loading: "Đang tải...",
       instructions: "Vui lòng hoàn thành mẫu này. Chỉ bạn mới có thể xem câu trả lời của mình cho đến khi bạn nộp.",
+      technicalReferenceLabel: "Mẫu đơn Cục Di trú Philippines số",
+      imNotSureLabel: "Tôi không chắc — hãy để FIS hỗ trợ tôi",
+      optionChooseHeading: "Trước khi bắt đầu",
+      optionSelfLabel: "Tôi sẽ tự cung cấp thông tin",
+      optionAssistLabel: "Tôi không chắc — hãy để FIS hỗ trợ tôi (bắt đầu nhanh)",
+      optionAssistHelp: "Chúng tôi sẽ đánh dấu những mục bạn chưa điền là cần FIS hỗ trợ và nộp yêu cầu của bạn ngay với những thông tin bạn đã cung cấp. FIS sẽ liên hệ với bạn để hoàn tất phần còn lại.",
+      assistanceRequestedNotice: "Chúng tôi đã đánh dấu các câu hỏi chưa trả lời là cần FIS hỗ trợ và đã nộp yêu cầu của bạn. FIS sẽ liên hệ với bạn để hoàn tất các chi tiết còn lại.",
       revisionNotice: "Nhân viên của chúng tôi đã yêu cầu chỉnh sửa mẫu này. Vui lòng xem ghi chú dưới đây, cập nhật câu trả lời và nộp lại.",
       historyLabel: "Lịch sử", requiredMark: "*", yes: "Có", no: "Không",
       saveDraft: "Lưu bản nháp", submit: "Nộp", saving: "Đang lưu...", saved: "Đã lưu.",
@@ -226,6 +268,22 @@
     });
   }
 
+  // Directive section 7: "I'm not sure -- let FIS help me", available on
+  // every question. Checked state is read back by collectAnswers below
+  // into a single reserved __unsureFields array (see
+  // worker/src/routes/biFormsCustomer.js's relaxRequiredForUnsureFields
+  // and staffBiForms.js's customer-fields completion route) -- never
+  // interpreted as "No"/"None"/any other substantive answer, and never
+  // disables the field itself, so a partial answer the customer already
+  // typed is always preserved exactly as directive section 7 requires.
+  function isUnsure(answers, key) {
+    return Array.isArray(answers.__unsureFields) && answers.__unsureFields.indexOf(key) !== -1;
+  }
+
+  function unsureCheckboxHtml(lang, key, checked) {
+    return '<label class="portal-unsure-toggle"><input type="checkbox" data-unsure-key="' + escapeAttr(key) + '"' + (checked ? " checked" : "") + '> ' + escapeHtml(t(lang, "imNotSureLabel")) + "</label>";
+  }
+
   function renderQuestionHtml(q, lang, answers) {
     var label = escapeHtml(labelFor(q.labels, lang));
     var required = q.required !== false;
@@ -234,6 +292,7 @@
     var wrapperAttrs = 'data-question-wrapper="' + escapeAttr(q.id) + '"' + (visible ? "" : " hidden");
 
     if (q.type === "repeatable-group") {
+      var unsureToggle = unsureCheckboxHtml(lang, q.groupDataKey, isUnsure(answers, q.groupDataKey));
       var items = answers[q.groupDataKey] || [];
       var entries = [];
       for (var i = 0; i < q.maxCount; i++) {
@@ -248,7 +307,7 @@
           .join("");
         entries.push('<fieldset class="portal-repeatable-entry"><legend>' + escapeHtml(t(lang, "entryLabel").replace("{n}", String(i + 1))) + '</legend>' + subFields + '</fieldset>');
       }
-      return '<div class="form-field form-field--full" ' + wrapperAttrs + '><label>' + label + mark + '</label>' + entries.join("") + '</div>';
+      return '<div class="form-field form-field--full" ' + wrapperAttrs + '><label>' + label + mark + '</label>' + entries.join("") + unsureToggle + '</div>';
     }
 
     var currentValue = answers[q.dataKey];
@@ -267,11 +326,12 @@
     } else {
       fieldHtml = '<input type="text" data-answer-key="' + escapeAttr(q.dataKey) + '" value="' + escapeAttr(currentValue || "") + '">';
     }
-    return '<div class="form-field" ' + wrapperAttrs + '><label>' + label + mark + '</label>' + fieldHtml + '</div>';
+    return '<div class="form-field" ' + wrapperAttrs + '><label>' + label + mark + '</label>' + fieldHtml + unsureCheckboxHtml(lang, q.dataKey, isUnsure(answers, q.dataKey)) + '</div>';
   }
 
   function collectAnswers(formEl, questions) {
     var answers = {};
+    var unsureFields = [];
     questions.forEach(function (q) {
       if (q.type === "repeatable-group") {
         var items = [];
@@ -284,11 +344,19 @@
           items.push(item);
         }
         answers[q.groupDataKey] = items;
+        if (isUnsureChecked(formEl, q.groupDataKey)) unsureFields.push(q.groupDataKey);
       } else {
         answers[q.dataKey] = getAnswerValue(formEl, q.dataKey);
+        if (isUnsureChecked(formEl, q.dataKey)) unsureFields.push(q.dataKey);
       }
     });
+    answers.__unsureFields = unsureFields;
     return answers;
+  }
+
+  function isUnsureChecked(formEl, key) {
+    var el = formEl.querySelector('[data-unsure-key="' + key + '"]');
+    return !!(el && el.checked);
   }
 
   function renderBiFormDetailHtml(lang, data, docsData) {
@@ -326,6 +394,26 @@
           .join(" ") + '</div>';
     }
 
+    // Directive section 7: the Option 1/Option 2 choice shown at the
+    // beginning of a fresh (never-yet-answered) application. "I'll
+    // provide the details myself" simply dismisses this panel -- the
+    // questionnaire below is always there regardless, so declining the
+    // offer costs nothing. "I'm not sure -- let FIS help me" is wired in
+    // renderInto() below: it marks every still-unanswered question
+    // unsure and submits immediately with only what's already provided.
+    var hasAnyAnswers = Object.keys(submission.answers || {}).some(function (k) {
+      return k !== "__unsureFields" && submission.answers[k];
+    });
+    var showChoicePanel = editable && submission.status === "draft" && !hasAnyAnswers;
+    var choicePanelHtml = showChoicePanel
+      ? '<div class="portal-bi-form-choice-panel"><h3>' + escapeHtml(t(lang, "optionChooseHeading")) + '</h3>' +
+        '<p class="enquiry-form-actions">' +
+        '<button type="button" class="btn btn-secondary portal-bi-form-choice-self">' + escapeHtml(t(lang, "optionSelfLabel")) + '</button>' +
+        '<button type="button" class="btn btn-primary portal-bi-form-choice-assist">' + escapeHtml(t(lang, "optionAssistLabel")) + '</button>' +
+        '</p><p class="muted">' + escapeHtml(t(lang, "optionAssistHelp")) + '</p></div>'
+      : "";
+
+    var unsureFieldsCount = Array.isArray(submission.answers && submission.answers.__unsureFields) ? submission.answers.__unsureFields.length : 0;
     var actionsHtml = editable
       ? '<div class="enquiry-form-actions">' +
         '<button type="button" class="btn btn-secondary portal-bi-form-save">' + escapeHtml(t(lang, "saveDraft")) + '</button>' +
@@ -333,13 +421,17 @@
         '<p class="portal-bi-form-status form-status" aria-live="polite"></p>' +
         '</div>' +
         '<p class="muted">' + escapeHtml(t(lang, "submitNotice")) + '</p>'
-      : '<p class="muted">' + escapeHtml(t(lang, "readOnlyNotice")) + '</p>';
+      : unsureFieldsCount
+        ? '<p class="muted">' + escapeHtml(t(lang, "assistanceRequestedNotice")) + '</p>'
+        : '<p class="muted">' + escapeHtml(t(lang, "readOnlyNotice")) + '</p>';
 
     return '<div class="card portal-detail-card portal-bi-form-detail" data-submission-id="' + submission.id + '" data-lang="' + lang + '">' +
       '<button type="button" class="btn btn-secondary portal-bi-form-back">' + escapeHtml(t(lang, "backToApplication")) + '</button>' +
-      '<h2>' + escapeHtml(questionnaire.formId) + '</h2>' +
+      '<h2>' + escapeHtml(submission.serviceName || questionnaire.formId) + '</h2>' +
+      '<p class="muted">' + escapeHtml(t(lang, "technicalReferenceLabel")) + ' ' + escapeHtml(submission.technicalReference || questionnaire.formId) + '</p>' +
       '<p><strong>' + escapeHtml(t(lang, "languageLabel")) + ':</strong> <select class="portal-bi-form-lang">' + langOptions + '</select></p>' +
       '<p class="muted">' + escapeHtml(t(lang, "instructions")) + '</p>' +
+      choicePanelHtml +
       revisionNote +
       '<form class="portal-bi-form-form">' + questionsHtml + '</form>' +
       actionsHtml +
@@ -412,25 +504,65 @@
         });
       }
 
+      // Shared by the normal Submit button and the "I'm not sure -- let FIS
+      // help me (quick start)" choice-panel button below -- both save the
+      // given answers as the draft, then submit, then re-open the
+      // submission so its new (read-only) state is reflected everywhere,
+      // including the Staff Portal's own view of the same data.
+      function submitWithAnswers(answers) {
+        statusEl.textContent = t(lang, "saving");
+        return window
+          .portalFetch("/api/bi-forms/" + submissionId + "/draft", { method: "PATCH", body: JSON.stringify({ answers: answers, preferredLanguage: lang }) })
+          .then(function () {
+            return window.portalFetch("/api/bi-forms/" + submissionId + "/submit", { method: "POST" });
+          })
+          .then(function (resp) {
+            if (resp.ok) {
+              statusEl.textContent = t(lang, "submitted");
+              openBiFormDetail(containerEl, submissionId, onBack);
+            } else {
+              statusEl.textContent = t(lang, "submitError");
+            }
+          })
+          .catch(function () { statusEl.textContent = t(lang, "submitError"); });
+      }
+
       var submitBtn = root.querySelector(".portal-bi-form-submit");
       if (submitBtn) {
         submitBtn.addEventListener("click", function () {
+          submitWithAnswers(collectAnswers(formEl, data.questionnaire.questions));
+        });
+      }
+
+      var choiceSelfBtn = root.querySelector(".portal-bi-form-choice-self");
+      if (choiceSelfBtn) {
+        choiceSelfBtn.addEventListener("click", function () {
+          var panel = root.querySelector(".portal-bi-form-choice-panel");
+          if (panel) panel.remove();
+        });
+      }
+
+      var choiceAssistBtn = root.querySelector(".portal-bi-form-choice-assist");
+      if (choiceAssistBtn) {
+        choiceAssistBtn.addEventListener("click", function () {
+          // Directive section 7's full assisted-completion pathway: every
+          // CURRENTLY required-and-unanswered question (same `required`/
+          // `showIf` rules the questionnaire already enforces -- nothing
+          // re-implemented here) is marked unsure, preserving anything the
+          // customer already typed, and the request is submitted now with
+          // just that. Never invents an answer for any of them.
           var answers = collectAnswers(formEl, data.questionnaire.questions);
-          statusEl.textContent = t(lang, "saving");
-          window
-            .portalFetch("/api/bi-forms/" + submissionId + "/draft", { method: "PATCH", body: JSON.stringify({ answers: answers, preferredLanguage: lang }) })
-            .then(function () {
-              return window.portalFetch("/api/bi-forms/" + submissionId + "/submit", { method: "POST" });
-            })
-            .then(function (resp) {
-              if (resp.ok) {
-                statusEl.textContent = t(lang, "submitted");
-                openBiFormDetail(containerEl, submissionId, onBack);
-              } else {
-                statusEl.textContent = t(lang, "submitError");
-              }
-            })
-            .catch(function () { statusEl.textContent = t(lang, "submitError"); });
+          var unsure = {};
+          (answers.__unsureFields || []).forEach(function (k) { unsure[k] = true; });
+          data.questionnaire.questions.forEach(function (q) {
+            var key = q.type === "repeatable-group" ? q.groupDataKey : q.dataKey;
+            if (q.required === false) return;
+            if (q.showIf && !isGateSatisfied(q.showIf, answers)) return;
+            var hasValue = q.type === "repeatable-group" ? Array.isArray(answers[key]) && answers[key].some(function (item) { return Object.keys(item || {}).some(function (k) { return item[k]; }); }) : !!answers[key];
+            if (!hasValue) unsure[key] = true;
+          });
+          answers.__unsureFields = Object.keys(unsure);
+          submitWithAnswers(answers);
         });
       }
 

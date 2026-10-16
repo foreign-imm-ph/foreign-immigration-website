@@ -92,4 +92,27 @@ export function backgroundTemplateKey(biFormId) {
   return BACKGROUND_KEY_OVERRIDES[biFormId] || `backgrounds/${biFormId}.png`;
 }
 
+// Official PDF preview (directive: "Preview Official BI Form", visible
+// before the customer starts the questionnaire) -- the ORIGINAL blank
+// template, watermarked "PREVIEW ONLY", never the customer's filled-in
+// answers (that is composeAndFinalizeCustomerPreview's job, a completely
+// separate pipeline). Reuses the existing watermark.js helper (already
+// used by the filled-preview pipeline) at a fixed, modest opacity suited
+// to a blank form -- deliberately NOT the per-form opacity tuned for the
+// filled-preview pipeline, since that value was approved for a different
+// visual context. Lazy-imported for the same pdf-lib/CJS bundling reason
+// as getDocumentBuilders() above.
+const BLANK_FORM_PREVIEW_WATERMARK_OPACITY = 0.15;
+export async function buildWatermarkedFormPreview(originalBytes, coordinateMap) {
+  const { PDFDocument, StandardFonts } = await import("pdf-lib");
+  const { addWatermark } = await import("../../../bi-forms-library/engine/lib/watermark.js");
+  const doc = await PDFDocument.load(originalBytes);
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  const bounds = { xLeft: 0, yBottom: 0, width: coordinateMap.pageWidthPt, height: coordinateMap.pageHeightPt };
+  for (const page of doc.getPages()) {
+    addWatermark(page, "PREVIEW ONLY", font, bounds, BLANK_FORM_PREVIEW_WATERMARK_OPACITY);
+  }
+  return doc.save();
+}
+
 export { fieldsForAudience, resolveFieldValues, validateAnswers, staffOwnedFields, getRequiredStaffFields };

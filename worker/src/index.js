@@ -18,7 +18,7 @@ import {
   handleUploadBiFormDocument,
   handleDownloadBiFormDocument,
 } from "./routes/biFormsCustomer.js";
-import { handleListCatalogue, handleGetCatalogueService, handleBeginCheckout } from "./routes/checkoutPublic.js";
+import { handleListCatalogue, handleGetCatalogueService, handleBeginCheckout, handlePreviewOfficialForm } from "./routes/checkoutPublic.js";
 import {
   handleGetOrder,
   handleStartApplication,
@@ -145,6 +145,8 @@ async function route(request, env, path, method, url) {
   if (path === "/api/instant-services/catalogue" && method === "GET") return handleListCatalogue(request, env, url);
   const catalogueItemMatch = path.match(/^\/api\/instant-services\/catalogue\/([^/]+)$/);
   if (catalogueItemMatch && method === "GET") return handleGetCatalogueService(request, env, url, catalogueItemMatch[1]);
+  const previewFormMatch = path.match(/^\/api\/instant-services\/catalogue\/([^/]+)\/preview-form$/);
+  if (previewFormMatch && method === "GET") return handlePreviewOfficialForm(request, env, previewFormMatch[1]);
   if (path === "/api/instant-services/begin" && method === "POST") return handleBeginCheckout(request, env);
 
   // Instant Services -- authenticated, order-scoped routes. The

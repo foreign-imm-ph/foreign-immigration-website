@@ -9,6 +9,7 @@ import {
   updateCustomerAnswers,
   transitionStatus,
   getHistory,
+  getFriendlyFormInfo,
 } from "../lib/biForms.js";
 
 const MAX_ANSWERS_JSON_BYTES = 200 * 1024; // generous for a questionnaire's worth of text; guards against an abusive payload
@@ -46,6 +47,7 @@ export async function handleGetBiForm(request, env, submissionId) {
   const submission = await requireOwnedSubmission(env.DB, client, submissionId);
   const { questionnaire } = getFormConfig(submission.bi_form_id);
   const history = await getHistory(env.DB, submissionId);
+  const friendly = await getFriendlyFormInfo(env.DB, submission.bi_form_id, submission.id, client.preferred_communication_language || "en");
 
   return json({
     submission: {
@@ -58,6 +60,12 @@ export async function handleGetBiForm(request, env, submissionId) {
       updatedAt: submission.updated_at,
       submittedAt: submission.submitted_at,
       publishedAt: submission.published_at,
+      // Service-based naming (directive: customer-facing heading must be
+      // the service the customer purchased, e.g. "Request for Travel
+      // Records", never the raw BI form identifier) -- technicalReference
+      // is preserved as the secondary reference, never the primary one.
+      serviceName: friendly.title,
+      technicalReference: friendly.technicalReference,
     },
     // Only the customer-facing question set is returned -- never the
     // coordinate map (field positions, staff-only field names), which the
@@ -199,6 +207,27 @@ export async function handleDownloadBiFormDocument(request, env, submissionId, d
   return response;
 }
 
+// Directive section 7: a question the customer marked "I'm not sure --
+// let FIS help me" must never block submission, and must never be
+// silently treated as "No"/"None"/any other substantive answer -- it's
+// simply exempted from the required-field check here, by relaxing a
+// CLONED copy of the questionnaire (the shared engine's questionnaire.json
+// itself, and validateAnswers() in bi-forms-library/engine, are never
+// mutated). Everything else about validateAnswers' rules -- type checks
+// on whatever the customer DID answer, conditional showIf gating, every
+// other required field -- is completely unchanged.
+function relaxRequiredForUnsureFields(questionnaire, answers) {
+  const unsure = new Set(Array.isArray(answers.__unsureFields) ? answers.__unsureFields : []);
+  if (!unsure.size) return questionnaire;
+  return {
+    ...questionnaire,
+    questions: questionnaire.questions.map((q) => {
+      const key = q.type === "repeatable-group" ? q.groupDataKey : q.dataKey;
+      return unsure.has(key) ? { ...q, required: false } : q;
+    }),
+  };
+}
+
 export async function handleSubmitBiForm(request, env, submissionId) {
   const client = await requireClient(request, env);
   const submission = await requireOwnedSubmission(env.DB, client, submissionId);
@@ -208,7 +237,7 @@ export async function handleSubmitBiForm(request, env, submissionId) {
 
   const { questionnaire } = getFormConfig(submission.bi_form_id);
   const answers = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
-  const validation = validateAnswers(questionnaire, answers);
+  const validation = validateAnswers(relaxRequiredForUnsureFields(questionnaire, answers), answers);
   if (!validation.ok) {
     throw new HttpError(422, `Questionnaire is incomplete: ${validation.errors.join("; ")}`);
   }

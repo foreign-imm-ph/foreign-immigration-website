@@ -36,6 +36,7 @@ import {
   viewBiForm,
   startReview,
   saveStaffFields,
+  saveCustomerFields,
   requestRevision,
   approveBiForm,
   publishBiForm,
@@ -230,6 +231,8 @@ async function dispatch(request, env, url) {
   if (startReviewMatch && method === "POST") return startReview(request, env, staff, startReviewMatch[1]);
   const staffFieldsMatch = path.match(/^\/bi-forms\/([^/]+)\/staff-fields$/);
   if (staffFieldsMatch && method === "POST") return saveStaffFields(request, env, staff, staffFieldsMatch[1]);
+  const customerFieldsMatch = path.match(/^\/bi-forms\/([^/]+)\/customer-fields$/);
+  if (customerFieldsMatch && method === "POST") return saveCustomerFields(request, env, staff, customerFieldsMatch[1]);
   const requestRevisionMatch = path.match(/^\/bi-forms\/([^/]+)\/request-revision$/);
   if (requestRevisionMatch && method === "POST") return requestRevision(request, env, staff, requestRevisionMatch[1]);
   const approveMatch = path.match(/^\/bi-forms\/([^/]+)\/approve$/);

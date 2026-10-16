@@ -58,6 +58,7 @@
       orderNow: "Order Now",
       bookNow: "Book Now",
       sendEnquiry: "Send an Enquiry",
+      previewFormLabel: "Preview Official BI Form",
       availabilityBadge: "This service is available to order online.",
       availabilityBadgeBooking: "This service is available to book online.",
       availabilityDescription: "Complete your requirements and submit payment online, without waiting for a quotation.",
@@ -85,6 +86,7 @@
       orderNow: "立即订购",
       bookNow: "立即预约",
       sendEnquiry: "发送咨询",
+      previewFormLabel: "预览官方BI表格",
       availabilityBadge: "该文件支持在线订购。",
       availabilityBadgeBooking: "该服务支持在线预约。",
       availabilityDescription: "完成您的申请并在线支付，无需等待报价。",
@@ -112,6 +114,7 @@
       orderNow: "立即訂購",
       bookNow: "立即預約",
       sendEnquiry: "傳送查詢",
+      previewFormLabel: "預覽官方BI表格",
       availabilityBadge: "此文件支援線上訂購。",
       availabilityBadgeBooking: "此服務支援線上預約。",
       availabilityDescription: "完成您的申請並線上付款，無需等待報價。",
@@ -139,6 +142,7 @@
       orderNow: "지금 주문",
       bookNow: "지금 예약",
       sendEnquiry: "문의하기",
+      previewFormLabel: "공식 BI 서식 미리보기",
       availabilityBadge: "이 문서는 온라인으로 주문하실 수 있습니다.",
       availabilityBadgeBooking: "이 서비스는 온라인으로 예약하실 수 있습니다.",
       availabilityDescription: "견적을 기다리지 않고 온라인으로 신청 및 결제를 완료하세요.",
@@ -166,6 +170,7 @@
       orderNow: "今すぐ注文",
       bookNow: "今すぐ予約",
       sendEnquiry: "お問い合わせ",
+      previewFormLabel: "公式BI様式プレビュー",
       availabilityBadge: "この書類はオンラインでご注文いただけます。",
       availabilityBadgeBooking: "このサービスはオンラインでご予約いただけます。",
       availabilityDescription: "お見積もりをお待ちいただくことなく、オンラインでお申し込みとお支払いを完了できます。",
@@ -193,6 +198,7 @@
       orderNow: "Đặt Ngay",
       bookNow: "Đặt Lịch Ngay",
       sendEnquiry: "Gửi Yêu Cầu Tư Vấn",
+      previewFormLabel: "Xem Trước Mẫu BI Chính Thức",
       availabilityBadge: "Tài liệu này có thể đặt trực tuyến.",
       availabilityBadgeBooking: "Dịch vụ này có thể đặt lịch trực tuyến.",
       availabilityDescription: "Hoàn tất yêu cầu và thanh toán trực tuyến ngay mà không cần chờ báo giá.",
@@ -347,6 +353,15 @@
 
   function enquiryUrl(serviceSlug) {
     return "/contact/?service=" + encodeURIComponent(serviceSlug);
+  }
+
+  // "Preview Official BI Form" (directive section 5) -- a direct link to
+  // the Worker's own public, unauthenticated preview route (never a
+  // relative /api/... path: this is a plain browser navigation, opened in
+  // a new tab, not a portalFetch() call, so it needs the full API origin
+  // the same way portal-bi-form.js's document download links do).
+  function previewFormUrl(service) {
+    return window.PORTAL_API_BASE + "/api/instant-services/catalogue/" + encodeURIComponent(service.id) + "/preview-form";
   }
 
   // ---------------------------------------------------------------------
@@ -611,9 +626,13 @@
           var primaryAction = service.hasApprovedPrice
             ? '<a class="btn btn-primary" href="' + applyUrl(service) + '">' + escapeHtml(bookable ? strings.bookNow : strings.orderNow) + "</a>"
             : "";
+          var previewFormAction = service.hasOfficialFormPreview
+            ? '<a class="btn btn-secondary" href="' + previewFormUrl(service) + '" target="_blank" rel="noopener">' + escapeHtml(strings.previewFormLabel) + "</a>"
+            : "";
           var actionsHtml =
             '<p class="service-cta__actions">' +
             primaryAction +
+            previewFormAction +
             '<a class="btn btn-secondary" href="' + enquiryUrl(ownServiceSlug) + '">' + escapeHtml(strings.sendEnquiry) + "</a>" +
             "</p>";
 

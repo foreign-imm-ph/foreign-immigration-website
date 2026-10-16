@@ -142,3 +142,36 @@ export async function updateStaffAnswers(db, submissionId, answersJson) {
     .bind(answersJson, submissionId)
     .run();
 }
+
+// Service-based naming (not the raw technical form ID) as the authoritative
+// customer/staff-facing heading. Prefers the catalogue service's own
+// i18n title when this submission is linked to an Instant Services order
+// (checkout_orders.bi_form_submission_id) -- the SAME title already shown
+// on the catalogue card/service page/checkout for that order, so there is
+// exactly one authoritative name, not a second one invented here. Falls
+// back to the official form's own title (coordinate-map.json's formTitle,
+// English only -- it has no translation workflow) for a submission with
+// no linked order (e.g. a BI form a staff member assigned directly on an
+// application, outside Instant Services). `technicalReference` is always
+// the raw biFormId, preserved as the secondary reference the directive
+// requires, never as the primary heading.
+export async function getFriendlyFormInfo(db, biFormId, submissionId, lang = "en") {
+  const link = await db
+    .prepare("SELECT service_id FROM checkout_orders WHERE bi_form_submission_id = ? LIMIT 1")
+    .bind(submissionId)
+    .first();
+  if (link) {
+    const { getServiceI18n } = await import("./checkout.js");
+    const i18n = await getServiceI18n(db, link.service_id, lang);
+    if (i18n && i18n.title) {
+      return { title: i18n.title, technicalReference: biFormId };
+    }
+  }
+  try {
+    const { getFormConfig } = await import("./biFormEngine.js");
+    const { coordinateMap } = getFormConfig(biFormId);
+    return { title: coordinateMap.formTitle || biFormId, technicalReference: biFormId };
+  } catch {
+    return { title: biFormId, technicalReference: biFormId };
+  }
+}
