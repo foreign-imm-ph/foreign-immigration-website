@@ -22,6 +22,11 @@
       refundStatusLabel: "Refund Status", refundAmountLabel: "Refund Amount",
       allInclusiveNotice: "Listed prices include applicable government fees. Delivery charges, where applicable, are quoted separately.",
       printButton: "Print / Save as PDF",
+      selectedProcessingOptionLabel: "Selected Processing Option",
+      expressProcessingLabel: "Express Processing", regularProcessingLabel: "Regular Processing",
+      estimatedProcessingTimeLabel: "Estimated processing time", businessDaysLabel: "business days",
+      deliveryFreeDomesticLabel: "Free domestic delivery confirmed.",
+      deliveryInternationalPendingLabel: "International delivery — charges to be quoted separately.",
     },
     "zh-CN": {
       loading: "正在加载您的收据...", errorGeneric: "无法加载此收据，请重试或直接与我们联系。",
@@ -32,6 +37,11 @@
       refundStatusLabel: "退款状态", refundAmountLabel: "退款金额",
       allInclusiveNotice: "所列价格已包含适用的政府费用。如需邮寄，邮寄费用将另行报价。",
       printButton: "打印/另存为 PDF",
+      selectedProcessingOptionLabel: "已选处理方式",
+      expressProcessingLabel: "加急处理", regularProcessingLabel: "普通处理",
+      estimatedProcessingTimeLabel: "预计处理时间", businessDaysLabel: "个工作日",
+      deliveryFreeDomesticLabel: "已确认国内免费配送。",
+      deliveryInternationalPendingLabel: "国际配送——费用将另行报价。",
     },
     "zh-Hant": {
       loading: "正在載入您的收據...", errorGeneric: "無法載入此收據，請重試或直接與我們聯絡。",
@@ -42,6 +52,11 @@
       refundStatusLabel: "退款狀態", refundAmountLabel: "退款金額",
       allInclusiveNotice: "所列價格已包含適用的政府費用。如需郵寄，郵寄費用將另行報價。",
       printButton: "列印/另存為 PDF",
+      selectedProcessingOptionLabel: "已選處理方式",
+      expressProcessingLabel: "加急處理", regularProcessingLabel: "一般處理",
+      estimatedProcessingTimeLabel: "預計處理時間", businessDaysLabel: "個工作日",
+      deliveryFreeDomesticLabel: "已確認國內免費配送。",
+      deliveryInternationalPendingLabel: "國際配送——費用將另行報價。",
     },
     ko: {
       loading: "영수증을 불러오는 중입니다...", errorGeneric: "영수증을 불러올 수 없습니다. 다시 시도하시거나 저희에게 직접 문의해 주십시오.",
@@ -52,6 +67,11 @@
       refundStatusLabel: "환불 상태", refundAmountLabel: "환불 금액",
       allInclusiveNotice: "표시된 가격에는 해당 정부 수수료가 포함되어 있습니다. 배송이 필요한 경우 배송비는 별도로 안내됩니다.",
       printButton: "인쇄/PDF로 저장",
+      selectedProcessingOptionLabel: "선택한 처리 옵션",
+      expressProcessingLabel: "신속 처리", regularProcessingLabel: "일반 처리",
+      estimatedProcessingTimeLabel: "예상 처리 기간", businessDaysLabel: "영업일",
+      deliveryFreeDomesticLabel: "국내 무료 배송이 확정되었습니다.",
+      deliveryInternationalPendingLabel: "국제 배송 — 요금은 별도로 안내됩니다.",
     },
     ja: {
       loading: "領収書を読み込んでいます...", errorGeneric: "領収書を読み込めませんでした。もう一度お試しいただくか、直接お問い合わせください。",
@@ -62,6 +82,11 @@
       refundStatusLabel: "返金状況", refundAmountLabel: "返金額",
       allInclusiveNotice: "表示されている価格には適用される政府手数料が含まれています。配送が必要な場合、配送料は別途ご案内いたします。",
       printButton: "印刷 / PDFとして保存",
+      selectedProcessingOptionLabel: "選択した処理オプション",
+      expressProcessingLabel: "エクスプレス処理", regularProcessingLabel: "通常処理",
+      estimatedProcessingTimeLabel: "処理予定期間", businessDaysLabel: "営業日",
+      deliveryFreeDomesticLabel: "国内配送は無料で確定しています。",
+      deliveryInternationalPendingLabel: "海外配送 — 料金は別途お見積りいたします。",
     },
     vi: {
       loading: "Đang tải biên lai của quý khách...", errorGeneric: "Không thể tải biên lai này. Vui lòng thử lại hoặc liên hệ trực tiếp với chúng tôi.",
@@ -72,6 +97,11 @@
       refundStatusLabel: "Trạng Thái Hoàn Tiền", refundAmountLabel: "Số Tiền Hoàn Lại",
       allInclusiveNotice: "Giá niêm yết đã bao gồm các phí chính phủ áp dụng. Phí giao hàng, nếu có, sẽ được báo giá riêng.",
       printButton: "In / Lưu dưới dạng PDF",
+      selectedProcessingOptionLabel: "Hình Thức Xử Lý Đã Chọn",
+      expressProcessingLabel: "Xử Lý Nhanh", regularProcessingLabel: "Xử Lý Thường",
+      estimatedProcessingTimeLabel: "Thời gian xử lý dự kiến", businessDaysLabel: "ngày làm việc",
+      deliveryFreeDomesticLabel: "Đã xác nhận giao hàng nội địa miễn phí.",
+      deliveryInternationalPendingLabel: "Giao hàng quốc tế — phí sẽ được báo giá riêng.",
     },
   };
 
@@ -126,6 +156,23 @@
           "<tr><td><strong>" + escapeHtml(t(lang, "totalLabel")) + "</strong></td><td><strong>" + formatPhp(data.priceSnapshot.totalPhpCentavos / 100) + "</strong></td></tr>"
         : "";
 
+      // The frozen, terms-at-purchase tier/lead-time/delivery figures --
+      // never recomputed from the current catalogue, since a historical
+      // receipt must keep showing what the customer actually paid for.
+      var tierHtml = "";
+      if (data.priceSnapshot && data.priceSnapshot.tierLabel) {
+        var snap = data.priceSnapshot;
+        var tierLabel = snap.processingTier === "express" ? t(lang, "expressProcessingLabel") : t(lang, "regularProcessingLabel");
+        tierHtml =
+          "<p><strong>" + escapeHtml(t(lang, "selectedProcessingOptionLabel")) + ":</strong> " + escapeHtml(tierLabel) + "</p>" +
+          (snap.minBusinessDays != null && snap.maxBusinessDays != null
+            ? "<p><strong>" + escapeHtml(t(lang, "estimatedProcessingTimeLabel")) + ":</strong> " + snap.minBusinessDays + "–" + snap.maxBusinessDays + " " + escapeHtml(t(lang, "businessDaysLabel")) + "</p>"
+            : "") +
+          (snap.delivery
+            ? "<p>" + escapeHtml(t(lang, snap.delivery.isInternational ? "deliveryInternationalPendingLabel" : "deliveryFreeDomesticLabel")) + "</p>"
+            : "");
+      }
+
       var bookingHtml = data.booking
         ? '<div class="card no-print-border">' +
           "<h3>" + escapeHtml(t(lang, "bookingHeading")) + "</h3>" +
@@ -153,6 +200,7 @@
         "<p><strong>" + escapeHtml(t(lang, "customerLabel")) + ":</strong> " + escapeHtml(data.customerName) + "</p>" +
         (data.service ? "<p><strong>" + escapeHtml(t(lang, "itemLabel")) + ":</strong> " + escapeHtml(data.service.title) + "</p>" : "") +
         '<table class="instant-services-price-table">' + totalHtml + deliveryHtml + "</table>" +
+        tierHtml +
         '<p class="muted">' + escapeHtml(t(lang, "allInclusiveNotice")) + "</p>" +
         "<p><strong>" + escapeHtml(t(lang, "paymentStatusLabel")) + ":</strong> " + escapeHtml(data.payment.statusText) + "</p>" +
         "</div>" +

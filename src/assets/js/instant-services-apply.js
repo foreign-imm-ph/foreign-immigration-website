@@ -27,7 +27,15 @@
       internationalLabel: "This is an international address",
       regionLabel: "State / Province / Region", cityLabel: "City", postalCodeLabel: "Postal Code",
       addressLine1Label: "Address Line 1", addressLine2Label: "Address Line 2 (optional)",
-      deliveryNotice: "Delivery charges are not included in the service fee. Once your documents are ready for dispatch, we will provide a separate delivery quotation and payment request.",
+      deliveryNotice: "Free regular nationwide delivery within the Philippines. International delivery charges are quoted separately. Processing times exclude delivery time.",
+      processingOptionHeading: "Choose a Processing Option",
+      expressProcessingLabel: "Express Processing",
+      regularProcessingLabel: "Regular Processing",
+      estimatedProcessingTimeLabel: "Estimated processing time",
+      businessDaysLabel: "business days",
+      selectProcessingOptionRequired: "Please select a processing option to continue.",
+      deliveryFreeDomesticLabel: "Free domestic delivery confirmed.",
+      deliveryInternationalPendingLabel: "International delivery — charges to be quoted separately.",
       continueButton: "Continue", saving: "Saving...",
       reviewHeading: "Request Submitted",
       reviewIntro: "Your questionnaire has been submitted. Review the price breakdown below to proceed to payment.",
@@ -82,7 +90,15 @@
       internationalLabel: "这是一个国际地址",
       regionLabel: "省/州/地区", cityLabel: "城市", postalCodeLabel: "邮政编码",
       addressLine1Label: "地址第一行", addressLine2Label: "地址第二行（选填）",
-      deliveryNotice: "邮寄费用不包含在服务费中。文件备妥可寄送后，我们将另行提供邮寄报价及付款请求。",
+      deliveryNotice: "菲律宾境内享免费普通全国配送。国际配送费用另行报价。处理时间不包含配送时间。",
+      processingOptionHeading: "选择处理方式",
+      expressProcessingLabel: "加急处理",
+      regularProcessingLabel: "普通处理",
+      estimatedProcessingTimeLabel: "预计处理时间",
+      businessDaysLabel: "个工作日",
+      selectProcessingOptionRequired: "请选择一种处理方式以继续。",
+      deliveryFreeDomesticLabel: "已确认国内免费配送。",
+      deliveryInternationalPendingLabel: "国际配送——费用将另行报价。",
       continueButton: "继续", saving: "保存中...",
       reviewHeading: "申请已提交",
       reviewIntro: "您的问卷已提交。请查看以下费用明细以继续付款。",
@@ -137,7 +153,15 @@
       internationalLabel: "這是國際地址",
       regionLabel: "省/州/地區", cityLabel: "城市", postalCodeLabel: "郵遞區號",
       addressLine1Label: "地址第一行", addressLine2Label: "地址第二行（選填）",
-      deliveryNotice: "郵寄費用不包含在服務費中。文件備妥可寄送後，我們將另行提供郵寄報價及付款請求。",
+      deliveryNotice: "菲律賓境內享免費一般全國配送。國際配送費用另行報價。處理時間不包含配送時間。",
+      processingOptionHeading: "選擇處理方式",
+      expressProcessingLabel: "加急處理",
+      regularProcessingLabel: "一般處理",
+      estimatedProcessingTimeLabel: "預計處理時間",
+      businessDaysLabel: "個工作日",
+      selectProcessingOptionRequired: "請選擇一種處理方式以繼續。",
+      deliveryFreeDomesticLabel: "已確認國內免費配送。",
+      deliveryInternationalPendingLabel: "國際配送——費用將另行報價。",
       continueButton: "繼續", saving: "儲存中...",
       reviewHeading: "申請已提交",
       reviewIntro: "您的問卷已提交。請查看以下費用明細以繼續付款。",
@@ -192,7 +216,15 @@
       internationalLabel: "국제 배송 주소입니다",
       regionLabel: "주/도/지역", cityLabel: "도시", postalCodeLabel: "우편번호",
       addressLine1Label: "주소 1", addressLine2Label: "주소 2 (선택)",
-      deliveryNotice: "배송비는 서비스 수수료에 포함되어 있지 않습니다. 서류 발송 준비가 완료되면 별도의 배송 견적 및 결제 요청을 보내드립니다.",
+      deliveryNotice: "필리핀 국내 일반 배송은 무료입니다. 국제 배송료는 별도로 견적됩니다. 처리 기간에는 배송 기간이 포함되지 않습니다.",
+      processingOptionHeading: "처리 옵션 선택",
+      expressProcessingLabel: "신속 처리",
+      regularProcessingLabel: "일반 처리",
+      estimatedProcessingTimeLabel: "예상 처리 기간",
+      businessDaysLabel: "영업일",
+      selectProcessingOptionRequired: "계속하려면 처리 옵션을 선택해 주세요.",
+      deliveryFreeDomesticLabel: "국내 무료 배송이 확정되었습니다.",
+      deliveryInternationalPendingLabel: "국제 배송 — 요금은 별도로 안내됩니다.",
       continueButton: "계속", saving: "저장 중...",
       reviewHeading: "신청이 제출되었습니다",
       reviewIntro: "설문이 제출되었습니다. 아래 금액 내역을 확인하신 후 결제를 진행해 주십시오.",
@@ -247,7 +279,15 @@
       internationalLabel: "海外のご住所です",
       regionLabel: "都道府県・州・地域", cityLabel: "市区町村", postalCodeLabel: "郵便番号",
       addressLine1Label: "住所1", addressLine2Label: "住所2（任意）",
-      deliveryNotice: "配送料はサービス料金に含まれておりません。書類の発送準備が整い次第、別途配送見積もりとお支払いのご案内をお送りいたします。",
+      deliveryNotice: "フィリピン国内の通常配送は無料です。海外配送料は別途お見積りいたします。処理期間には配送期間は含まれません。",
+      processingOptionHeading: "処理オプションを選択してください",
+      expressProcessingLabel: "エクスプレス処理",
+      regularProcessingLabel: "通常処理",
+      estimatedProcessingTimeLabel: "処理予定期間",
+      businessDaysLabel: "営業日",
+      selectProcessingOptionRequired: "続行するには処理オプションを選択してください。",
+      deliveryFreeDomesticLabel: "国内配送は無料で確定しています。",
+      deliveryInternationalPendingLabel: "海外配送 — 料金は別途お見積りいたします。",
       continueButton: "次へ", saving: "保存中...",
       reviewHeading: "お申し込みを受け付けました",
       reviewIntro: "アンケートが送信されました。以下の金額内訳をご確認のうえ、お支払いにお進みください。",
@@ -302,7 +342,15 @@
       internationalLabel: "Đây là địa chỉ quốc tế",
       regionLabel: "Tỉnh / Thành Phố / Khu Vực", cityLabel: "Thành Phố", postalCodeLabel: "Mã Bưu Điện",
       addressLine1Label: "Địa Chỉ Dòng 1", addressLine2Label: "Địa Chỉ Dòng 2 (tùy chọn)",
-      deliveryNotice: "Phí giao hàng không bao gồm trong phí dịch vụ. Khi hồ sơ của quý khách sẵn sàng để gửi đi, chúng tôi sẽ cung cấp báo giá giao hàng và yêu cầu thanh toán riêng.",
+      deliveryNotice: "Miễn phí giao hàng thông thường trên toàn quốc tại Philippines. Phí giao hàng quốc tế sẽ được báo giá riêng. Thời gian xử lý không bao gồm thời gian giao hàng.",
+      processingOptionHeading: "Chọn Hình Thức Xử Lý",
+      expressProcessingLabel: "Xử Lý Nhanh",
+      regularProcessingLabel: "Xử Lý Thường",
+      estimatedProcessingTimeLabel: "Thời gian xử lý dự kiến",
+      businessDaysLabel: "ngày làm việc",
+      selectProcessingOptionRequired: "Vui lòng chọn một hình thức xử lý để tiếp tục.",
+      deliveryFreeDomesticLabel: "Đã xác nhận giao hàng nội địa miễn phí.",
+      deliveryInternationalPendingLabel: "Giao hàng quốc tế — phí sẽ được báo giá riêng.",
       continueButton: "Tiếp Tục", saving: "Đang lưu...",
       reviewHeading: "Yêu Cầu Đã Được Gửi",
       reviewIntro: "Bảng câu hỏi của quý khách đã được gửi. Vui lòng xem chi tiết giá bên dưới để tiếp tục thanh toán.",
@@ -453,6 +501,72 @@
   }
 
   // ---- Screen: delivery address ----
+  // ---- Screen: processing tier selection (dual processing tiers) ----
+  // Express first, Regular second (service.processingTiers is already in
+  // that order -- see lib/checkout.js getProcessingTiersForCustomer). A
+  // tier is never pre-selected/defaulted: the customer must explicitly
+  // pick one (native radio input, required) before the Continue button
+  // does anything. Only tiers that are both enabled and fully priced by
+  // the owner ever appear here -- a disabled or not-yet-priced tier is
+  // simply absent, never shown with an invented or blank price.
+  function renderProcessingTierSelection(order, service) {
+    var tiers = service.processingTiers || [];
+    var cardsHtml = tiers
+      .map(function (tierInfo) {
+        var label = tierInfo.tier === "express" ? t(lang, "expressProcessingLabel") : t(lang, "regularProcessingLabel");
+        return (
+          '<label class="processing-tier-option">' +
+          '<input type="radio" name="processingTier" value="' + escapeHtml(tierInfo.tier) + '" required>' +
+          '<span class="processing-tier-option__body">' +
+          '<span class="processing-tier-option__label">' + escapeHtml(label) + "</span>" +
+          '<span class="processing-tier-option__price">' + formatPhp(tierInfo.totalPhpCentavos) + "</span>" +
+          '<span class="processing-tier-option__leadtime">' +
+          escapeHtml(t(lang, "estimatedProcessingTimeLabel")) + ": " + tierInfo.minBusinessDays + "–" + tierInfo.maxBusinessDays + " " + escapeHtml(t(lang, "businessDaysLabel")) +
+          "</span>" +
+          "</span>" +
+          "</label>"
+        );
+      })
+      .join("");
+
+    root.innerHTML =
+      '<div class="card"><h2>' + escapeHtml(service.title) + "</h2>" +
+      "<h3>" + escapeHtml(t(lang, "processingOptionHeading")) + "</h3>" +
+      '<form id="instant-services-tier-form" class="enquiry-form">' +
+      '<div class="processing-tier-options">' + cardsHtml + "</div>" +
+      '<div class="context-note"><p>' + escapeHtml(t(lang, "deliveryNotice")) + "</p></div>" +
+      '<div class="enquiry-form-actions"><button type="submit" class="btn btn-primary">' + escapeHtml(t(lang, "continueButton")) + '</button><p class="form-status" aria-live="polite"></p></div>' +
+      "</form></div>";
+
+    var form = document.getElementById("instant-services-tier-form");
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var status = form.querySelector(".form-status");
+      var selected = form.querySelector('input[name="processingTier"]:checked');
+      if (!selected) {
+        status.textContent = t(lang, "selectProcessingOptionRequired");
+        return;
+      }
+      var button = form.querySelector("button[type=submit]");
+      button.disabled = true;
+      status.textContent = t(lang, "saving");
+
+      window
+        .portalFetch("/api/instant-services/orders/" + order.id + "/processing-tier", {
+          method: "POST",
+          body: JSON.stringify({ processingTier: selected.value }),
+        })
+        .then(function (resp) {
+          if (!resp.ok) return resp.json().then((data) => Promise.reject(data));
+          loadOrder();
+        })
+        .catch(function (data) {
+          status.textContent = (data && data.error) || t(lang, "errorGeneric");
+          button.disabled = false;
+        });
+    });
+  }
+
   function renderDeliveryAddress(order) {
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "deliveryHeading")) + "</h2>" +
@@ -651,12 +765,38 @@
   // Stage 2; this screen must never have read it in the first place.)
   function renderReview(order, service) {
     var isBooking = service.offeringType === "bookable_service";
+
+    // For a tiered document order, the row shown here is the TIER the
+    // customer actually selected, not the generic "from" price the
+    // catalogue/service-detail pages show -- service.processingTiers
+    // carries each enabled, approved tier's own price and lead-time range.
+    var selectedTier = null;
+    if (service.usesProcessingTiers && order.processingTier) {
+      selectedTier = (service.processingTiers || []).filter(function (opt) { return opt.tier === order.processingTier; })[0] || null;
+    }
+
+    var priceRowsHtml;
+    if (selectedTier) {
+      var tierLabel = selectedTier.tier === "express" ? t(lang, "expressProcessingLabel") : t(lang, "regularProcessingLabel");
+      priceRowsHtml =
+        "<tr><td>" + escapeHtml(tierLabel) + "</td><td>" + formatPhp(selectedTier.totalPhpCentavos) + "</td></tr>" +
+        "<tr><td><strong>" + escapeHtml(t(lang, "totalLabel")) + "</strong></td><td><strong>" + formatPhp(selectedTier.totalPhpCentavos) + "</strong></td></tr>";
+    } else {
+      priceRowsHtml =
+        "<tr><td>" + escapeHtml(service.priceLabel || t(lang, "totalLabel")) + "</td><td>" + formatPhp(service.totalPhpCentavos) + "</td></tr>" +
+        "<tr><td><strong>" + escapeHtml(t(lang, "totalLabel")) + "</strong></td><td><strong>" + formatPhp(service.totalPhpCentavos) + "</strong></td></tr>";
+    }
+    var leadTimeHtml = selectedTier
+      ? '<p class="muted">' +
+        escapeHtml(t(lang, "estimatedProcessingTimeLabel")) + ": " + selectedTier.minBusinessDays + "–" + selectedTier.maxBusinessDays + " " + escapeHtml(t(lang, "businessDaysLabel")) +
+        "</p>"
+      : "";
+    var deliveryHtml = service.supportsDelivery ? '<p class="muted">' + escapeHtml(t(lang, "deliveryNotice")) + "</p>" : "";
+
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, isBooking ? "reviewHeadingBooking" : "reviewHeading")) + "</h2><p>" + escapeHtml(t(lang, isBooking ? "reviewIntroBooking" : "reviewIntro")) + "</p>" +
-      '<table class="instant-services-price-table">' +
-      "<tr><td>" + escapeHtml(service.priceLabel || t(lang, "totalLabel")) + "</td><td>" + formatPhp(service.totalPhpCentavos) + "</td></tr>" +
-      "<tr><td><strong>" + escapeHtml(t(lang, "totalLabel")) + "</strong></td><td><strong>" + formatPhp(service.totalPhpCentavos) + "</strong></td></tr>" +
-      "</table>" +
+      '<table class="instant-services-price-table">' + priceRowsHtml + "</table>" +
+      leadTimeHtml + deliveryHtml +
       '<p class="muted">' + escapeHtml(t(lang, "allInclusiveNotice")) + "</p>" +
       '<div class="enquiry-form-actions"><button type="button" class="btn btn-primary" id="instant-services-confirm-pay">' + escapeHtml(t(lang, "confirmAndPayButton")) + '</button><p class="form-status" aria-live="polite"></p></div>' +
       "</div>";
@@ -684,6 +824,26 @@
   }
 
   // ---- Screen: payment (QR Ph) ----
+  // Shared across the payment/awaiting-verification/paid screens: once
+  // the order has a server-frozen price snapshot, show the ACTUAL
+  // confirmed tier/lead-time/delivery terms-at-purchase rather than the
+  // catalogue's current (and possibly since-changed) figures -- the same
+  // snapshot-is-truth principle as the review screen, just carried
+  // through the remaining states.
+  function tierDeliveryStatusHtml(order) {
+    var snap = order.priceSnapshot;
+    if (!snap || !snap.tierLabel) return "";
+    var tierLabel = snap.processingTier === "express" ? t(lang, "expressProcessingLabel") : t(lang, "regularProcessingLabel");
+    var leadTimeLine = snap.minBusinessDays != null && snap.maxBusinessDays != null
+      ? '<p class="muted">' + escapeHtml(t(lang, "estimatedProcessingTimeLabel")) + ": " + snap.minBusinessDays + "–" + snap.maxBusinessDays + " " + escapeHtml(t(lang, "businessDaysLabel")) + "</p>"
+      : "";
+    var deliveryLine = "";
+    if (snap.delivery) {
+      deliveryLine = '<p class="muted">' + escapeHtml(t(lang, snap.delivery.isInternational ? "deliveryInternationalPendingLabel" : "deliveryFreeDomesticLabel")) + "</p>";
+    }
+    return '<p class="muted"><strong>' + escapeHtml(tierLabel) + "</strong></p>" + leadTimeLine + deliveryLine;
+  }
+
   function renderPayment(order, payment) {
     var amount = order.priceSnapshot ? formatPhp(order.priceSnapshot.totalPhpCentavos) : payment ? "₱" + Number(payment.amountPhp).toFixed(2) : "";
     var merchantLine = payment && payment.merchantDisplayName ? "<p><strong>" + escapeHtml(payment.merchantDisplayName) + "</strong></p>" : "";
@@ -691,6 +851,7 @@
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paymentHeading")) + "</h2>" +
       '<p class="instant-service-card__price">' + escapeHtml(t(lang, "amountLabel")) + ": " + amount + "</p>" +
+      tierDeliveryStatusHtml(order) +
       merchantLine + instructionsLine +
       '<p><img id="instant-services-qr-image" alt="QR Ph" style="max-width:260px;border:1px solid #e2e2dc;border-radius:6px;"></p>' +
       '<label class="portal-upload-label">' + escapeHtml(t(lang, "uploadProofLabel")) + '<input type="file" id="instant-services-proof-upload" accept=".pdf,.jpg,.jpeg,.png,.webp"></label>' +
@@ -769,6 +930,7 @@
   function renderAwaitingVerification(order, bookingStatus) {
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paymentSubmittedHeading")) + "</h2><p>" + escapeHtml(t(lang, "paymentSubmittedBody")) + "</p>" +
+      tierDeliveryStatusHtml(order) +
       bookingStatusLine(bookingStatus) +
       "<p>" + escapeHtml(t(lang, "referenceLabel")) + ": <strong>" + escapeHtml(order.reference || order.id) + "</strong></p>" +
       '<p><a class="btn btn-secondary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a> " +
@@ -779,6 +941,7 @@
   function renderPaid(order, bookingStatus) {
     root.innerHTML =
       '<div class="card"><h2>' + escapeHtml(t(lang, "paidHeading")) + "</h2><p>" + escapeHtml(t(lang, "paidBody")) + "</p>" +
+      tierDeliveryStatusHtml(order) +
       bookingStatusLine(bookingStatus) +
       '<p><a class="btn btn-primary" href="/portal/">' + escapeHtml(t(lang, "portalLinkText")) + "</a> " +
       '<a class="btn btn-secondary" href="' + receiptUrl(order) + '">' + escapeHtml(t(lang, "viewReceiptText")) + "</a></p>" +
@@ -821,6 +984,12 @@
                 .then(function (r) { return r.json(); })
                 .then(function () { loadOrder(); });
             }
+            // A customer must actively choose Express or Regular before
+            // anything else about checkout proceeds -- never defaulted,
+            // and checked before delivery address / review either way.
+            if (service.usesProcessingTiers && !order.processingTier) {
+              return renderProcessingTierSelection(order, service);
+            }
             if (service.supportsDelivery && !data.deliveryAddress) {
               return renderDeliveryAddress(order);
             }
@@ -836,6 +1005,9 @@
           }
           if (!data.submissionStatus || data.submissionStatus === "draft" || data.submissionStatus === "revision_requested") {
             return renderQuestionnaire({ id: order.id, submissionId: order.submissionId });
+          }
+          if (service.usesProcessingTiers && !order.processingTier) {
+            return renderProcessingTierSelection(order, service);
           }
           if (service.supportsDelivery && !data.deliveryAddress) {
             return renderDeliveryAddress(order);

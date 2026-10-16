@@ -1,9 +1,9 @@
 import { env } from "cloudflare:workers";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import worker from "../src/index.js";
-import { createTestClient, createTestCheckoutService, createTestStaff, SITE_ORIGIN } from "./helpers.js";
+import { createTestClient, createTestCheckoutService, createTestStaff, SITE_ORIGIN, selectProcessingTier } from "./helpers.js";
 import { generateTestAccessKeypair, signTestAccessJwt, mockAccessJwksEndpoint } from "./access-jwt-helper.js";
-import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, computeAndSnapshotPrice, transitionOrder, getServiceById, getPriceHistory } from "../src/lib/checkout.js";
+import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, computeAndSnapshotPrice, transitionOrder, getServiceById, getPriceHistory, usesProcessingTiers } from "../src/lib/checkout.js";
 import { newId } from "../src/lib/crypto.js";
 import { createBooking, transitionBooking, getBookingByOrderId } from "../src/lib/airportVip.js";
 
@@ -45,6 +45,9 @@ async function createOrderAwaitingVerification(service) {
   let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
   const { applicationId } = await startOrderApplication(env.DB, order, service);
   order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+  if (usesProcessingTiers(service.offering_type)) {
+    order = await selectProcessingTier(order, "regular");
+  }
   const snapshot = await computeAndSnapshotPrice(env.DB, order);
   const paymentId = newId();
   await env.DB
@@ -316,13 +319,13 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
     expect(resp.status).toBe(403);
   });
 
-  it("an admin can create a service (inactive by default), then activate it", async () => {
+  it("an admin can create a service (inactive by default), then activate it -- the legacy single-price model, unchanged, for a non-document offering", async () => {
     const staff = await createTestStaff({ role: "admin" });
     const resp = await staffRequest("/staff/instant-services/catalogue", staff, {
       method: "POST",
       body: formBody({
         serviceSlug: "motions-blacklist",
-        biFormId: "CCS-A-CDR-2016",
+        offeringType: "bookable_service",
         displayOrder: "1",
         serviceFeeAmount: "5000.00",
         title_en: "Certificate of Derogatory Record",
@@ -386,7 +389,7 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
       method: "POST",
       body: formBody({
         serviceSlug: "price-history-regression",
-        offeringType: "document_manual",
+        offeringType: "fixed_price_service",
         biFormId: "",
         serviceFeeAmount: "2000.00",
         title_en: "Price History Regression",
@@ -428,7 +431,7 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
       method: "POST",
       body: formBody({
         serviceSlug: "price-history-regression",
-        offeringType: "document_manual",
+        offeringType: "fixed_price_service",
         biFormId: "",
         serviceFeeAmount: "3500.00",
         priceChangeReason: "Cost of supporting documents increased",
@@ -516,8 +519,10 @@ describe("Staff Instant Services: catalogue management (admin-gated)", () => {
 
   it("refuses to activate an approved offering with no approved price, even via the direct status-change endpoint", async () => {
     const staff = await createTestStaff({ role: "admin" });
-    const service = await createTestCheckoutService({ active: 0 });
-    // This fixture service is created inactive with no price components at all.
+    // bookable_service: the legacy single-price gate, specifically --
+    // tier-based activation for a document offering is covered separately
+    // in the "Processing tiers" describe block below.
+    const service = await createTestCheckoutService({ active: 0, offeringType: "bookable_service" });
     await env.DB.prepare("DELETE FROM checkout_price_components WHERE service_id = ?").bind(service.id).run();
 
     // Approved (isolating this test to the price gate specifically, not

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, it, expect } from "vitest";
 import worker from "../src/index.js";
-import { authedRequest, createTestClient, createSessionCookieFor, createTestApplication, createTestCheckoutService } from "./helpers.js";
+import { authedRequest, createTestClient, createSessionCookieFor, createTestApplication, createTestCheckoutService, selectProcessingTier } from "./helpers.js";
 import { findOrCreateDraftOrder, startOrderApplication, startBookingApplication, transitionOrder, computeAndSnapshotPrice } from "../src/lib/checkout.js";
 import { createBooking, transitionBooking } from "../src/lib/airportVip.js";
 
@@ -32,6 +32,7 @@ describe("Client Portal: application status is never conflated with payment/book
     let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
     const { applicationId } = await startOrderApplication(env.DB, order, service);
     order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    order = await selectProcessingTier(order, "regular");
     await computeAndSnapshotPrice(env.DB, order);
     order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
     await transitionOrder(env.DB, order, "awaiting_payment");

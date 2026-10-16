@@ -5,15 +5,20 @@ import { authedRequest, createTestCheckoutService, SITE_ORIGIN } from "./helpers
 
 describe("Instant Services: public catalogue", () => {
   it("lists only active services, in display order, with server-computed totals", async () => {
-    const hidden = await createTestCheckoutService({ active: 0, title: "Hidden Service" });
+    // fixed_price_service: the legacy itemized-components pricing model,
+    // specifically -- a tiered document service's totalPhpCentavos is
+    // covered separately (its own describe block, lib/checkout.test.js).
+    const hidden = await createTestCheckoutService({ active: 0, title: "Hidden Service", offeringType: "fixed_price_service" });
     const second = await createTestCheckoutService({
       title: "Second Service",
       displayOrder: 2,
+      offeringType: "fixed_price_service",
       priceComponents: [{ type: "service_fee", label: "Fee", amountPhpCentavos: 100000 }],
     });
     const first = await createTestCheckoutService({
       title: "First Service",
       displayOrder: 1,
+      offeringType: "fixed_price_service",
       priceComponents: [
         { type: "service_fee", label: "FIS Service Fee", amountPhpCentavos: 300000 },
         { type: "government_fee", label: "Government Fee", amountPhpCentavos: 50000 },
@@ -39,7 +44,7 @@ describe("Instant Services: public catalogue", () => {
   });
 
   it("marks a service with no priced components as having no approved price, rather than a zero price", async () => {
-    const service = await createTestCheckoutService({ title: "Unpriced Service", priceComponents: [] });
+    const service = await createTestCheckoutService({ title: "Unpriced Service", offeringType: "fixed_price_service", priceComponents: [] });
     const resp = await worker.fetch(authedRequest("/api/instant-services/catalogue"), env);
     const body = await resp.json();
     // An unpriced service should not even be listed as checkout-ready;

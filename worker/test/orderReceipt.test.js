@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, it, expect } from "vitest";
 import worker from "../src/index.js";
-import { authedRequest, createTestClient, createSessionCookieFor, createTestCheckoutService } from "./helpers.js";
+import { authedRequest, createTestClient, createSessionCookieFor, createTestCheckoutService, selectProcessingTier } from "./helpers.js";
 import { findOrCreateDraftOrder, startOrderApplication, computeAndSnapshotPrice, transitionOrder } from "../src/lib/checkout.js";
 import { newId } from "../src/lib/crypto.js";
 
@@ -38,6 +38,7 @@ describe("Customer receipts", () => {
     let order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId: service.id });
     await startOrderApplication(env.DB, order, service);
     order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
+    order = await selectProcessingTier(order, "regular");
     await computeAndSnapshotPrice(env.DB, order);
     order = await env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
     await transitionOrder(env.DB, order, "awaiting_payment");

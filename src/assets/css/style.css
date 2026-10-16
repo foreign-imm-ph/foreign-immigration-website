@@ -930,6 +930,56 @@ summary:focus-visible {
   padding-top: 0.9rem;
 }
 
+/* Express/Regular processing-tier selection cards (instant-services-
+   apply.js renderProcessingTierSelection) -- Express is always the first
+   DOM child (the required display order), a plain radio-selected card
+   matching the rest of this flow's "a plain stated price" styling, no
+   discount/strikethrough treatment on either option. */
+.processing-tier-options {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1.25rem 0;
+}
+
+.processing-tier-option {
+  display: block;
+  border: 1px solid rgba(13, 61, 37, 0.18);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.processing-tier-option:has(input:checked) {
+  border-color: var(--color-gold);
+  background: var(--color-green-tint);
+}
+
+.processing-tier-option input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+.processing-tier-option__body {
+  display: inline;
+}
+
+.processing-tier-option__label {
+  font-weight: 600;
+  color: var(--color-green);
+}
+
+.processing-tier-option__price {
+  font-weight: 600;
+  float: right;
+}
+
+.processing-tier-option__leadtime {
+  display: block;
+  margin: 0.35rem 0 0 1.5rem;
+  color: var(--color-grey);
+  font-size: 0.92rem;
+}
+
 /* Feature split (Airport VIP homepage feature) */
 
 .feature-split {

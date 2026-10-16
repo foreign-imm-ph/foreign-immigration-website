@@ -35,6 +35,11 @@ import {
   replacePriceComponents,
   updatePriceComponentsWithHistory,
   getPriceHistory,
+  usesProcessingTiers,
+  PROCESSING_TIERS,
+  TIER_LABELS,
+  tierIsApproved,
+  updateProcessingTiers,
 } from "../lib/checkout.js";
 import { ensureServiceTranslations, generateTranslationPreview, reconcileKeep, applyRegeneratedTranslation } from "../lib/checkoutTranslation.js";
 import { getSubmissionById } from "../lib/biForms.js";
@@ -132,11 +137,28 @@ export async function viewOrder(env, staff, orderId) {
     })
     .join("") || '<p class="muted">No payment requests for this order yet.</p>';
 
-  const priceHtml = snapshot
-    ? `<table><tr><th>Item</th><th>Amount (PHP)</th></tr>${snapshot.components
-        .map((c) => `<tr><td>${escapeHtml(c.label)}</td><td>${centavosToPhpString(c.amountPhpCentavos)}</td></tr>`)
-        .join("")}<tr><td><strong>Total</strong></td><td><strong>${centavosToPhpString(snapshot.totalPhpCentavos)}</strong></td></tr></table>`
-    : '<p class="muted">Price not yet confirmed by the customer.</p>';
+  let priceHtml;
+  if (!snapshot) {
+    priceHtml = '<p class="muted">Price not yet confirmed by the customer.</p>';
+  } else if (snapshot.processingTier) {
+    // Tiered document order -- the frozen terms the customer actually
+    // agreed to, exactly as confirmed, regardless of whatever the
+    // catalogue's tier prices/lead-times have changed to since.
+    priceHtml = `<p><strong>Selected processing option:</strong> ${escapeHtml(snapshot.tierLabel)}</p>
+      <p><strong>Confirmed price:</strong> ${centavosToPhpString(snapshot.totalPhpCentavos)} PHP</p>
+      <p><strong>Estimated processing time:</strong> ${escapeHtml(String(snapshot.minBusinessDays))}–${escapeHtml(String(snapshot.maxBusinessDays))} business days (excludes delivery time)</p>
+      ${
+        snapshot.delivery
+          ? snapshot.delivery.isInternational
+            ? '<p><strong>Delivery:</strong> International — delivery charges quoted separately, pending a staff quotation.</p>'
+            : '<p><strong>Delivery:</strong> Free Regular Nationwide Delivery (Philippines).</p>'
+          : ""
+      }`;
+  } else {
+    priceHtml = `<table><tr><th>Item</th><th>Amount (PHP)</th></tr>${snapshot.components
+      .map((c) => `<tr><td>${escapeHtml(c.label)}</td><td>${centavosToPhpString(c.amountPhpCentavos)}</td></tr>`)
+      .join("")}<tr><td><strong>Total</strong></td><td><strong>${centavosToPhpString(snapshot.totalPhpCentavos)}</strong></td></tr></table>`;
+  }
 
   const deliveryHtml = service && service.supports_delivery
     ? `<div class="card">
@@ -432,6 +454,20 @@ export async function viewPaymentSettingsQrImage(env, staff) {
 // Catalogue management
 // ---------------------------------------------------------------------
 
+// Compact one-line pricing summary for the catalogue list -- shows both
+// tiers for a document service (dash for an unapproved/disabled one, so
+// "not yet priced" is never confused with "free"), or just notes that
+// non-document offerings use the legacy single-price editor instead.
+function pricingSummary(service) {
+  if (!usesProcessingTiers(service.offering_type)) return '<span class="muted">(single price)</span>';
+  return PROCESSING_TIERS.map((tier) => {
+    const label = TIER_LABELS[tier].split(" ")[0]; // "Express" / "Regular"
+    if (!service[`${tier}_enabled`]) return `${label}: <span class="muted">disabled</span>`;
+    if (!tierIsApproved(service, tier)) return `${label}: <span class="muted">not yet priced</span>`;
+    return `${label}: ${centavosToPhpString(service[`${tier}_price_php_centavos`])}`;
+  }).join(" · ");
+}
+
 export async function listCatalogue(env, staff) {
   const services = await listAllServicesForStaff(env.DB);
   const rows = await Promise.all(
@@ -441,7 +477,7 @@ export async function listCatalogue(env, staff) {
         <td><a class="ref" href="/staff/instant-services/catalogue/${s.id}">${escapeHtml(i18n ? i18n.title : s.service_slug)}</a></td>
         <td class="muted">${escapeHtml(s.service_slug)}</td>
         <td class="muted">${escapeHtml(OFFERING_TYPE_LABELS[s.offering_type] || s.offering_type)}</td>
-        <td class="muted">${escapeHtml(s.bi_form_id || "")}</td>
+        <td>${pricingSummary(s)}</td>
         <td><span class="status">${escapeHtml(s.offering_status)}</span></td>
       </tr>`;
     })
@@ -451,7 +487,7 @@ export async function listCatalogue(env, staff) {
     `<h1>Order &amp; Book Online Catalogue</h1>
      <p><a href="/staff/instant-services/catalogue/new">+ Add an offering</a></p>
      <div class="table-scroll"><table>
-       <tr><th>Title</th><th>Slug</th><th>Type</th><th>BI Form</th><th>Status</th></tr>
+       <tr><th>Title</th><th>Slug</th><th>Type</th><th>Pricing</th><th>Status</th></tr>
        ${rows.join("") || '<tr><td colspan="5" class="muted">No catalogue offerings yet.</td></tr>'}
      </table></div>`,
     staff.email
@@ -534,6 +570,63 @@ function languageContentFields(i18nByLang, serviceId) {
     .join("");
 }
 
+// "Processing Options & Pricing" -- the dual-tier editor for a document
+// service (document_automated/document_manual). Express is always
+// rendered first, Regular second, per the explicit display-order
+// requirement; PROCESSING_TIERS' own order is relied on here. A blank
+// price/lead-time field means "not yet configured" (NULL in the
+// database) -- never prefilled with a guessed or zero value.
+function processingTierFields(service) {
+  const migratedNotice = service.regular_price_migrated_from_legacy
+    ? `<p class="priority-badge priority-badge--priority">This Regular Processing price was carried over from this service's previous single price. Please review and re-save to confirm it before activating.</p>`
+    : "";
+  const tierFieldset = (tier) => {
+    const prefix = tier;
+    const enabled = service[`${tier}_enabled`];
+    const price = service[`${tier}_price_php_centavos`];
+    const min = service[`${tier}_min_business_days`];
+    const max = service[`${tier}_max_business_days`];
+    return `<fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
+      <legend>${escapeHtml(TIER_LABELS[tier].toUpperCase())}</legend>
+      <label for="${prefix}Enabled"><input type="checkbox" name="${prefix}Enabled" id="${prefix}Enabled" style="width:auto;display:inline-block;" ${enabled ? "checked" : ""}> Enabled</label>
+      <label for="${prefix}Price">All-inclusive price (PHP)</label>
+      <input type="text" name="${prefix}Price" id="${prefix}Price" value="${price != null ? (price / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00">
+      <label for="${prefix}MinDays">Minimum processing time (business days)</label>
+      <input type="text" name="${prefix}MinDays" id="${prefix}MinDays" value="${min != null ? min : ""}" placeholder="e.g. 2">
+      <label for="${prefix}MaxDays">Maximum processing time (business days)</label>
+      <input type="text" name="${prefix}MaxDays" id="${prefix}MaxDays" value="${max != null ? max : ""}" placeholder="e.g. 3">
+      ${tier === "regular" ? migratedNotice : ""}
+    </fieldset>`;
+  };
+  return `<p class="muted">Leave a tier's price/lead-time blank until you're ready to approve it -- a blank field is never treated as a zero price. At least one enabled tier needs a complete price and lead-time range before this service can be activated.</p>
+    ${tierFieldset("express")}
+    ${tierFieldset("regular")}`;
+}
+
+// Parses + validates the Processing Options & Pricing form into the
+// shape lib/checkout.js updateProcessingTiers expects. A blank price/
+// lead-time input becomes null ("not yet configured"); anything else is
+// parsed and validated (validateTierInput, called inside
+// updateProcessingTiers) before it is ever persisted.
+function parseProcessingTiersFromForm(form) {
+  const parseTier = (tier) => {
+    const priceRaw = String(form.get(`${tier}Price`) || "").trim();
+    const minRaw = String(form.get(`${tier}MinDays`) || "").trim();
+    const maxRaw = String(form.get(`${tier}MaxDays`) || "").trim();
+    let priceCentavos = null;
+    if (priceRaw) {
+      priceCentavos = phpStringToCentavos(priceRaw);
+      if (priceCentavos === null) throw new HttpError(400, `${TIER_LABELS[tier]}: invalid price amount.`);
+    }
+    const minDays = minRaw ? Number(minRaw) : null;
+    const maxDays = maxRaw ? Number(maxRaw) : null;
+    if (minRaw && !Number.isInteger(minDays)) throw new HttpError(400, `${TIER_LABELS[tier]}: minimum processing time must be a whole number.`);
+    if (maxRaw && !Number.isInteger(maxDays)) throw new HttpError(400, `${TIER_LABELS[tier]}: maximum processing time must be a whole number.`);
+    return { enabled: form.get(`${tier}Enabled`) === "on", priceCentavos, minDays, maxDays };
+  };
+  return { express: parseTier("express"), regular: parseTier("regular") };
+}
+
 function priceComponentFields(components) {
   const byType = {};
   for (const c of components) byType[c.component_type] = c;
@@ -542,7 +635,7 @@ function priceComponentFields(components) {
     <label for="serviceFeeLabel">FIS service fee — label</label>
     <input type="text" name="serviceFeeLabel" id="serviceFeeLabel" value="${escapeHtml(byType.service_fee ? byType.service_fee.label : "FIS Service Fee")}">
     <label for="serviceFeeAmount">FIS service fee — amount (PHP)</label>
-    <input type="text" name="serviceFeeAmount" id="serviceFeeAmount" value="${byType.service_fee ? (byType.service_fee.amount_php_centavos / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00" required>
+    <input type="text" name="serviceFeeAmount" id="serviceFeeAmount" value="${byType.service_fee ? (byType.service_fee.amount_php_centavos / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00">
     <label for="govFeeLabel">Government fee — label (optional)</label>
     <input type="text" name="govFeeLabel" id="govFeeLabel" value="${escapeHtml(byType.government_fee ? byType.government_fee.label : "Government Fee")}">
     <label for="govFeeAmount">Government fee — amount (PHP, optional)</label>
@@ -597,7 +690,9 @@ export async function newServiceForm(env, staff) {
        <label for="displayOrder">Display order</label>
        <input type="text" name="displayOrder" id="displayOrder" value="0">
        <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" checked> This offering involves physical document delivery</label>
-       <h2>Price</h2>
+       <h2>Processing Options &amp; Pricing <span class="muted">(Automated/Staff-processed document orders only)</span></h2>
+       ${processingTierFields({ express_enabled: 1, regular_enabled: 1 })}
+       <h2>Price <span class="muted">(Bookable services and fixed-price services only)</span></h2>
        ${priceComponentFields([])}
        <h2>Customer-facing content</h2>
        ${languageContentFields({})}
@@ -665,7 +760,11 @@ export async function createServiceHandler(request, env, staff) {
     throw new HttpError(400, "A BI Form ID is required for an automated document order");
   }
 
-  const components = parsePriceComponentsFromForm(form);
+  // Document services use the new dual-tier model exclusively; the
+  // legacy itemized-components price remains the single source of truth
+  // for every other offering type, completely unchanged.
+  const tiers = usesProcessingTiers(offeringType) ? parseProcessingTiersFromForm(form) : null;
+  const components = tiers ? null : parsePriceComponentsFromForm(form);
 
   const service = await createService(env.DB, {
     serviceSlug,
@@ -676,7 +775,11 @@ export async function createServiceHandler(request, env, staff) {
     supportsDelivery: form.get("supportsDelivery") === "on",
     displayOrder: Number(form.get("displayOrder")) || 0,
   });
-  await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
+  if (tiers) {
+    await updateProcessingTiers(env.DB, service.id, tiers);
+  } else {
+    await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
+  }
   await saveLanguageContent(env.DB, service.id, form);
   // Automatic catalogue translation: fills in the five non-English
   // languages from the English content just saved, so the owner never has
@@ -735,7 +838,9 @@ export async function viewService(env, staff, serviceId) {
        <label for="displayOrder">Display order</label>
        <input type="text" name="displayOrder" id="displayOrder" value="${service.display_order}">
        <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${service.supports_delivery ? "checked" : ""}> This offering involves physical document delivery</label>
-       <h2>Price</h2>
+       <h2>Processing Options &amp; Pricing <span class="muted">(Automated/Staff-processed document orders only)</span></h2>
+       ${processingTierFields(service)}
+       <h2>Price <span class="muted">(Bookable services and fixed-price services only)</span></h2>
        ${priceComponentFields(components)}
        <h2>Customer-facing content</h2>
        ${languageContentFields(i18nByLang, serviceId)}
@@ -759,7 +864,8 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
   if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
   if (!serviceSlug) throw new HttpError(400, "Service slug is required");
 
-  const components = parsePriceComponentsFromForm(form);
+  const tiers = usesProcessingTiers(offeringType) ? parseProcessingTiersFromForm(form) : null;
+  const components = tiers ? null : parsePriceComponentsFromForm(form);
 
   await updateServiceMeta(env.DB, serviceId, {
     serviceSlug,
@@ -770,7 +876,11 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
     supportsDelivery: form.get("supportsDelivery") === "on",
     displayOrder: Number(form.get("displayOrder")) || 0,
   });
-  await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
+  if (tiers) {
+    await updateProcessingTiers(env.DB, serviceId, tiers);
+  } else {
+    await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
+  }
   await saveLanguageContent(env.DB, serviceId, form);
   await ensureServiceTranslations(env, serviceId);
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, it, expect } from "vitest";
 import worker from "../src/index.js";
-import { authedRequest, createTestClient, createSessionCookieFor, createTestCheckoutService, createTestStaff, SITE_ORIGIN } from "./helpers.js";
+import { authedRequest, createTestClient, createSessionCookieFor, createTestCheckoutService, createTestStaff, SITE_ORIGIN, selectProcessingTier } from "./helpers.js";
 import { findOrCreateDraftOrder } from "../src/lib/checkout.js";
 import { recordPaymentSettingsChange } from "../src/lib/checkoutPaymentSettings.js";
 import { newId } from "../src/lib/crypto.js";
@@ -182,6 +182,11 @@ describe("Instant Services: authenticated order routes", () => {
       await env.DB.prepare("UPDATE bi_form_submissions SET status = 'submitted' WHERE id = ?").bind(submissionId).run();
     }
 
+    // A customer must actively select a processing option before
+    // proceeding to checkout -- confirm-and-pay now refuses to price a
+    // tiered document order until this has happened.
+    await selectProcessingTier(order, "regular");
+
     const confirmResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
     expect(confirmResp.status).toBe(200);
     const confirmBody = await confirmResp.json();
@@ -256,6 +261,8 @@ describe("Instant Services: authenticated order routes", () => {
       changes: { qrImageR2Key: "config/test-qr-ph-manual.png", merchantDisplayName: "FIS Test Merchant", customerInstructions: "Scan and pay.", enabled: true },
     });
     await env.CLIENT_FILES.put("config/test-qr-ph-manual.png", new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
+
+    await selectProcessingTier(order, "express");
 
     const confirmResp = await worker.fetch(authedRequest(`/api/instant-services/orders/${order.id}/confirm-and-pay`, { method: "POST", cookie }), env);
     expect(confirmResp.status).toBe(200);

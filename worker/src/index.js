@@ -23,6 +23,7 @@ import {
   handleGetOrder,
   handleStartApplication,
   handleSetDeliveryAddress,
+  handleSetProcessingTier,
   handleConfirmAndPay,
   handleGetOrderHistory,
   handleGetOrderReceipt,
@@ -160,6 +161,9 @@ async function route(request, env, path, method, url) {
 
   const orderAddressMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/delivery-address$/);
   if (orderAddressMatch && method === "POST") return handleSetDeliveryAddress(request, env, orderAddressMatch[1]);
+
+  const orderTierMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/processing-tier$/);
+  if (orderTierMatch && method === "POST") return handleSetProcessingTier(request, env, orderTierMatch[1]);
 
   const orderConfirmMatch = path.match(/^\/api\/instant-services\/orders\/([^/]+)\/confirm-and-pay$/);
   if (orderConfirmMatch && method === "POST") return handleConfirmAndPay(request, env, orderConfirmMatch[1]);

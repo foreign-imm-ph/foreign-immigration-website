@@ -69,20 +69,41 @@ export async function createBiFormSubmission(client, application, staff, overrid
 // 1 here only because these are explicitly test fixtures in a local D1,
 // never anything deployed -- production rows stay active=0 until staff
 // approval, per the migration's fail-closed default.
+// Dual processing tiers: a document_automated/document_manual fixture
+// gets both tiers enabled and fully approved by default (Regular at the
+// same 500000-centavo/₱5,000 amount the legacy service_fee default below
+// already used, so any test asserting that specific total continues to
+// pass unchanged; Express distinctly priced/faster, for tests that care
+// about tier differences). Override via expressPriceCentavos/
+// expressMinDays/expressMaxDays/regularPriceCentavos/etc., or pass
+// expressEnabled: false / regularEnabled: false to test a disabled tier.
 export async function createTestCheckoutService(overrides = {}) {
   const id = newId();
+  const offeringType = overrides.offeringType || "document_automated";
+  const usesTiers = offeringType === "document_automated" || offeringType === "document_manual";
   await env.DB.prepare(
-    `INSERT INTO checkout_services (id, service_slug, bi_form_id, supports_delivery, display_order, active, offering_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO checkout_services
+       (id, service_slug, bi_form_id, supports_delivery, display_order, active, offering_type,
+        express_enabled, express_price_php_centavos, express_min_business_days, express_max_business_days,
+        regular_enabled, regular_price_php_centavos, regular_min_business_days, regular_max_business_days)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
       overrides.serviceSlug || "motions-blacklist",
-      overrides.offeringType === "bookable_service" ? "" : overrides.biFormId || "CCS-A-CDR-2016",
+      offeringType === "bookable_service" ? "" : overrides.biFormId || "CCS-A-CDR-2016",
       overrides.supportsDelivery === undefined ? 1 : overrides.supportsDelivery,
       overrides.displayOrder || 0,
       overrides.active === undefined ? 1 : overrides.active,
-      overrides.offeringType || "document_automated"
+      offeringType,
+      !usesTiers || overrides.expressEnabled === undefined ? 1 : overrides.expressEnabled ? 1 : 0,
+      !usesTiers ? null : overrides.expressPriceCentavos === undefined ? 800000 : overrides.expressPriceCentavos,
+      !usesTiers ? null : overrides.expressMinDays === undefined ? 2 : overrides.expressMinDays,
+      !usesTiers ? null : overrides.expressMaxDays === undefined ? 3 : overrides.expressMaxDays,
+      !usesTiers || overrides.regularEnabled === undefined ? 1 : overrides.regularEnabled ? 1 : 0,
+      !usesTiers ? null : overrides.regularPriceCentavos === undefined ? 500000 : overrides.regularPriceCentavos,
+      !usesTiers ? null : overrides.regularMinDays === undefined ? 10 : overrides.regularMinDays,
+      !usesTiers ? null : overrides.regularMaxDays === undefined ? 15 : overrides.regularMaxDays
     )
     .run();
   await env.DB.prepare(
@@ -100,6 +121,16 @@ export async function createTestCheckoutService(overrides = {}) {
       .run();
   }
   return env.DB.prepare("SELECT * FROM checkout_services WHERE id = ?").bind(id).first();
+}
+
+// Test-only shortcut for the real customer action (handleSetProcessingTier,
+// routes/checkoutCustomer.js) -- sets an order's selected processing tier
+// directly via SQL so fixtures that don't need to exercise that endpoint's
+// own HTTP validation can still reach confirm-and-pay for a tiered service,
+// which now requires a tier to have been selected first.
+export async function selectProcessingTier(order, tier) {
+  await env.DB.prepare("UPDATE checkout_orders SET processing_tier = ? WHERE id = ?").bind(tier, order.id).run();
+  return env.DB.prepare("SELECT * FROM checkout_orders WHERE id = ?").bind(order.id).first();
 }
 
 // Builds a Request with the headers every state-changing endpoint in this

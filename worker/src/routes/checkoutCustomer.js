@@ -20,6 +20,9 @@ import {
   publicPriceSnapshot,
   transitionOrder,
   getOrderHistory,
+  usesProcessingTiers,
+  tierIsSelectable,
+  PROCESSING_TIERS,
 } from "../lib/checkout.js";
 import { getSubmissionById } from "../lib/biForms.js";
 import { getCurrentPaymentSettings } from "../lib/checkoutPaymentSettings.js";
@@ -87,6 +90,7 @@ export async function handleGetOrder(request, env, orderId) {
       status: order.status,
       applicationId: order.application_id,
       submissionId: order.bi_form_submission_id,
+      processingTier: order.processing_tier,
       priceSnapshot: order.price_snapshot_json ? publicPriceSnapshot(JSON.parse(order.price_snapshot_json)) : null,
       createdAt: order.created_at,
     },
@@ -153,6 +157,36 @@ export async function handleSetDeliveryAddress(request, env, orderId) {
     .run();
 
   return json({ ok: true });
+}
+
+// A customer must ACTIVELY select a processing option before proceeding
+// to checkout -- never silently defaulted to Express merely because it
+// is listed first. Editable only up to the moment a price is actually
+// frozen (computeAndSnapshotPrice, at confirm-and-pay): once a snapshot
+// exists, changing this column would no longer change what the customer
+// is charged, so it is refused outright rather than silently ignored.
+// The tier is re-validated against the CURRENT catalogue state here, and
+// AGAIN inside computeAndSnapshotPrice itself -- a tier that was
+// selectable a moment ago but got disabled or re-priced in between can
+// never slip through to a charge.
+export async function handleSetProcessingTier(request, env, orderId) {
+  const client = await requireClient(request, env);
+  const order = await requireOwnedOrder(env.DB, client, orderId);
+  const service = await getServiceById(env.DB, order.service_id);
+  if (!service || !usesProcessingTiers(service.offering_type)) {
+    throw new HttpError(409, "This service does not use processing options.");
+  }
+  if (order.status !== "draft" || order.price_snapshot_json) {
+    throw new HttpError(409, "The processing option can no longer be changed for this order.");
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const tier = String(body.processingTier || "");
+  if (!PROCESSING_TIERS.includes(tier)) throw new HttpError(400, "Invalid processing option.");
+  if (!tierIsSelectable(service, tier)) throw new HttpError(409, "This processing option is not currently available. Please choose another.");
+
+  await env.DB.prepare("UPDATE checkout_orders SET processing_tier = ?, updated_at = datetime('now') WHERE id = ?").bind(tier, order.id).run();
+  return json({ ok: true, processingTier: tier });
 }
 
 // The review-confirm step (Part III step 9/10): snapshots the

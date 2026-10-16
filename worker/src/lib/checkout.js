@@ -6,7 +6,7 @@
 // immutably onto the order.
 import { newId, generateReference } from "./crypto.js";
 import { HttpError } from "./storage.js";
-import { sumCentavos } from "./money.js";
+import { sumCentavos, isValidCentavos } from "./money.js";
 import { hashEnglishContent, hashEnglishFields } from "./checkoutTranslation.js";
 
 export const ORDER_STATUSES = ["draft", "awaiting_payment", "awaiting_verification", "paid", "cancelled", "expired"];
@@ -36,6 +36,119 @@ export const OFFERING_TYPES = ["document_automated", "document_manual", "bookabl
 // columns -- "ready for activation" is simply approved + a price set,
 // which setOfferingStatus already computes, not a state worth storing.
 export const OFFERING_STATUSES = ["draft", "ready_for_review", "approved", "active", "paused", "archived"];
+
+// ---------------------------------------------------------------------
+// Dual processing tiers (Express/Regular) -- document services only.
+// Express is always listed first, per the explicit display-order
+// requirement; the array order below is relied on wherever tiers are
+// iterated for display (Staff Portal editor, customer tier selection).
+// ---------------------------------------------------------------------
+export const PROCESSING_TIERS = ["express", "regular"];
+export const DOCUMENT_OFFERING_TYPES = ["document_automated", "document_manual"];
+export const TIER_LABELS = { express: "Express Processing", regular: "Regular Processing" };
+
+export function usesProcessingTiers(offeringType) {
+  return DOCUMENT_OFFERING_TYPES.includes(offeringType);
+}
+
+// Maps a tier name to its four column names on checkout_services -- the
+// one place that mapping is spelled out, so every other function below
+// reads/writes columns through this rather than repeating the four
+// string literals per tier.
+export function tierColumns(tier) {
+  return {
+    enabled: `${tier}_enabled`,
+    price: `${tier}_price_php_centavos`,
+    min: `${tier}_min_business_days`,
+    max: `${tier}_max_business_days`,
+  };
+}
+
+// A tier is "approved" only when it has an explicit, non-null price AND
+// a complete, valid lead-time range -- never inferred, never defaulted,
+// and never confused with the tier simply being enabled. Mirrors
+// hasApprovedPrice's "a missing price is not a zero price" rule for the
+// legacy single-price model below.
+export function tierIsApproved(service, tier) {
+  const c = tierColumns(tier);
+  const price = service[c.price];
+  const min = service[c.min];
+  const max = service[c.max];
+  return price !== null && price !== undefined && Number.isInteger(min) && Number.isInteger(max) && min >= 1 && max >= min;
+}
+
+// Selectable by a CUSTOMER right now: enabled AND approved. A disabled
+// tier is never selectable regardless of what price/lead-time data it
+// still holds from before it was disabled.
+export function tierIsSelectable(service, tier) {
+  const c = tierColumns(tier);
+  return !!service[c.enabled] && tierIsApproved(service, tier);
+}
+
+// Validates one tier's staff-submitted values before they are ever
+// persisted. Intentionally lenient when a field is simply blank (null) --
+// the owner is allowed to save a partially-configured tier while still
+// working on it; only the ACTIVATION gate (setOfferingStatus below)
+// requires a tier to be fully approved. A present-but-invalid value
+// (a negative price, a non-integer lead time, max < min) is always
+// rejected outright, whether or not the tier is enabled.
+export function validateTierInput(tier, { priceCentavos, minDays, maxDays }) {
+  if (priceCentavos !== null && !isValidCentavos(priceCentavos)) {
+    throw new HttpError(400, `${TIER_LABELS[tier]}: price must be a valid, non-negative PHP amount.`);
+  }
+  if (minDays !== null && (!Number.isInteger(minDays) || minDays < 1)) {
+    throw new HttpError(400, `${TIER_LABELS[tier]}: minimum processing time must be a positive whole number of business days.`);
+  }
+  if (maxDays !== null && (!Number.isInteger(maxDays) || maxDays < 1)) {
+    throw new HttpError(400, `${TIER_LABELS[tier]}: maximum processing time must be a positive whole number of business days.`);
+  }
+  if (minDays !== null && maxDays !== null && maxDays < minDays) {
+    throw new HttpError(400, `${TIER_LABELS[tier]}: maximum processing time must be greater than or equal to the minimum.`);
+  }
+}
+
+// Persists both tiers in one statement. Clears
+// regular_price_migrated_from_legacy unconditionally -- an explicit staff
+// save of the tier form IS the required confirmation (the same pattern
+// lib/checkoutTranslation.js already uses for its own "needs review"
+// flag), whether or not this particular save touched the Regular price.
+export async function updateProcessingTiers(db, serviceId, tiers) {
+  for (const tier of PROCESSING_TIERS) validateTierInput(tier, tiers[tier]);
+  await db
+    .prepare(
+      `UPDATE checkout_services SET
+         express_enabled = ?, express_price_php_centavos = ?, express_min_business_days = ?, express_max_business_days = ?,
+         regular_enabled = ?, regular_price_php_centavos = ?, regular_min_business_days = ?, regular_max_business_days = ?,
+         regular_price_migrated_from_legacy = 0,
+         updated_at = datetime('now')
+       WHERE id = ?`
+    )
+    .bind(
+      tiers.express.enabled ? 1 : 0, tiers.express.priceCentavos, tiers.express.minDays, tiers.express.maxDays,
+      tiers.regular.enabled ? 1 : 0, tiers.regular.priceCentavos, tiers.regular.minDays, tiers.regular.maxDays,
+      serviceId
+    )
+    .run();
+}
+
+// Customer-facing tier list for a document service -- Express first,
+// Regular second (PROCESSING_TIERS' own order), including only tiers
+// that are both enabled and have an approved price/lead-time range. A
+// tier the owner hasn't finished pricing yet, or has disabled, is simply
+// absent from this list -- never shown with an invented or blank price.
+export function getProcessingTiersForCustomer(service) {
+  if (!usesProcessingTiers(service.offering_type)) return [];
+  return PROCESSING_TIERS.filter((tier) => tierIsSelectable(service, tier)).map((tier) => {
+    const c = tierColumns(tier);
+    return {
+      tier,
+      label: TIER_LABELS[tier],
+      totalPhpCentavos: service[c.price],
+      minBusinessDays: service[c.min],
+      maxBusinessDays: service[c.max],
+    };
+  });
+}
 
 const DEFAULT_PRICE_LABEL = {
   document_automated: "Document price",
@@ -146,6 +259,18 @@ export async function getPriceComponents(db, serviceId) {
 async function shapeServiceForCustomer(db, service, lang) {
   const i18n = await getServiceI18n(db, service.id, lang);
   const components = await getPriceComponents(db, service.id);
+  const usesTiers = usesProcessingTiers(service.offering_type);
+  const processingTiers = getProcessingTiersForCustomer(service);
+  // For a tiered document service, the generic price fields below mirror
+  // the CHEAPEST selectable tier -- so every existing customer-facing
+  // surface that already reads totalPhpCentavos/hasApprovedPrice (the
+  // catalogue grid cards, homepage cards, service-detail CTA badge --
+  // see instant-services-catalogue.js) keeps working unchanged, showing
+  // a representative "from" price, while the full Express/Regular
+  // breakdown a customer actually chooses from is in `processingTiers`.
+  const cheapestTier = processingTiers.length
+    ? processingTiers.reduce((min, t) => (t.totalPhpCentavos < min.totalPhpCentavos ? t : min))
+    : null;
   return {
     id: service.id,
     serviceSlug: service.service_slug,
@@ -158,8 +283,10 @@ async function shapeServiceForCustomer(db, service, lang) {
     eligibilityText: i18n ? i18n.eligibility_text : "",
     noticesText: i18n ? i18n.notices_text : null,
     priceLabel: service.customer_price_label || defaultPriceLabel(service.offering_type),
-    hasApprovedPrice: hasApprovedPrice(components),
-    totalPhpCentavos: sumCentavos(components),
+    hasApprovedPrice: usesTiers ? !!cheapestTier : hasApprovedPrice(components),
+    totalPhpCentavos: usesTiers ? (cheapestTier ? cheapestTier.totalPhpCentavos : 0) : sumCentavos(components),
+    usesProcessingTiers: usesTiers,
+    processingTiers,
   };
 }
 
@@ -172,7 +299,16 @@ async function shapeServiceForCustomer(db, service, lang) {
 // this only narrows what leaves the server toward a customer.
 export function publicPriceSnapshot(snapshot) {
   if (!snapshot) return null;
-  return { totalPhpCentavos: snapshot.totalPhpCentavos, snapshotAt: snapshot.snapshotAt };
+  return {
+    totalPhpCentavos: snapshot.totalPhpCentavos,
+    snapshotAt: snapshot.snapshotAt,
+    currency: snapshot.currency || "PHP",
+    processingTier: snapshot.processingTier || null,
+    tierLabel: snapshot.tierLabel || null,
+    minBusinessDays: snapshot.minBusinessDays != null ? snapshot.minBusinessDays : null,
+    maxBusinessDays: snapshot.maxBusinessDays != null ? snapshot.maxBusinessDays : null,
+    delivery: snapshot.delivery || null,
+  };
 }
 
 export { shapeServiceForCustomer };
@@ -417,9 +553,23 @@ export async function setOfferingStatus(db, serviceId, status, staffEmail) {
     if (!service.approved_at) {
       throw new HttpError(409, "This offering has not been approved yet. Move it to 'approved' before activating it.");
     }
-    const components = await getPriceComponents(db, serviceId);
-    if (!hasApprovedPrice(components)) {
-      throw new HttpError(409, "This offering has no approved price yet. Set a price before activating it.");
+    if (usesProcessingTiers(service.offering_type)) {
+      // At least one tier must be enabled AND fully approved (price +
+      // valid lead-time range) -- "an enabled tier must have a valid
+      // price/lead-time before activation" and "at least one tier must
+      // be enabled before a document service can be activated" are the
+      // same gate, since a disabled tier is never selectable anyway.
+      if (!PROCESSING_TIERS.some((tier) => tierIsSelectable(service, tier))) {
+        throw new HttpError(
+          409,
+          "This document service has no enabled processing tier with an approved price and lead-time range yet. Configure Express or Regular Processing before activating it."
+        );
+      }
+    } else {
+      const components = await getPriceComponents(db, serviceId);
+      if (!hasApprovedPrice(components)) {
+        throw new HttpError(409, "This offering has no approved price yet. Set a price before activating it.");
+      }
     }
   }
   const active = status === "active" ? 1 : 0;
@@ -629,14 +779,72 @@ export async function computeAndSnapshotPrice(db, order) {
   }
   const service = await getServiceById(db, order.service_id);
   if (!service) throw new HttpError(409, "This service is no longer available.");
-  const components = await getPriceComponents(db, order.service_id);
-  const snapshot = {
-    serviceId: service.id,
-    serviceSlug: service.service_slug,
-    components: components.map((c) => ({ type: c.component_type, label: c.label, amountPhpCentavos: c.amount_php_centavos })),
-    totalPhpCentavos: sumCentavos(components),
-    snapshotAt: new Date().toISOString(),
-  };
+
+  let snapshot;
+  if (usesProcessingTiers(service.offering_type)) {
+    // The browser's own claim about which tier it wants is never trusted
+    // for price -- the order's SERVER-RECORDED processing_tier (set only
+    // via handleSetProcessingTier, itself re-validated against the
+    // CURRENT catalogue state) is re-checked again here, at the one
+    // moment a price actually gets frozen, so a tier disabled or
+    // unpriced between selection and confirm-and-pay can never slip
+    // through.
+    const tier = order.processing_tier;
+    if (!tier || !PROCESSING_TIERS.includes(tier)) {
+      throw new HttpError(409, "Please select a processing option (Express or Regular) before proceeding to payment.");
+    }
+    if (!tierIsSelectable(service, tier)) {
+      throw new HttpError(409, "The selected processing option is no longer available. Please choose another and try again.");
+    }
+    const c = tierColumns(tier);
+    const i18nEn = await getServiceI18n(db, service.id, "en");
+    snapshot = {
+      serviceId: service.id,
+      serviceSlug: service.service_slug,
+      serviceTitle: i18nEn ? i18nEn.title : service.service_slug,
+      processingTier: tier,
+      tierLabel: TIER_LABELS[tier],
+      minBusinessDays: service[c.min],
+      maxBusinessDays: service[c.max],
+      totalPhpCentavos: service[c.price],
+      currency: "PHP",
+      snapshotAt: new Date().toISOString(),
+    };
+  } else {
+    const components = await getPriceComponents(db, order.service_id);
+    snapshot = {
+      serviceId: service.id,
+      serviceSlug: service.service_slug,
+      components: components.map((c) => ({ type: c.component_type, label: c.label, amountPhpCentavos: c.amount_php_centavos })),
+      totalPhpCentavos: sumCentavos(components),
+      currency: "PHP",
+      snapshotAt: new Date().toISOString(),
+    };
+  }
+
+  // Delivery destination, captured into the snapshot at the moment the
+  // price itself is frozen -- domestic regular delivery is always free
+  // for either tier; an international destination instead records that a
+  // separate shipping quotation is required (worker/src/lib/checkout.js
+  // getDeliveryQuotations / checkout_delivery_quotations, unchanged --
+  // the quotation amount is never folded into this service-fee snapshot,
+  // so a customer can never be charged an undisclosed delivery amount as
+  // though it were included in the total above).
+  if (service.supports_delivery) {
+    const address = await db
+      .prepare("SELECT country, is_international FROM checkout_delivery_addresses WHERE order_id = ?")
+      .bind(order.id)
+      .first();
+    if (address) {
+      snapshot.delivery = {
+        country: address.country,
+        isInternational: !!address.is_international,
+        domesticFree: !address.is_international,
+        internationalQuotationRequired: !!address.is_international,
+      };
+    }
+  }
+
   await db
     .prepare("UPDATE checkout_orders SET price_snapshot_json = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(JSON.stringify(snapshot), order.id)
