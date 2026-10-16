@@ -616,3 +616,100 @@ document offering the owner wants to sell. Every offering's Processing
 Options & Pricing fields are live in the Staff Portal and ready for the
 owner to fill in; none are populated, approved, or activated by this
 release.
+
+## 13. Fourth Release — Staff Portal Catalogue Editor UX Refinement,
+Worker-only (2026-10-16)
+
+Authorized and executed 2026-10-16, covering commit `eebc281`: the
+catalogue editor's existing fields reorganized into seven collapsible
+sections (Processing Options & Pricing, Customer-Facing Content
+(English), Translations & Manual Overrides, Service Configuration,
+Other Pricing Settings, Approval & Publication, Price History). No
+field, control, status, D1 column, or validation rule was removed or
+changed; no database migration; no public-facing frontend file changed.
+
+### Step 1 — Baseline re-confirmed at execution time
+
+`main` was at `604ee6d` (the third release above); the dev branch
+`claude/fis-website-planning-r52sii` was at `eebc281`, two commits
+ahead (the intervening `980b0b7` being that release's own documentation
+commit). `git diff --stat` between `main` and `eebc281` touched only
+`docs/FIS_PRODUCTION_INTEGRATION_AND_RELEASE.md`,
+`worker/src/lib/staffHtml.js`, `worker/src/routes/staffCheckout.js`,
+and the new `worker/test/staffCatalogueEditor.test.js` — confirming the
+release is scoped exactly as authorized, with nothing under `src/`
+(the public Eleventy site) touched.
+
+### Step 2 — Production backup / migration
+
+Not applicable. This release adds no migration, and `wrangler d1
+migrations list fis-backend --remote` confirmed "No migrations to
+apply" both before and after the Worker deploy below. No backup was
+taken since no database write of any kind was authorized or performed.
+
+### Step 3 — Worker deployed
+
+`wrangler deploy` from `worker/`, from the dev branch's working tree at
+`eebc281`. **Version ID
+`9d755339-fe08-4acb-aeef-d73185eaf9f5`** (previous live version:
+`6b4c6e2a-70cb-49b6-90af-6729bc1a53b6`, the prior release). Bindings
+unchanged (`DB`, `CLIENT_FILES`, `BI_FORMS_LIBRARY`, `AI`, Access/email
+environment variables, route) — no new binding, no new resource.
+
+### Step 4 — Website NOT republished (by design)
+
+Per this release's explicit instruction not to republish the public
+site when it contains no public frontend change: `main` was
+deliberately left at `604ee6d` and nothing was pushed to it, since
+pushing would trigger the GitHub Actions "Build and Deploy" workflow
+unconditionally (it rebuilds on every push to `main` regardless of
+which files changed). The Worker deploy above is independent of that
+workflow — `wrangler deploy` reads directly from the local working
+tree, not from any particular git ref — so production now runs
+Worker code from `eebc281` while `main`'s own history still reads
+`604ee6d`. This is an intentional, release-scoped divergence, not an
+oversight; the next release that does touch the public site will carry
+`eebc281` into `main` along with its own changes.
+
+### Step 5 — Production verification
+
+- Worker health: `/staff/enquiries/` and
+  `/staff/instant-services/catalogue/` both return 302 (Cloudflare
+  Access challenge) — alive, still protected, authentication
+  unchanged. The public catalogue API still returns
+  `{"services":[],"lang":"en"}` (0 active offerings). The customer-
+  facing `POST /api/instant-services/orders/:id/processing-tier` route
+  from the prior release still returns 401 (auth required), confirming
+  this deploy didn't regress it. The public homepage returns 200,
+  unchanged, consistent with no public frontend file having changed.
+- D1: `migrations list` still reports none pending; a direct query
+  immediately after the deploy confirmed all 19 `checkout_services`
+  rows unchanged — `active = 0` and `offering_status = 'draft'` for
+  every one, with no price, approval, or content modified.
+- **Authenticated visual verification of the seven collapsible
+  sections themselves was NOT performed against production** —
+  Cloudflare Access correctly has no path for this session to
+  authenticate as a staff user (that requires a real human SSO login),
+  so the 302 above is the most this session can directly confirm live.
+  What WAS verified, immediately before packaging this exact commit
+  for deploy: the dedicated 8-test suite
+  (`worker/test/staffCatalogueEditor.test.js`) exercising section
+  presence, default open/closed state for both a document and a
+  non-document offering, every existing field's continued presence
+  regardless of collapsed state, the translation-review warning
+  surfacing on the collapsed parent section, and three validation-
+  failure round trips confirming the correct section re-opens with
+  nothing typed lost — plus the full 297-test suite, zero regressions.
+  Stating this limitation accurately rather than claiming an
+  authenticated screenshot pass that did not happen.
+- No real payment, refund, booking, catalogue activation, price
+  approval, or customer email occurred during this verification.
+
+### Step 6 — This document
+
+Updated and committed as this section (no new planning document
+created).
+
+**Outstanding business configuration**: unchanged from the third
+release above — this was a UI-organization-only release and added no
+new business decision to make.
