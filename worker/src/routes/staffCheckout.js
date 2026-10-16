@@ -458,14 +458,81 @@ export async function viewPaymentSettingsQrImage(env, staff) {
 // tiers for a document service (dash for an unapproved/disabled one, so
 // "not yet priced" is never confused with "free"), or just notes that
 // non-document offerings use the legacy single-price editor instead.
-function pricingSummary(service) {
+// `form` (optional) is the just-submitted, not-yet-saved FormData -- used
+// only when re-rendering the editor after a validation failure, so the
+// collapsed-section summary reflects what the owner actually typed
+// rather than the still-unchanged stored values.
+function pricingSummary(service, form = null) {
   if (!usesProcessingTiers(service.offering_type)) return '<span class="muted">(single price)</span>';
   return PROCESSING_TIERS.map((tier) => {
     const label = TIER_LABELS[tier].split(" ")[0]; // "Express" / "Regular"
-    if (!service[`${tier}_enabled`]) return `${label}: <span class="muted">disabled</span>`;
+    const enabled = form ? form.get(`${tier}Enabled`) === "on" : !!service[`${tier}_enabled`];
+    if (!enabled) return `${label}: <span class="muted">disabled</span>`;
+    if (form) {
+      const priceRaw = String(form.get(`${tier}Price`) || "").trim();
+      const minRaw = String(form.get(`${tier}MinDays`) || "").trim();
+      const maxRaw = String(form.get(`${tier}MaxDays`) || "").trim();
+      if (!priceRaw || !minRaw || !maxRaw) return `${label}: <span class="muted">not yet priced</span>`;
+      const centavos = phpStringToCentavos(priceRaw);
+      return centavos != null ? `${label}: ${centavosToPhpString(centavos)}` : `${label}: <span class="muted">invalid</span>`;
+    }
     if (!tierIsApproved(service, tier)) return `${label}: <span class="muted">not yet priced</span>`;
     return `${label}: ${centavosToPhpString(service[`${tier}_price_php_centavos`])}`;
   }).join(" · ");
+}
+
+// Mirrors pricingSummary above for the legacy single-price (itemized
+// components) model -- shown as the "E. Other Pricing Settings" section's
+// collapsed-state badge for a non-document offering.
+function componentsSummaryBadge(components, form = null) {
+  let total;
+  if (form) {
+    total = ["serviceFeeAmount", "govFeeAmount", "otherFeeAmount"].reduce((sum, field) => {
+      const raw = String(form.get(field) || "").trim();
+      if (!raw) return sum;
+      const centavos = phpStringToCentavos(raw);
+      return sum + (centavos != null && centavos > 0 ? centavos : 0);
+    }, 0);
+  } else {
+    total = components.reduce((sum, c) => sum + (c.amount_php_centavos || 0), 0);
+  }
+  return total > 0 ? centavosToPhpString(total) : '<span class="muted">not yet priced</span>';
+}
+
+// "F. Approval & Publication" section's collapsed-state badge -- the
+// two states the directive specifically requires to stay visible without
+// opening the section: not yet approved, and (once approved) the current
+// publication status.
+function approvalSectionBadge(service) {
+  if (!service.approved_at) return '<span class="priority-badge priority-badge--priority">not yet approved</span>';
+  return `<span class="status">${escapeHtml(service.offering_status)}</span>${service.active ? " customer-visible" : ""}`;
+}
+
+// "C. Translations & Manual Overrides" section's collapsed-state badge --
+// surfaced at the PARENT level (not just inside each nested language
+// subsection) so a review-needed or failed translation is never hidden
+// inside an unmarked collapsed section, per the directive's explicit
+// warning-visibility requirement.
+function translationsSectionBadge(i18nByLang) {
+  const flagged = CANONICAL_LANGUAGES.filter((lang) => lang !== "en").filter((lang) => {
+    const row = i18nByLang[lang];
+    if (!row) return false;
+    return (row.auto_generated === 0 && row.needs_review) || row.translation_status === "failed";
+  });
+  if (!flagged.length) return "";
+  return `<span class="priority-badge priority-badge--urgent">${flagged.length} translation${flagged.length > 1 ? "s" : ""} need${flagged.length > 1 ? "" : "s"} review</span>`;
+}
+
+// Native <details>/<summary> -- independently openable, keyboard-operable
+// out of the box, and (the key property this whole refinement relies on)
+// a closed section's form fields stay in the DOM and are still submitted
+// with the rest of the form; collapsing one never clears or resets its
+// values, and no client-side script is needed for any of that.
+function collapsibleSection({ id, title, bodyHtml, open, badgeHtml = "", nested = false }) {
+  return `<details class="staff-collapsible${nested ? " staff-collapsible--nested" : ""}" id="section-${id}" ${open ? "open" : ""}>
+    <summary><span>${escapeHtml(title)}</span>${badgeHtml ? `<span class="staff-collapsible__meta">${badgeHtml}</span>` : ""}</summary>
+    <div class="staff-collapsible__body">${bodyHtml}</div>
+  </details>`;
 }
 
 export async function listCatalogue(env, staff) {
@@ -547,25 +614,50 @@ function reviewNeededPanel(serviceId, lang, row, enRow) {
   </div>`;
 }
 
-function languageContentFields(i18nByLang, serviceId) {
-  return CANONICAL_LANGUAGES
+// "B. Customer-Facing Content (English)" -- English is always expanded
+// (per the directive: the owner must not need to open any collapsed
+// section for an ordinary English-only catalogue update) and is the
+// authoritative source every other language is automatically translated
+// from. `form` (optional) echoes back exactly what was just submitted,
+// for the error-recovery re-render path -- see renderCreateServiceError/
+// renderUpdateServiceError below.
+function englishContentField(row, form = null) {
+  row = row || {};
+  const title = form ? String(form.get("title_en") || "") : row.title || "";
+  const shortDescription = form ? String(form.get("shortDescription_en") || "") : row.short_description || "";
+  const eligibilityText = form ? String(form.get("eligibilityText_en") || "") : row.eligibility_text || "";
+  return `<label for="title-en">Title</label>
+    <input type="text" name="title_en" id="title-en" value="${escapeHtml(title)}" required>
+    <label for="desc-en">Short description</label>
+    <textarea name="shortDescription_en" id="desc-en" required>${escapeHtml(shortDescription)}</textarea>
+    <label for="elig-en">Eligibility</label>
+    <textarea name="eligibilityText_en" id="elig-en" required>${escapeHtml(eligibilityText)}</textarea>`;
+}
+
+// "C. Translations & Manual Overrides" -- the five non-English languages,
+// each its own nested collapsible subsection (collapsed by default; the
+// parent section itself carries the aggregate review-needed/failed
+// warning via translationsSectionBadge so a flagged translation is never
+// hidden inside an unmarked collapsed section). Every existing field,
+// generation-status badge, review-needed comparison panel, and Keep/
+// Regenerate action is preserved unchanged -- only the markup nesting
+// around them changed.
+function nonEnglishContentFields(i18nByLang, serviceId, form = null) {
+  return CANONICAL_LANGUAGES.filter((lang) => lang !== "en")
     .map((lang) => {
       const row = i18nByLang[lang] || {};
-      return `${serviceId && lang !== "en" && row.needs_review ? reviewNeededPanel(serviceId, lang, row, i18nByLang.en) : ""}
-      <fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
-        <legend>${escapeHtml(LANGUAGE_LABELS[lang])}${
-          lang === "en"
-            ? " (required — this is the source every other language is automatically translated from)"
-            : ` (optional override — ${translationStatusBadge(row)})`
-        }</legend>
+      const title = form ? String(form.get(`title_${lang}`) || "") : row.title || "";
+      const shortDescription = form ? String(form.get(`shortDescription_${lang}`) || "") : row.short_description || "";
+      const eligibilityText = form ? String(form.get(`eligibilityText_${lang}`) || "") : row.eligibility_text || "";
+      const body = `${serviceId && row.needs_review ? reviewNeededPanel(serviceId, lang, row, i18nByLang.en) : ""}
         <label for="title-${lang}">Title</label>
-        <input type="text" name="title_${lang}" id="title-${lang}" value="${escapeHtml(row.title || "")}" ${lang === "en" ? "required" : ""}>
+        <input type="text" name="title_${lang}" id="title-${lang}" value="${escapeHtml(title)}">
         <label for="desc-${lang}">Short description</label>
-        <textarea name="shortDescription_${lang}" id="desc-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.short_description || "")}</textarea>
+        <textarea name="shortDescription_${lang}" id="desc-${lang}">${escapeHtml(shortDescription)}</textarea>
         <label for="elig-${lang}">Eligibility</label>
-        <textarea name="eligibilityText_${lang}" id="elig-${lang}" ${lang === "en" ? "required" : ""}>${escapeHtml(row.eligibility_text || "")}</textarea>
-        ${lang !== "en" ? `<p class="muted">Filled in automatically from the English content above. Type here only to permanently override the automatic translation for this language.</p>` : ""}
-      </fieldset>`;
+        <textarea name="eligibilityText_${lang}" id="elig-${lang}">${escapeHtml(eligibilityText)}</textarea>
+        <p class="muted">Filled in automatically from the English content above. Type here only to permanently override the automatic translation for this language.</p>`;
+      return collapsibleSection({ id: `lang-${lang}`, title: LANGUAGE_LABELS[lang], badgeHtml: translationStatusBadge(row), open: false, nested: true, bodyHtml: body });
     })
     .join("");
 }
@@ -576,25 +668,28 @@ function languageContentFields(i18nByLang, serviceId) {
 // requirement; PROCESSING_TIERS' own order is relied on here. A blank
 // price/lead-time field means "not yet configured" (NULL in the
 // database) -- never prefilled with a guessed or zero value.
-function processingTierFields(service) {
+// `form` (optional) echoes back the just-submitted, not-yet-saved values
+// instead of the stored service's -- used only by the error-recovery
+// re-render path, same convention as pricingSummary/priceComponentFields.
+function processingTierFields(service, form = null) {
   const migratedNotice = service.regular_price_migrated_from_legacy
     ? `<p class="priority-badge priority-badge--priority">This Regular Processing price was carried over from this service's previous single price. Please review and re-save to confirm it before activating.</p>`
     : "";
   const tierFieldset = (tier) => {
     const prefix = tier;
-    const enabled = service[`${tier}_enabled`];
-    const price = service[`${tier}_price_php_centavos`];
-    const min = service[`${tier}_min_business_days`];
-    const max = service[`${tier}_max_business_days`];
+    const enabled = form ? form.get(`${prefix}Enabled`) === "on" : !!service[`${tier}_enabled`];
+    const priceStr = form ? String(form.get(`${prefix}Price`) || "") : service[`${tier}_price_php_centavos`] != null ? (service[`${tier}_price_php_centavos`] / 100).toFixed(2) : "";
+    const minStr = form ? String(form.get(`${prefix}MinDays`) || "") : service[`${tier}_min_business_days`] != null ? String(service[`${tier}_min_business_days`]) : "";
+    const maxStr = form ? String(form.get(`${prefix}MaxDays`) || "") : service[`${tier}_max_business_days`] != null ? String(service[`${tier}_max_business_days`]) : "";
     return `<fieldset style="border:1px solid #e2e2dc;border-radius:6px;padding:0.8rem 1rem;margin-bottom:0.8rem;">
       <legend>${escapeHtml(TIER_LABELS[tier].toUpperCase())}</legend>
       <label for="${prefix}Enabled"><input type="checkbox" name="${prefix}Enabled" id="${prefix}Enabled" style="width:auto;display:inline-block;" ${enabled ? "checked" : ""}> Enabled</label>
       <label for="${prefix}Price">All-inclusive price (PHP)</label>
-      <input type="text" name="${prefix}Price" id="${prefix}Price" value="${price != null ? (price / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00">
+      <input type="text" name="${prefix}Price" id="${prefix}Price" value="${escapeHtml(priceStr)}" placeholder="e.g. 5000.00">
       <label for="${prefix}MinDays">Minimum processing time (business days)</label>
-      <input type="text" name="${prefix}MinDays" id="${prefix}MinDays" value="${min != null ? min : ""}" placeholder="e.g. 2">
+      <input type="text" name="${prefix}MinDays" id="${prefix}MinDays" value="${escapeHtml(minStr)}" placeholder="e.g. 2">
       <label for="${prefix}MaxDays">Maximum processing time (business days)</label>
-      <input type="text" name="${prefix}MaxDays" id="${prefix}MaxDays" value="${max != null ? max : ""}" placeholder="e.g. 3">
+      <input type="text" name="${prefix}MaxDays" id="${prefix}MaxDays" value="${escapeHtml(maxStr)}" placeholder="e.g. 3">
       ${tier === "regular" ? migratedNotice : ""}
     </fieldset>`;
   };
@@ -627,25 +722,34 @@ function parseProcessingTiersFromForm(form) {
   return { express: parseTier("express"), regular: parseTier("regular") };
 }
 
-function priceComponentFields(components) {
+// `form` (optional), same convention as processingTierFields above.
+function priceComponentFields(components, form = null) {
   const byType = {};
   for (const c of components) byType[c.component_type] = c;
+  const val = (type, field, dbDefault) => {
+    if (form) return String(form.get(field) || "");
+    return byType[type] ? (byType[type].amount_php_centavos / 100).toFixed(2) : dbDefault;
+  };
+  const labelVal = (type, field, dbDefault) => {
+    if (form) return String(form.get(field) || dbDefault);
+    return byType[type] ? byType[type].label : dbDefault;
+  };
   return `
     <p class="muted">These two amounts are added together into the ONE total a customer ever sees (no itemized breakdown is ever shown to a customer, per the Order &amp; Book Online pricing decision) -- they exist so FIS can internally track the government-fee and FIS-fee components separately.</p>
     <label for="serviceFeeLabel">FIS service fee — label</label>
-    <input type="text" name="serviceFeeLabel" id="serviceFeeLabel" value="${escapeHtml(byType.service_fee ? byType.service_fee.label : "FIS Service Fee")}">
+    <input type="text" name="serviceFeeLabel" id="serviceFeeLabel" value="${escapeHtml(labelVal("service_fee", "serviceFeeLabel", "FIS Service Fee"))}">
     <label for="serviceFeeAmount">FIS service fee — amount (PHP)</label>
-    <input type="text" name="serviceFeeAmount" id="serviceFeeAmount" value="${byType.service_fee ? (byType.service_fee.amount_php_centavos / 100).toFixed(2) : ""}" placeholder="e.g. 5000.00">
+    <input type="text" name="serviceFeeAmount" id="serviceFeeAmount" value="${escapeHtml(val("service_fee", "serviceFeeAmount", ""))}" placeholder="e.g. 5000.00">
     <label for="govFeeLabel">Government fee — label (optional)</label>
-    <input type="text" name="govFeeLabel" id="govFeeLabel" value="${escapeHtml(byType.government_fee ? byType.government_fee.label : "Government Fee")}">
+    <input type="text" name="govFeeLabel" id="govFeeLabel" value="${escapeHtml(labelVal("government_fee", "govFeeLabel", "Government Fee"))}">
     <label for="govFeeAmount">Government fee — amount (PHP, optional)</label>
-    <input type="text" name="govFeeAmount" id="govFeeAmount" value="${byType.government_fee ? (byType.government_fee.amount_php_centavos / 100).toFixed(2) : ""}">
+    <input type="text" name="govFeeAmount" id="govFeeAmount" value="${escapeHtml(val("government_fee", "govFeeAmount", ""))}">
     <label for="otherFeeLabel">Other charge — label (optional)</label>
-    <input type="text" name="otherFeeLabel" id="otherFeeLabel" value="${escapeHtml(byType.other ? byType.other.label : "Other")}">
+    <input type="text" name="otherFeeLabel" id="otherFeeLabel" value="${escapeHtml(labelVal("other", "otherFeeLabel", "Other"))}">
     <label for="otherFeeAmount">Other charge — amount (PHP, optional)</label>
-    <input type="text" name="otherFeeAmount" id="otherFeeAmount" value="${byType.other ? (byType.other.amount_php_centavos / 100).toFixed(2) : ""}">
+    <input type="text" name="otherFeeAmount" id="otherFeeAmount" value="${escapeHtml(val("other", "otherFeeAmount", ""))}">
     <label for="priceChangeReason">Reason for this price (optional, kept in the price history)</label>
-    <input type="text" name="priceChangeReason" id="priceChangeReason" placeholder="e.g. Initial approved price">`;
+    <input type="text" name="priceChangeReason" id="priceChangeReason" value="${escapeHtml(form ? String(form.get("priceChangeReason") || "") : "")}" placeholder="e.g. Initial approved price">`;
 }
 
 const OFFERING_TYPE_LABELS = {
@@ -672,34 +776,173 @@ function priceHistoryTable(history) {
     .join("")}</table>`;
 }
 
+// "D. Service Configuration" -- the fields that rarely change once an
+// offering is set up, pulled into their own collapsed-by-default section.
+// Exact same stored values/validation as before; only the grouping moved.
+// `current` is a plain {offeringType, serviceSlug, biFormId, serviceGroup,
+// customerPriceLabel, displayOrder, supportsDelivery} object; `form`
+// (optional) overrides every field from the just-submitted values, same
+// convention as the pricing field renderers above.
+function serviceConfigFields(current, form = null) {
+  const offeringType = form ? String(form.get("offeringType") || "document_automated") : current.offeringType;
+  const serviceSlug = form ? String(form.get("serviceSlug") || "") : current.serviceSlug;
+  const biFormId = form ? String(form.get("biFormId") || "") : current.biFormId;
+  const serviceGroup = form ? String(form.get("serviceGroup") || "") : current.serviceGroup;
+  const customerPriceLabel = form ? String(form.get("customerPriceLabel") || "") : current.customerPriceLabel;
+  const displayOrder = form ? String(form.get("displayOrder") || "0") : current.displayOrder;
+  const supportsDelivery = form ? form.get("supportsDelivery") === "on" : current.supportsDelivery;
+  return `${offeringTypeField(offeringType)}
+    <label for="serviceSlug">Service slug (matches the existing public service pages)</label>
+    <input type="text" name="serviceSlug" id="serviceSlug" value="${escapeHtml(serviceSlug || "")}" required>
+    <label for="biFormId">BI Form ID</label>
+    <input type="text" name="biFormId" id="biFormId" value="${escapeHtml(biFormId || "")}">
+    <p class="muted">Required, and must be a BI Form ID with an approved Forms Library configuration, only for "Automated document order." For a staff-processed order this is just a free-text reference code (optional). Not used for a bookable service.</p>
+    <label for="serviceGroup">Service group (optional — groups related offerings/packages together, e.g. "airport-vip")</label>
+    <input type="text" name="serviceGroup" id="serviceGroup" value="${escapeHtml(serviceGroup || "")}">
+    <label for="customerPriceLabel">Customer-facing price label (optional — defaults to "Document price" or "Service price")</label>
+    <input type="text" name="customerPriceLabel" id="customerPriceLabel" value="${escapeHtml(customerPriceLabel || "")}">
+    <label for="displayOrder">Display order</label>
+    <input type="text" name="displayOrder" id="displayOrder" value="${escapeHtml(String(displayOrder))}">
+    <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${supportsDelivery ? "checked" : ""}> This offering involves physical document delivery</label>`;
+}
+
+// Pure validation, no persistence -- pulled out of saveLanguageContent so
+// the English-required check runs and can fail BEFORE any tier/price
+// write happens, rather than (as before) after. This is the one
+// behavioral tightening this refinement makes: it closes a pre-existing
+// partial-write edge case (tier/price saved, then the save fails on a
+// missing English field) without changing what is required or how it is
+// validated -- saveLanguageContent still carries its own identical check
+// as a second, harmless safety net.
+function validateEnglishContent(form) {
+  const title = String(form.get("title_en") || "").trim();
+  const shortDescription = String(form.get("shortDescription_en") || "").trim();
+  const eligibilityText = String(form.get("eligibilityText_en") || "").trim();
+  if (!title || !shortDescription || !eligibilityText) {
+    throw new HttpError(400, "English title, short description, and eligibility text are required.");
+  }
+}
+
+// "F. Approval & Publication" -- unchanged status/approval controls and
+// transition rules, just grouped into their own labelled section. The
+// explicit note makes the save-vs-activate distinction the directive
+// asks for: these buttons act immediately and independently of the
+// "Save changes" button in the form below.
+function approvalSectionBody(service, staff, serviceId) {
+  const statusButtons = OFFERING_STATUSES.map(
+    (s) =>
+      `<form method="POST" action="/staff/instant-services/catalogue/${serviceId}/status" style="display:inline-block;margin-right:0.4rem;">
+         <input type="hidden" name="status" value="${s}">
+         <button class="${s === service.offering_status ? "" : "secondary"}" type="submit" ${s === service.offering_status ? "disabled" : ""}>${s}</button>
+       </form>`
+  ).join("");
+  return `<p><strong>Offering type:</strong> ${escapeHtml(OFFERING_TYPE_LABELS[service.offering_type] || service.offering_type)}</p>
+     <p><strong>Status:</strong> <span class="status">${escapeHtml(service.offering_status)}</span>${service.active ? ' <span class="status">(customer-visible)</span>' : ""}</p>
+     <p><strong>Business approval:</strong> ${
+       service.approved_at
+         ? `Approved by ${escapeHtml(service.approved_by_staff_email)} on ${escapeHtml(service.approved_at)}`
+         : '<span class="muted">Not yet approved -- cannot be activated until an administrator moves this to "approved".</span>'
+     }</p>
+     <p class="muted">These buttons change the publication status immediately and independently of the form below -- they do not save any field edits, and saving the form below never changes status or activates this offering.</p>
+     ${staff.role === "admin" ? statusButtons : '<p class="muted">Only an administrator can change offering status.</p>'}`;
+}
+
+// The shared assembly of sections A/B/C/D/E inside the create/edit
+// <form> -- used by newServiceForm, viewService, and both error-recovery
+// renderers below, so there is exactly one place that lays these five
+// sections out. `offeringType` decides which of A (tiers) / E (legacy
+// components) is relevant and therefore open by default; `forceOpenSection`
+// (one of "tiers" | "content-en" | "translations" | "config" | "components",
+// or null) overrides that default for the one section a save just failed
+// on, per the directive's "automatically expand the relevant section"
+// requirement. `form` (optional, the just-submitted FormData) is threaded
+// through to every field renderer so the whole form echoes back exactly
+// what was typed, not the last-saved values.
+function catalogueFormSections({ offeringType, configCurrent, tierService, components, i18nByLang, serviceId, form = null, forceOpenSection = null }) {
+  const tiered = usesProcessingTiers(offeringType);
+  const open = {
+    tiers: forceOpenSection === "tiers" ? true : tiered,
+    components: forceOpenSection === "components" ? true : !tiered,
+    translations: forceOpenSection === "translations" ? true : false,
+    config: forceOpenSection === "config" ? true : false,
+  };
+  const NOT_APPLICABLE_TIERS = '<span class="muted">not applicable — see "Other Pricing Settings" below</span>';
+  const NOT_APPLICABLE_COMPONENTS = '<span class="muted">not applicable — see "Processing Options &amp; Pricing" above</span>';
+  return `
+    ${collapsibleSection({
+      id: "tiers",
+      title: "A. Processing Options & Pricing",
+      open: open.tiers,
+      badgeHtml: tiered ? pricingSummary(tierService, form) : NOT_APPLICABLE_TIERS,
+      bodyHtml: processingTierFields(tierService, form),
+    })}
+    ${collapsibleSection({
+      id: "content-en",
+      title: "B. Customer-Facing Content (English)",
+      open: true,
+      bodyHtml: englishContentField(i18nByLang.en, form),
+    })}
+    ${collapsibleSection({
+      id: "translations",
+      title: "C. Translations & Manual Overrides",
+      open: open.translations,
+      badgeHtml: translationsSectionBadge(i18nByLang),
+      bodyHtml: nonEnglishContentFields(i18nByLang, serviceId, form),
+    })}
+    ${collapsibleSection({
+      id: "config",
+      title: "D. Service Configuration",
+      open: open.config,
+      bodyHtml: serviceConfigFields(configCurrent, form),
+    })}
+    ${collapsibleSection({
+      id: "components",
+      title: "E. Other Pricing Settings",
+      open: open.components,
+      badgeHtml: !tiered ? componentsSummaryBadge(components, form) : NOT_APPLICABLE_COMPONENTS,
+      bodyHtml: priceComponentFields(components, form),
+    })}`;
+}
+
+// New-offering stub: both tiers default enabled (migration 0016's own
+// default), unpriced -- used both for the real blank form and as the
+// "service-shaped" object pricingSummary/processingTierFields read from.
+const NEW_SERVICE_TIER_STUB = { offering_type: "document_automated", express_enabled: 1, regular_enabled: 1, regular_price_migrated_from_legacy: 0 };
+
 export async function newServiceForm(env, staff) {
+  const offeringType = NEW_SERVICE_TIER_STUB.offering_type;
+  const configCurrent = { offeringType, serviceSlug: "", biFormId: "", serviceGroup: "", customerPriceLabel: "", displayOrder: 0, supportsDelivery: true };
   return staffPage(
     "Add a Document Order or Bookable Service",
     `<h1>Add an Offering</h1>
      <form method="POST" action="/staff/instant-services/catalogue">
-       ${offeringTypeField("document_automated")}
-       <label for="serviceSlug">Service slug (matches the existing public service pages)</label>
-       <input type="text" name="serviceSlug" id="serviceSlug" required>
-       <label for="biFormId">BI Form ID</label>
-       <input type="text" name="biFormId" id="biFormId">
-       <p class="muted">Required, and must be a BI Form ID with an approved Forms Library configuration, only for "Automated document order." For a staff-processed order this is just a free-text reference code (optional). Not used for a bookable service.</p>
-       <label for="serviceGroup">Service group (optional — groups related offerings/packages together, e.g. "airport-vip")</label>
-       <input type="text" name="serviceGroup" id="serviceGroup">
-       <label for="customerPriceLabel">Customer-facing price label (optional — defaults to "Document price" or "Service price")</label>
-       <input type="text" name="customerPriceLabel" id="customerPriceLabel">
-       <label for="displayOrder">Display order</label>
-       <input type="text" name="displayOrder" id="displayOrder" value="0">
-       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" checked> This offering involves physical document delivery</label>
-       <h2>Processing Options &amp; Pricing <span class="muted">(Automated/Staff-processed document orders only)</span></h2>
-       ${processingTierFields({ express_enabled: 1, regular_enabled: 1 })}
-       <h2>Price <span class="muted">(Bookable services and fixed-price services only)</span></h2>
-       ${priceComponentFields([])}
-       <h2>Customer-facing content</h2>
-       ${languageContentFields({})}
+       ${catalogueFormSections({ offeringType, configCurrent, tierService: NEW_SERVICE_TIER_STUB, components: [], i18nByLang: {}, serviceId: null })}
        <p class="muted">New offerings are created in "draft" status. Move to "ready for review", then "active", only once the price, content, and (for an automated document) the BI Form mapping have been reviewed and approved. Activation is refused automatically if no approved price has been set.</p>
        <button type="submit">Create (draft)</button>
      </form>`,
     staff.email
+  );
+}
+
+// Error-recovery re-render for createServiceHandler below -- same page,
+// same action URL, with every submitted value echoed back (including
+// invalid ones, so the owner can see and fix exactly what they typed)
+// and `forceOpenSection` expanding whichever section the failure came
+// from, per the directive's requirement 4.8.
+function renderCreateServiceError(staff, form, errorMessage, forceOpenSection) {
+  const offeringType = String(form.get("offeringType") || "document_automated");
+  const tierService = { offering_type: offeringType, regular_price_migrated_from_legacy: 0 };
+  return staffPage(
+    "Add a Document Order or Bookable Service",
+    `<h1>Add an Offering</h1>
+     <div class="card form-error-card"><p><strong>Could not save:</strong> ${escapeHtml(errorMessage)}</p></div>
+     <form method="POST" action="/staff/instant-services/catalogue">
+       ${catalogueFormSections({ offeringType, configCurrent: {}, tierService, components: [], i18nByLang: {}, serviceId: null, form, forceOpenSection })}
+       <p class="muted">New offerings are created in "draft" status. Move to "ready for review", then "active", only once the price, content, and (for an automated document) the BI Form mapping have been reviewed and approved. Activation is refused automatically if no approved price has been set.</p>
+       <button type="submit">Create (draft)</button>
+     </form>`,
+    staff.email,
+    400
   );
 }
 
@@ -747,6 +990,21 @@ async function saveLanguageContent(db, serviceId, form) {
   }
 }
 
+// Tags an HttpError with which section of the editor its field lives in,
+// re-throws it, and lets everything else propagate unchanged -- used so
+// the catch block in createServiceHandler/updateServiceHandler knows
+// which collapsed section to force open on re-render (directive
+// requirement 4.8), without changing what any validator checks or when
+// it's allowed to fail.
+function withSection(section, fn) {
+  try {
+    return fn();
+  } catch (err) {
+    if (err instanceof HttpError && !err.section) err.section = section;
+    throw err;
+  }
+}
+
 export async function createServiceHandler(request, env, staff) {
   const denied = adminOnlyResponse(staff);
   if (denied) return denied;
@@ -754,43 +1012,54 @@ export async function createServiceHandler(request, env, staff) {
   const serviceSlug = String(form.get("serviceSlug") || "").trim();
   const biFormId = String(form.get("biFormId") || "").trim();
   const offeringType = String(form.get("offeringType") || "document_automated");
-  if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
-  if (!serviceSlug) throw new HttpError(400, "Service slug is required");
-  if (offeringType !== "bookable_service" && !biFormId && offeringType === "document_automated") {
-    throw new HttpError(400, "A BI Form ID is required for an automated document order");
+
+  try {
+    withSection("config", () => {
+      if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
+      if (!serviceSlug) throw new HttpError(400, "Service slug is required");
+      if (offeringType !== "bookable_service" && !biFormId && offeringType === "document_automated") {
+        throw new HttpError(400, "A BI Form ID is required for an automated document order");
+      }
+    });
+    withSection("content-en", () => validateEnglishContent(form));
+
+    // Document services use the new dual-tier model exclusively; the
+    // legacy itemized-components price remains the single source of truth
+    // for every other offering type, completely unchanged.
+    const tiers = usesProcessingTiers(offeringType) ? withSection("tiers", () => parseProcessingTiersFromForm(form)) : null;
+    const components = tiers ? null : withSection("components", () => parsePriceComponentsFromForm(form));
+
+    const service = await createService(env.DB, {
+      serviceSlug,
+      biFormId: biFormId || "",
+      offeringType,
+      serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
+      customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
+      supportsDelivery: form.get("supportsDelivery") === "on",
+      displayOrder: Number(form.get("displayOrder")) || 0,
+    });
+    if (tiers) {
+      await updateProcessingTiers(env.DB, service.id, tiers);
+    } else {
+      await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
+    }
+    await saveLanguageContent(env.DB, service.id, form);
+    // Automatic catalogue translation: fills in the five non-English
+    // languages from the English content just saved, so the owner never has
+    // to type five separate translations. Bounded to this one offering, run
+    // synchronously as part of this save (not on a customer page load) --
+    // see worker/src/lib/checkoutTranslation.js for the caching/staleness
+    // rules that make repeat saves cheap.
+    await ensureServiceTranslations(env, service.id);
+    await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: service.id });
+
+    return redirectTo(request, `/staff/instant-services/catalogue/${service.id}`);
+  } catch (err) {
+    if (err instanceof HttpError) {
+      return renderCreateServiceError(staff, form, err.message, err.section || null);
+    }
+    throw err;
   }
-
-  // Document services use the new dual-tier model exclusively; the
-  // legacy itemized-components price remains the single source of truth
-  // for every other offering type, completely unchanged.
-  const tiers = usesProcessingTiers(offeringType) ? parseProcessingTiersFromForm(form) : null;
-  const components = tiers ? null : parsePriceComponentsFromForm(form);
-
-  const service = await createService(env.DB, {
-    serviceSlug,
-    biFormId: biFormId || "",
-    offeringType,
-    serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
-    customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
-    supportsDelivery: form.get("supportsDelivery") === "on",
-    displayOrder: Number(form.get("displayOrder")) || 0,
-  });
-  if (tiers) {
-    await updateProcessingTiers(env.DB, service.id, tiers);
-  } else {
-    await updatePriceComponentsWithHistory(env.DB, service.id, components, staff.email, parsePriceChangeReason(form));
-  }
-  await saveLanguageContent(env.DB, service.id, form);
-  // Automatic catalogue translation: fills in the five non-English
-  // languages from the English content just saved, so the owner never has
-  // to type five separate translations. Bounded to this one offering, run
-  // synchronously as part of this save (not on a customer page load) --
-  // see worker/src/lib/checkoutTranslation.js for the caching/staleness
-  // rules that make repeat saves cheap.
-  await ensureServiceTranslations(env, service.id);
-  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "created_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: service.id });
-
-  return redirectTo(request, `/staff/instant-services/catalogue/${service.id}`);
 }
 
 export async function viewService(env, staff, serviceId) {
@@ -803,51 +1072,56 @@ export async function viewService(env, staff, serviceId) {
     const row = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?").bind(serviceId, lang).first();
     if (row) i18nByLang[lang] = row;
   }
-
-  const statusButtons = OFFERING_STATUSES.map(
-    (s) =>
-      `<form method="POST" action="/staff/instant-services/catalogue/${serviceId}/status" style="display:inline-block;margin-right:0.4rem;">
-         <input type="hidden" name="status" value="${s}">
-         <button class="${s === service.offering_status ? "" : "secondary"}" type="submit" ${s === service.offering_status ? "disabled" : ""}>${s}</button>
-       </form>`
-  ).join("");
+  const configCurrent = {
+    offeringType: service.offering_type,
+    serviceSlug: service.service_slug,
+    biFormId: service.bi_form_id || "",
+    serviceGroup: service.service_group || "",
+    customerPriceLabel: service.customer_price_label || "",
+    displayOrder: service.display_order,
+    supportsDelivery: !!service.supports_delivery,
+  };
 
   return staffPage(
     `Catalogue: ${service.service_slug}`,
     `<h1>${escapeHtml(service.service_slug)}</h1>
-     <div class="card">
-       <p><strong>Offering type:</strong> ${escapeHtml(OFFERING_TYPE_LABELS[service.offering_type] || service.offering_type)}</p>
-       <p><strong>Status:</strong> <span class="status">${escapeHtml(service.offering_status)}</span>${service.active ? ' <span class="status">(customer-visible)</span>' : ""}</p>
-       <p><strong>Business approval:</strong> ${
-         service.approved_at
-           ? `Approved by ${escapeHtml(service.approved_by_staff_email)} on ${escapeHtml(service.approved_at)}`
-           : '<span class="muted">Not yet approved -- cannot be activated until an administrator moves this to "approved".</span>'
-       }</p>
-       ${staff.role === "admin" ? statusButtons : '<p class="muted">Only an administrator can change offering status.</p>'}
-     </div>
+     ${collapsibleSection({ id: "approval", title: "F. Approval & Publication", open: true, badgeHtml: approvalSectionBadge(service), bodyHtml: approvalSectionBody(service, staff, serviceId) })}
      <form method="POST" action="/staff/instant-services/catalogue/${serviceId}">
-       ${offeringTypeField(service.offering_type)}
-       <label for="serviceSlug">Service slug</label>
-       <input type="text" name="serviceSlug" id="serviceSlug" value="${escapeHtml(service.service_slug)}" required>
-       <label for="biFormId">BI Form ID</label>
-       <input type="text" name="biFormId" id="biFormId" value="${escapeHtml(service.bi_form_id || "")}">
-       <label for="serviceGroup">Service group (optional)</label>
-       <input type="text" name="serviceGroup" id="serviceGroup" value="${escapeHtml(service.service_group || "")}">
-       <label for="customerPriceLabel">Customer-facing price label (optional)</label>
-       <input type="text" name="customerPriceLabel" id="customerPriceLabel" value="${escapeHtml(service.customer_price_label || "")}">
-       <label for="displayOrder">Display order</label>
-       <input type="text" name="displayOrder" id="displayOrder" value="${service.display_order}">
-       <label for="supportsDelivery"><input type="checkbox" name="supportsDelivery" id="supportsDelivery" style="width:auto;display:inline-block;" ${service.supports_delivery ? "checked" : ""}> This offering involves physical document delivery</label>
-       <h2>Processing Options &amp; Pricing <span class="muted">(Automated/Staff-processed document orders only)</span></h2>
-       ${processingTierFields(service)}
-       <h2>Price <span class="muted">(Bookable services and fixed-price services only)</span></h2>
-       ${priceComponentFields(components)}
-       <h2>Customer-facing content</h2>
-       ${languageContentFields(i18nByLang, serviceId)}
+       ${catalogueFormSections({ offeringType: service.offering_type, configCurrent, tierService: service, components, i18nByLang, serviceId })}
        <button type="submit">Save changes</button>
      </form>
-     <div class="card"><h2>Price history</h2>${priceHistoryTable(history)}</div>`,
+     ${collapsibleSection({ id: "price-history", title: "G. Price History", open: false, bodyHtml: priceHistoryTable(history) })}`,
     staff.email
+  );
+}
+
+// Error-recovery re-render for updateServiceHandler below -- mirrors
+// renderCreateServiceError, but re-reads the (unchanged, since nothing
+// was persisted) stored service/translations/history so sections F and G
+// still show real data, not an echo.
+async function renderUpdateServiceError(env, staff, serviceId, form, errorMessage, forceOpenSection) {
+  const service = await getServiceById(env.DB, serviceId);
+  const components = await getPriceComponents(env.DB, serviceId);
+  const history = await getPriceHistory(env.DB, serviceId);
+  const i18nByLang = {};
+  for (const lang of CANONICAL_LANGUAGES) {
+    const row = await env.DB.prepare("SELECT * FROM checkout_service_i18n WHERE service_id = ? AND lang = ?").bind(serviceId, lang).first();
+    if (row) i18nByLang[lang] = row;
+  }
+  const offeringType = String(form.get("offeringType") || service.offering_type);
+
+  return staffPage(
+    `Catalogue: ${service.service_slug}`,
+    `<h1>${escapeHtml(service.service_slug)}</h1>
+     <div class="card form-error-card"><p><strong>Could not save:</strong> ${escapeHtml(errorMessage)}</p></div>
+     ${collapsibleSection({ id: "approval", title: "F. Approval & Publication", open: true, badgeHtml: approvalSectionBadge(service), bodyHtml: approvalSectionBody(service, staff, serviceId) })}
+     <form method="POST" action="/staff/instant-services/catalogue/${serviceId}">
+       ${catalogueFormSections({ offeringType, configCurrent: {}, tierService: service, components, i18nByLang, serviceId, form, forceOpenSection })}
+       <button type="submit">Save changes</button>
+     </form>
+     ${collapsibleSection({ id: "price-history", title: "G. Price History", open: false, bodyHtml: priceHistoryTable(history) })}`,
+    staff.email,
+    400
   );
 }
 
@@ -861,31 +1135,42 @@ export async function updateServiceHandler(request, env, staff, serviceId) {
   const serviceSlug = String(form.get("serviceSlug") || "").trim();
   const biFormId = String(form.get("biFormId") || "").trim();
   const offeringType = String(form.get("offeringType") || "document_automated");
-  if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
-  if (!serviceSlug) throw new HttpError(400, "Service slug is required");
 
-  const tiers = usesProcessingTiers(offeringType) ? parseProcessingTiersFromForm(form) : null;
-  const components = tiers ? null : parsePriceComponentsFromForm(form);
+  try {
+    withSection("config", () => {
+      if (!OFFERING_TYPES.includes(offeringType)) throw new HttpError(400, "Unknown offering type");
+      if (!serviceSlug) throw new HttpError(400, "Service slug is required");
+    });
+    withSection("content-en", () => validateEnglishContent(form));
 
-  await updateServiceMeta(env.DB, serviceId, {
-    serviceSlug,
-    biFormId: biFormId || "",
-    offeringType,
-    serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
-    customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
-    supportsDelivery: form.get("supportsDelivery") === "on",
-    displayOrder: Number(form.get("displayOrder")) || 0,
-  });
-  if (tiers) {
-    await updateProcessingTiers(env.DB, serviceId, tiers);
-  } else {
-    await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
+    const tiers = usesProcessingTiers(offeringType) ? withSection("tiers", () => parseProcessingTiersFromForm(form)) : null;
+    const components = tiers ? null : withSection("components", () => parsePriceComponentsFromForm(form));
+
+    await updateServiceMeta(env.DB, serviceId, {
+      serviceSlug,
+      biFormId: biFormId || "",
+      offeringType,
+      serviceGroup: String(form.get("serviceGroup") || "").trim() || null,
+      customerPriceLabel: String(form.get("customerPriceLabel") || "").trim() || null,
+      supportsDelivery: form.get("supportsDelivery") === "on",
+      displayOrder: Number(form.get("displayOrder")) || 0,
+    });
+    if (tiers) {
+      await updateProcessingTiers(env.DB, serviceId, tiers);
+    } else {
+      await updatePriceComponentsWithHistory(env.DB, serviceId, components, staff.email, parsePriceChangeReason(form));
+    }
+    await saveLanguageContent(env.DB, serviceId, form);
+    await ensureServiceTranslations(env, serviceId);
+    await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
+
+    return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
+  } catch (err) {
+    if (err instanceof HttpError) {
+      return await renderUpdateServiceError(env, staff, serviceId, form, err.message, err.section || null);
+    }
+    throw err;
   }
-  await saveLanguageContent(env.DB, serviceId, form);
-  await ensureServiceTranslations(env, serviceId);
-  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "updated_instant_services_catalogue_entry", targetTable: "checkout_services", targetId: serviceId });
-
-  return redirectTo(request, `/staff/instant-services/catalogue/${serviceId}`);
 }
 
 // "Keep my translation": the owner reviewed the warning above and

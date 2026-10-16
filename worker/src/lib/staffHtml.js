@@ -7,7 +7,7 @@ export function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-export function staffPage(title, bodyHtml, staffEmail) {
+export function staffPage(title, bodyHtml, staffEmail, status = 200) {
   return new Response(
     `<!doctype html>
 <html>
@@ -65,7 +65,27 @@ export function staffPage(title, bodyHtml, staffEmail) {
   .filter-bar a:hover { background: #eef1ec; }
   .filter-bar a.filter-active { font-weight: 700; background: #eef1ec; }
   .muted { color: #777; font-size: 0.85rem; }
+  /* Catalogue editor collapsible sections -- plain native <details>/
+     <summary>, no JS: a closed section's inputs stay in the DOM and are
+     still submitted with the form, so collapsing/expanding never loses
+     an unsaved edit, and the browser's own keyboard/accessibility
+     handling for <details> covers the "keyboard-operable, independently
+     openable" requirement with no extra markup or script. */
+  details.staff-collapsible { background: #fff; border: 1px solid #e2e2dc; border-radius: 8px; margin-bottom: 1rem; }
+  details.staff-collapsible > summary { list-style: none; cursor: pointer; padding: 0.9rem 1.2rem; display: flex; align-items: center; gap: 0.6rem; font-weight: 600; color: var(--fis-green); font-size: 1.02rem; }
+  details.staff-collapsible > summary::-webkit-details-marker { display: none; }
+  details.staff-collapsible > summary::marker { content: ""; }
+  details.staff-collapsible > summary::before { content: "\\25B8"; display: inline-block; color: var(--fis-gold); transition: transform 0.12s ease; flex-shrink: 0; }
+  details.staff-collapsible[open] > summary::before { transform: rotate(90deg); }
+  details.staff-collapsible > summary .staff-collapsible__meta { font-weight: 400; font-size: 0.78rem; margin-left: auto; text-align: right; }
+  details.staff-collapsible > .staff-collapsible__body { padding: 0.2rem 1.2rem 1.2rem; border-top: 1px solid #ece9e1; }
+  details.staff-collapsible--nested { border: 1px solid #ece9e1; border-radius: 6px; margin: 0.6rem 0; background: #faf8f3; }
+  details.staff-collapsible--nested > summary { font-size: 0.88rem; padding: 0.6rem 0.9rem; }
+  details.staff-collapsible--nested > .staff-collapsible__body { padding: 0.2rem 0.9rem 0.9rem; }
+  .form-error-card { border-color: #d98c85 !important; background: #f7e6e4 !important; }
   @media (max-width: 640px) {
+    details.staff-collapsible > summary { flex-wrap: wrap; }
+    details.staff-collapsible > summary .staff-collapsible__meta { margin-left: 0; text-align: left; }
     .site-bar .wrap { flex-direction: column; align-items: flex-start; }
     table, thead, tbody, th, td, tr { font-size: 0.85rem; }
   }
@@ -95,6 +115,6 @@ export function staffPage(title, bodyHtml, staffEmail) {
 </div>
 </body>
 </html>`,
-    { headers: { "Content-Type": "text/html; charset=utf-8" } }
+    { status, headers: { "Content-Type": "text/html; charset=utf-8" } }
   );
 }
