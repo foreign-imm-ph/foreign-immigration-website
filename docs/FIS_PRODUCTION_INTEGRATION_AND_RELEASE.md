@@ -511,3 +511,108 @@ real QR Ph payment image, and the payment-verification/refund staff-
 permission recommendation. The catalogue translation infrastructure is
 now live and automatic — no further owner action is needed for
 translation itself once English content is entered or edited.
+
+## 12. Third Release — Dual Express/Regular Processing Tiers, Pricing,
+Lead Times & Free Nationwide Delivery (2026-10-16)
+
+Authorized and executed 2026-10-16, covering commit `604ee6d`: dual
+Express/Regular processing tiers for document services, independent
+per-tier pricing and business-day lead times, free domestic nationwide
+delivery with a separate international-delivery-quotation workflow,
+server-side price-integrity enforcement, immutable historical order
+snapshots, and six-language localization of the new interface labels.
+
+### Step 1 — Baseline re-confirmed at execution time
+
+`main` was at `c60cfa2` (the second release above); the dev branch
+`claude/fis-website-planning-r52sii` was at `604ee6d`, one commit ahead.
+`git merge-base --is-ancestor origin/main origin/claude/fis-website-planning-r52sii`
+confirmed a clean fast-forward relationship before anything else was
+touched.
+
+### Step 2 — Production backup
+
+`wrangler d1 export fis-backend --remote` before any schema change.
+Backup verified readable: **85,563 bytes**, **SHA-256
+`d110b75481df8760e49dd8cb4248a190b9ec1c9ef7adb63624a1fd4223eb33f4`**,
+600 lines, all 34 production tables present. Cross-checked against live
+row counts taken directly from the database immediately beforehand: 19
+`checkout_services` rows, 0 active, 0 `checkout_orders`, 2 `clients`, 4
+`applications`, 3 `payment_requests`, 0 `checkout_price_components` —
+i.e. none of the 19 real offerings carry a legacy itemized price, so
+migration 0016's provenance-preserving backfill was confirmed to be a
+true no-op for current data, not merely a theoretical one. Stored
+outside the repository (session scratchpad), never committed.
+
+### Step 3 — Migration applied
+
+`wrangler d1 migrations apply fis-backend --remote` applied exactly one
+pending migration, **`0016_processing_tiers_and_delivery.sql`** (12
+statements, 15.41ms). Post-migration verification query: all 19
+`checkout_services` rows still `active=0`; all 19 have
+`express_enabled=1` and `regular_enabled=1` (the correct default) but
+**zero** rows have an `express_price_php_centavos` or
+`regular_price_php_centavos` set — no price was invented — and
+`regular_price_migrated_from_legacy` is 0 for every row, confirming the
+backfill found nothing to migrate. `checkout_orders.processing_tier` was
+added with 0 existing orders affected. A second `migrations list` call
+confirmed "No migrations to apply" afterward. Existing
+`checkout_delivery_addresses` / `checkout_delivery_quotations` /
+`checkout_delivery_status_history` tables and `checkout_service_i18n`
+(19 rows, 0 flagged for review) were confirmed untouched.
+
+### Step 4 — Worker deployed
+
+`wrangler deploy` from `worker/`. **Version ID
+`6b4c6e2a-70cb-49b6-90af-6729bc1a53b6`**. Bindings unchanged from the
+prior two releases (`DB`, `CLIENT_FILES`, `BI_FORMS_LIBRARY`, `AI`,
+Access/email environment variables, route). No new provider, no new paid
+resource.
+
+### Step 5 — Website published
+
+`git merge-base --is-ancestor` confirmed a clean fast-forward; `main`
+was moved `c60cfa2` → `604ee6d` and pushed. GitHub Actions "Build and
+Deploy" run
+[`38902867607`](https://github.com/foreign-imm-ph/foreign-immigration-website/actions/runs/38902867607)
+completed with `conclusion: success`.
+
+### Step 6–7 — Production smoke tests
+
+- Worker: public catalogue API still returns `{"services":[],"lang":"en"}`
+  — 0 active offerings, as required. An unauthenticated order fetch and
+  the new `POST /api/instant-services/orders/:id/processing-tier` route
+  both return 401 ("Sign in required"), not 404 — confirming the new
+  route is live and auth-gated, not merely absent. Staff Portal
+  (`/staff/enquiries/`) returns 302 (Cloudflare Access challenge) —
+  alive, still protected.
+- Website: homepage and `/instant-services/` both HTTP 200.
+  `instant-services-apply.js`, `instant-services-receipt.js`, and
+  `style.css` fetched live from production and confirmed to contain the
+  new tier-selection function, the six new `processing-tier` references,
+  the receipt page's selected-tier label, and the eight new
+  `.processing-tier-option*` CSS rules respectively.
+- Staff Portal's new "Processing Options & Pricing" editor was not
+  independently re-screenshotted against production, since Cloudflare
+  Access correctly prevented an unauthenticated fetch from rendering the
+  protected page (confirmed by the 302 itself) — it was verified locally
+  against this exact commit before release via the dedicated 20-test
+  suite (`worker/test/processingTiers.test.js`) plus the full 289-test
+  suite run with zero regressions immediately before this deployment.
+- No real payment, refund, booking, catalogue activation, price
+  approval, or customer email occurred during this verification.
+
+### Step 8 — This document
+
+Updated and committed as this section (no new planning document
+created).
+
+**Outstanding business configuration** (unchanged, now also including):
+which draft offerings to sell and at what price, Airport VIP package
+pricing/activation, the real QR Ph payment image, the payment-
+verification/refund staff-permission recommendation, and — newly — the
+actual Express/Regular prices and business-day lead times for each
+document offering the owner wants to sell. Every offering's Processing
+Options & Pricing fields are live in the Staff Portal and ready for the
+owner to fill in; none are populated, approved, or activated by this
+release.
