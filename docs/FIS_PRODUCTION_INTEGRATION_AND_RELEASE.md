@@ -259,18 +259,139 @@ during this pass, per the directive.
 
 ---
 
-## Deployment Approval Request
+## 10. Deployment Authorization & Execution Record
 
-The integrated FIS release is ready. Phases 1–4 are complete: the baseline
-was re-confirmed, a full visual/navigation review across every required page
-found the design already fully unified (zero corrective changes were
-needed), the existing 249 worker tests and 16 Playwright journeys pass fresh,
-and the migration/deployment sequence above has been assessed for backward
-compatibility.
+Explicit written authorization for the deployment described in §6–§9 was
+received from the business owner on 2026-10-16, covering: production D1
+backup, applying migrations `0009`–`0013`, deploying the `fis-backend`
+Worker, and publishing the merged static site via GitHub Pages — subject to
+the catalogue-safety restriction (all 19 offerings stay `draft`/`active=0`)
+and the other non-negotiable requirements in that authorization. The
+authorization explicitly covered the full scope executed below; no separate
+approval request was issued per step.
 
-**Do you authorize the production deployment described above** — applying
-migrations `0009`–`0013` to the live D1 database, deploying the current
-Worker code, and merging the relevant static-site changes to `main` for
-GitHub Pages — on the understanding that the catalogue goes live empty and
-no offering, QR Ph image, or Airport VIP package is activated without your
-separate approval?
+**Release commit**: `1598947` (same commit this document already describes;
+no code changed between approval and execution).
+
+**Release date/time**: 2026-10-16, ~01:02–01:10 UTC.
+
+### Step 1 — Baseline re-confirmed at execution time
+
+Branch `claude/fis-website-planning-r52sii`, working tree clean, HEAD =
+`1598947`, matching `origin` exactly — no unexpected commits since this
+document was written.
+
+### Step 2 — Production backup
+
+- Pre-migration remote schema: 19 tables (`d1_migrations` present but
+  **empty** — see "Issue encountered" below), matching the 0001–0008-era
+  structure.
+- Baseline row counts recorded directly from production before any change:
+  `enquiries`=7, `clients`=2, `applications`=4, `staff`=1, `documents`=1,
+  `document_requests`=4, `payment_requests`=3, `payment_proofs`=0,
+  `conversations`=4, `messages`=4, `communication_messages`=5,
+  `audit_log`=43, `auth_tokens`=6, `sessions`=3,
+  `client_channel_consents`=0, `client_channel_identities`=0,
+  `application_status_history`=8, `rate_limit_events`=13.
+- Full SQL export created via `wrangler d1 export fis-backend --remote`,
+  downloaded and verified: **49,126 bytes**, 19 `CREATE TABLE` statements
+  (matching the live schema exactly), and an `INSERT` row count **for every
+  single table matching the baseline count above exactly**. SHA-256:
+  `59ced6e36b5e2058938911dc13d55d9f014bc3dae4c0dc82cee6b08840a66f40`.
+  Stored outside the repository, in this session's private scratch
+  storage, under `db-backups/fis-backend-pre-migration-20261016T010412Z.sql`
+  — not committed to GitHub, not printed in full in any log. Suitable for a
+  full re-import (`wrangler d1 execute --file`) as the documented recovery
+  path if ever needed.
+
+**Issue encountered and resolved**: the production `d1_migrations` ledger
+table was found empty even though migrations `0001`–`0008` were verifiably
+already applied (their tables existed, held live data matching all prior
+audits). This caused the first `wrangler d1 migrations apply` attempt to try
+re-running `0001_init.sql`, which correctly failed immediately (`table
+enquiries already exists`) without altering anything — re-verified directly
+afterward (table list and all row counts unchanged). Root cause: these
+migrations were applied to production at some point by a mechanism other
+than `wrangler d1 migrations apply`, so the ledger was never populated.
+Fix: inserted 8 bookkeeping rows into `d1_migrations` recording
+`0001_init.sql` through `0008_translated_client_content.sql` as applied —
+metadata only, no schema or data statement executed, nothing from those
+files re-run. This is the same kind of ledger correction `wrangler` itself
+performs automatically on a first-ever `migrations apply` against a
+hand-created database; nothing here altered any table, column, or row.
+
+### Step 3 — Migrations applied
+
+`0009_bi_form_lifecycle.sql`, `0010_instant_services.sql`,
+`0011_order_and_book_online.sql`, `0012_phase4_catalogue_expansion.sql`,
+`0013_offering_approval_register.sql` — applied in that order via
+`wrangler d1 migrations apply fis-backend --remote`. All five reported ✅.
+`wrangler d1 migrations list --remote` afterward: "No migrations to apply."
+
+**Post-migration verification**:
+- 18 new tables present (`airport_vip_*`, `bi_form_*`, `checkout_*`), none
+  missing.
+- All pre-existing tables and rows intact: `enquiries`=7, `clients`=2,
+  `staff`=1, `applications`=4, `audit_log`=43 — exact match to baseline.
+- `checkout_services`: exactly 19 rows, **all** `offering_status='draft'`,
+  `active=0` — zero exceptions, confirmed by direct `GROUP BY` query.
+
+### Step 4 — Worker deployed
+
+`wrangler deploy` from `worker/`. Result: **Version ID
+`41e2d7d5-dee8-4f90-810a-475979236098`**. Bindings confirmed in the deploy
+output: `DB`→`fis-backend`, `CLIENT_FILES`→`fis-client-files`,
+`BI_FORMS_LIBRARY`→`fis-bi-forms-library` (now live — previously only
+declared, not bound), `AI`, all existing Access/email environment
+variables unchanged, route `api.foreignimmigration.ph/*` unchanged.
+`RESEND_API_KEY` is a secret and was untouched by this deploy (secrets are
+only ever set via `wrangler secret put`, never touched by `deploy`).
+
+- Staff Portal (`https://api.foreignimmigration.ph/staff/enquiries/`):
+  HTTP 302 (Cloudflare Access challenge) — alive and still protected, not
+  erroring.
+- New Staff Portal routes — Instant Services Catalogue, Airport VIP
+  Bookings, BI Forms, Payment Settings — all return the same 302 Access
+  challenge (reachable, protected, not 500ing).
+
+### Step 5 — Website published
+
+Diff against `main` inspected before merging: 232 files, all within this
+release's approved scope (BI Forms/Instant Services/Airport VIP/Client
+Portal code, tests, docs, e2e suite). Only two site-template files changed:
+`src/_data/nav.json` (adds one nav entry, `instantServices`, with an
+`accent` flag) and `src/_includes/partials/header.njk` (renders that
+accent class) — no logo, footer, or other template touched. Confirmed via
+`git merge-base --is-ancestor` that `main` was a strict ancestor of this
+branch, so the publish was a clean **fast-forward** (`3d53913` →
+`1598947`), not a 3-way merge — zero conflict risk.
+
+Pushed to `main`; GitHub Actions "Build and Deploy" run
+[`38833598707`](https://github.com/foreign-imm-ph/foreign-immigration-website/actions/runs/38833598707)
+triggered automatically and completed with `conclusion: success`.
+
+### Step 6–7 — Production smoke tests
+
+- Public catalogue API (`/api/instant-services/catalogue`): HTTP 200,
+  `{"services":[],"lang":"en"}` — empty, exactly as required.
+- Direct access to a known draft offering ID (`svc-cdr`): HTTP 404 — not
+  exposed, not purchasable.
+- Homepage, `/instant-services/`, `/client-portal/`, `/portal/login/`,
+  the Airport VIP service page, and `/instant-services/` in all five
+  non-English locales (ja/zh-cn/zh-hant/ko/vi): all HTTP 200.
+- Original FIS logo (`/assets/images/fis-logo.svg`) present and unchanged
+  on the published homepage.
+- `/api/qr-ph-image` (authenticated customer route): HTTP 401 "Sign in
+  required" — correctly gated, not erroring.
+- No real payment, refund, booking, or unsolicited customer email was
+  created or sent during this verification.
+
+### Step 8 — This document
+
+Updated and committed as this section.
+
+**Outstanding business configuration** (unchanged from §7 — still entirely
+the owner's decision, nothing here activates any of it): which draft
+offerings to sell and at what price, Airport VIP package pricing/
+activation, the real QR Ph payment image, and whether to tighten the
+payment-verification/refund staff-permission recommendation.
