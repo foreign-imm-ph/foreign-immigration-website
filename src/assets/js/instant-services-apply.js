@@ -75,6 +75,8 @@
       bookingStatusUnderReview: "Payment verified — availability under review",
       bookingStatusConfirmed: "Booking confirmed", bookingStatusCompleted: "Service completed",
       bookingStatusCancelled: "Booking cancelled", bookingStatusRefundPending: "Refund pending", bookingStatusRefunded: "Refunded",
+      phaseQuestionnaire: "Questionnaire", phaseBooking: "Booking Details", phasePolicy: "Policy",
+      phaseTier: "Processing Option", phaseDelivery: "Delivery", phaseReview: "Review", phasePayment: "Payment",
     },
     "zh-CN": {
       loading: "加载中...",
@@ -138,6 +140,8 @@
       bookingStatusUnderReview: "付款已核实 — 可用性审核中",
       bookingStatusConfirmed: "预约已确认", bookingStatusCompleted: "服务已完成",
       bookingStatusCancelled: "预约已取消", bookingStatusRefundPending: "退款处理中", bookingStatusRefunded: "已退款",
+      phaseQuestionnaire: "问卷", phaseBooking: "预约详情", phasePolicy: "政策",
+      phaseTier: "处理方式", phaseDelivery: "配送", phaseReview: "核对", phasePayment: "付款",
     },
     "zh-Hant": {
       loading: "載入中...",
@@ -201,6 +205,8 @@
       bookingStatusUnderReview: "付款已核實 — 可用性審核中",
       bookingStatusConfirmed: "預約已確認", bookingStatusCompleted: "服務已完成",
       bookingStatusCancelled: "預約已取消", bookingStatusRefundPending: "退款處理中", bookingStatusRefunded: "已退款",
+      phaseQuestionnaire: "問卷", phaseBooking: "預約詳情", phasePolicy: "政策",
+      phaseTier: "處理方式", phaseDelivery: "配送", phaseReview: "核對", phasePayment: "付款",
     },
     ko: {
       loading: "불러오는 중...",
@@ -264,6 +270,8 @@
       bookingStatusUnderReview: "결제 확인됨 — 가능 여부 검토 중",
       bookingStatusConfirmed: "예약 확정됨", bookingStatusCompleted: "서비스 완료됨",
       bookingStatusCancelled: "예약 취소됨", bookingStatusRefundPending: "환불 처리 중", bookingStatusRefunded: "환불 완료됨",
+      phaseQuestionnaire: "설문", phaseBooking: "예약 정보", phasePolicy: "정책",
+      phaseTier: "처리 옵션", phaseDelivery: "배송", phaseReview: "검토", phasePayment: "결제",
     },
     ja: {
       loading: "読み込み中...",
@@ -327,6 +335,8 @@
       bookingStatusUnderReview: "お支払い確認済み — 空き状況確認中",
       bookingStatusConfirmed: "予約確定済み", bookingStatusCompleted: "サービス完了",
       bookingStatusCancelled: "予約キャンセル済み", bookingStatusRefundPending: "返金手続き中", bookingStatusRefunded: "返金済み",
+      phaseQuestionnaire: "アンケート", phaseBooking: "予約詳細", phasePolicy: "ポリシー",
+      phaseTier: "処理オプション", phaseDelivery: "配送", phaseReview: "確認", phasePayment: "お支払い",
     },
     vi: {
       loading: "Đang tải...",
@@ -390,6 +400,8 @@
       bookingStatusUnderReview: "Đã xác minh thanh toán — Đang xem xét tình trạng chỗ trống",
       bookingStatusConfirmed: "Đặt lịch đã được xác nhận", bookingStatusCompleted: "Dịch vụ đã hoàn tất",
       bookingStatusCancelled: "Đặt lịch đã bị hủy", bookingStatusRefundPending: "Đang chờ hoàn tiền", bookingStatusRefunded: "Đã hoàn tiền",
+      phaseQuestionnaire: "Bảng Câu Hỏi", phaseBooking: "Chi Tiết Đặt Lịch", phasePolicy: "Chính Sách",
+      phaseTier: "Hình Thức Xử Lý", phaseDelivery: "Giao Hàng", phaseReview: "Xem Lại", phasePayment: "Thanh Toán",
     },
   };
 
@@ -406,6 +418,43 @@
   function formatPhp(centavos) {
     var pesos = Math.round(Number(centavos) || 0) / 100;
     return "₱" + pesos.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Directive section 11: "a coherent, CONNECTED journey" needs to be
+  // visibly ONE journey, not a sequence of disconnected screens -- this
+  // app already drives every screen from the order's own server-
+  // authoritative state (loadOrder below), so the sequence itself was
+  // already connected; this makes that connection VISIBLE. Reuses the
+  // same .portal-wizard-steps/.portal-wizard-step CSS the BI-form
+  // questionnaire wizard uses (src/assets/css/style.css), so the whole
+  // purchase has one consistent progress-indicator look, not two.
+  var PHASE_LABEL_KEYS = {
+    questionnaire: "phaseQuestionnaire", booking: "phaseBooking", policy: "phasePolicy",
+    tier: "phaseTier", delivery: "phaseDelivery", review: "phaseReview", payment: "phasePayment",
+  };
+  function journeyProgressHtml(phases, currentKey) {
+    var currentIndex = phases.indexOf(currentKey);
+    var items = phases
+      .map(function (key, i) {
+        var cls = "portal-wizard-step" + (i === currentIndex ? " portal-wizard-step--current" : i < currentIndex ? " portal-wizard-step--done" : "");
+        return '<li class="' + cls + '"><span class="portal-wizard-step__num">' + (i + 1) + '</span><span class="portal-wizard-step__label">' + escapeHtml(t(lang, PHASE_LABEL_KEYS[key])) + '</span></li>';
+      })
+      .join("");
+    return '<ol class="portal-wizard-steps" role="list">' + items + '</ol>';
+  }
+
+  // Mirrors loadOrder()'s OWN branching below exactly (never a second,
+  // possibly-drifting copy of that logic) -- the phase LIST a service
+  // walks through and the phase loadOrder() actually routes to for that
+  // same service must always agree.
+  function phasesForService(service) {
+    if (service.offeringType === "bookable_service") return ["booking", "policy", "review", "payment"];
+    var phases = [];
+    if (service.offeringType !== "document_manual" && service.offeringType !== "fixed_price_service") phases.push("questionnaire");
+    if (service.usesProcessingTiers) phases.push("tier");
+    if (service.supportsDelivery) phases.push("delivery");
+    phases.push("review", "payment");
+    return phases;
   }
 
   var root = document.getElementById("instant-services-apply-content");
@@ -474,8 +523,9 @@
   }
 
   // ---- Screen: questionnaire (reuses portal-bi-form.js verbatim) ----
-  function renderQuestionnaire(order) {
-    root.innerHTML = '<div class="card"><p>' + escapeHtml(t(lang, "questionnaireIntro")) + '</p><div id="instant-services-questionnaire"></div></div>';
+  function renderQuestionnaire(order, service) {
+    root.innerHTML = journeyProgressHtml(phasesForService(service), "questionnaire") +
+      '<div class="card"><p>' + escapeHtml(t(lang, "questionnaireIntro")) + '</p><div id="instant-services-questionnaire"></div></div>';
     var container = document.getElementById("instant-services-questionnaire");
     window.PortalBiForms.openBiFormDetail(
       container,
@@ -530,6 +580,7 @@
       .join("");
 
     root.innerHTML =
+      journeyProgressHtml(phasesForService(service), "tier") +
       '<div class="card"><h2>' + escapeHtml(service.title) + "</h2>" +
       "<h3>" + escapeHtml(t(lang, "processingOptionHeading")) + "</h3>" +
       '<form id="instant-services-tier-form" class="enquiry-form">' +
@@ -567,8 +618,9 @@
     });
   }
 
-  function renderDeliveryAddress(order) {
+  function renderDeliveryAddress(order, service) {
     root.innerHTML =
+      journeyProgressHtml(phasesForService(service), "delivery") +
       '<div class="card"><h2>' + escapeHtml(t(lang, "deliveryHeading")) + "</h2>" +
       '<form id="instant-services-delivery-form" class="enquiry-form">' +
       '<div class="form-field form-field--full"><label for="recipientName">' + escapeHtml(t(lang, "recipientNameLabel")) + '</label><input type="text" id="recipientName" required></div>' +
@@ -635,6 +687,7 @@
     var b = existingBooking || {};
     var passengerNamesText = (b.passengerNames || []).join("\n");
     root.innerHTML =
+      journeyProgressHtml(phasesForService(service), "booking") +
       '<div class="card"><h2>' + escapeHtml(t(lang, "bookingHeading")) + "</h2>" +
       '<form id="instant-services-booking-form" class="enquiry-form">' +
       '<div class="form-field form-field--full"><label for="direction">' + escapeHtml(t(lang, "directionLabel")) + '</label>' +
@@ -713,8 +766,9 @@
   // never pre-checked, and acceptance is recorded server-side with the
   // booking's original scheduled departure + a policy version, per
   // worker/src/lib/airportVip.js's recordPolicyAcceptance. ----
-  function renderPolicyAcceptance(order) {
+  function renderPolicyAcceptance(order, service) {
     root.innerHTML =
+      journeyProgressHtml(phasesForService(service), "policy") +
       '<div class="card"><h2>' + escapeHtml(t(lang, "policyHeading")) + "</h2>" +
       "<p>" + escapeHtml(t(lang, "policyIntro")) + "</p>" +
       "<p>" + escapeHtml(t(lang, "policyCancellation")) + "</p>" +
@@ -794,6 +848,7 @@
     var deliveryHtml = service.supportsDelivery ? '<p class="muted">' + escapeHtml(t(lang, "deliveryNotice")) + "</p>" : "";
 
     root.innerHTML =
+      journeyProgressHtml(phasesForService(service), "review") +
       '<div class="card"><h2>' + escapeHtml(t(lang, isBooking ? "reviewHeadingBooking" : "reviewHeading")) + "</h2><p>" + escapeHtml(t(lang, isBooking ? "reviewIntroBooking" : "reviewIntro")) + "</p>" +
       '<table class="instant-services-price-table">' + priceRowsHtml + "</table>" +
       leadTimeHtml + deliveryHtml +
@@ -844,11 +899,12 @@
     return '<p class="muted"><strong>' + escapeHtml(tierLabel) + "</strong></p>" + leadTimeLine + deliveryLine;
   }
 
-  function renderPayment(order, payment) {
+  function renderPayment(order, payment, service) {
     var amount = order.priceSnapshot ? formatPhp(order.priceSnapshot.totalPhpCentavos) : payment ? "₱" + Number(payment.amountPhp).toFixed(2) : "";
     var merchantLine = payment && payment.merchantDisplayName ? "<p><strong>" + escapeHtml(payment.merchantDisplayName) + "</strong></p>" : "";
     var instructionsLine = payment && payment.instructions ? "<p>" + escapeHtml(payment.instructions) + "</p>" : "";
     root.innerHTML =
+      (service ? journeyProgressHtml(phasesForService(service), "payment") : "") +
       '<div class="card"><h2>' + escapeHtml(t(lang, "paymentHeading")) + "</h2>" +
       '<p class="instant-service-card__price">' + escapeHtml(t(lang, "amountLabel")) + ": " + amount + "</p>" +
       tierDeliveryStatusHtml(order) +
@@ -971,7 +1027,7 @@
         if (!isBooking) {
           if (order.status === "paid") return renderPaid(order, null);
           if (order.status === "awaiting_verification") return renderAwaitingVerification(order, null);
-          if (order.status === "awaiting_payment") return renderPayment(order, data.payment);
+          if (order.status === "awaiting_payment") return renderPayment(order, data.payment, service);
 
           // A staff-processed document has no automated questionnaire --
           // once the application exists, go straight to delivery/review,
@@ -991,7 +1047,7 @@
               return renderProcessingTierSelection(order, service);
             }
             if (service.supportsDelivery && !data.deliveryAddress) {
-              return renderDeliveryAddress(order);
+              return renderDeliveryAddress(order, service);
             }
             return renderReview(order, service);
           }
@@ -1004,13 +1060,13 @@
               .then(function () { loadOrder(); });
           }
           if (!data.submissionStatus || data.submissionStatus === "draft" || data.submissionStatus === "revision_requested") {
-            return renderQuestionnaire({ id: order.id, submissionId: order.submissionId });
+            return renderQuestionnaire({ id: order.id, submissionId: order.submissionId }, service);
           }
           if (service.usesProcessingTiers && !order.processingTier) {
             return renderProcessingTierSelection(order, service);
           }
           if (service.supportsDelivery && !data.deliveryAddress) {
-            return renderDeliveryAddress(order);
+            return renderDeliveryAddress(order, service);
           }
           return renderReview(order, service);
         }
@@ -1027,10 +1083,10 @@
 
             if (order.status === "paid") return renderPaid(order, booking && booking.status);
             if (order.status === "awaiting_verification") return renderAwaitingVerification(order, booking && booking.status);
-            if (order.status === "awaiting_payment") return renderPayment(order, data.payment);
+            if (order.status === "awaiting_payment") return renderPayment(order, data.payment, service);
 
             if (!booking) return renderBookingForm(order, service, null);
-            if (!policyAccepted) return renderPolicyAcceptance(order);
+            if (!policyAccepted) return renderPolicyAcceptance(order, service);
             return renderReview(order, service);
           });
       })

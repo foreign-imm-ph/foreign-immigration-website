@@ -11,7 +11,7 @@
 //     checkoutCustomer.js) -- there is no way to reach a payment screen
 //     at all otherwise. The uploaded "QR image" here is a synthetic 1x1
 //     PNG, never a real QR Ph code -- see e2e/README.md.
-const { ensureTestStaffAdmin, WORKER_BASE } = require("./fixtures/testHelpers");
+const { ensureTestStaffAdmin, WORKER_BASE, PUBLIC_ORIGIN_HEADERS } = require("./fixtures/testHelpers");
 
 // A real, byte-valid 1x1 PNG (not a real QR Ph code) -- satisfies the
 // same magic-byte sniffing (worker/src/lib/storage.js sniffContentType)
@@ -39,8 +39,13 @@ async function configureQrPhPaymentSettings() {
     method: "POST",
     body: form,
     redirect: "manual",
+    // A state-changing request needs a same-site Origin header to pass
+    // worker/src/index.js's CSRF check (isSameSiteOrigin) -- plain
+    // Node fetch (unlike a browser) never adds one on its own, same
+    // reason testHelpers.js's beginGuestOrderAndSignIn sets this.
+    headers: PUBLIC_ORIGIN_HEADERS,
   });
-  if (resp.status !== 302 && resp.status !== 200) {
+  if (resp.status !== 302 && resp.status !== 303 && resp.status !== 200) {
     throw new Error(`Failed to configure QR Ph payment settings for e2e tests: HTTP ${resp.status}`);
   }
 }

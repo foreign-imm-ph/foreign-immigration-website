@@ -218,27 +218,69 @@ async function createAndActivateOffering(page, {
   return serviceId;
 }
 
-// Fills every question in the currently-open BI Forms questionnaire
-// (window.PortalBiForms, reused unmodified from the Client Portal -- see
-// src/assets/js/portal-bi-form.js) with a generic value and submits it.
-// Works for any form's question set without knowing its specific fields:
-// every question renders with a `data-answer-key` attribute regardless of
-// which BI Form config produced it.
+// Drives the real multi-step BI Forms wizard (window.PortalBiForms,
+// reused unmodified from the Client Portal -- see
+// src/assets/js/portal-bi-form.js) end to end with generic values and
+// submits it, for ANY form's question set, without knowing its specific
+// fields or step count: every question still renders with a
+// `data-answer-key` (or, for a repeatable group, `data-sub-key`)
+// attribute regardless of which BI Form config produced it, and the
+// wizard exposes the SAME `.portal-wizard-continue`/`.portal-bi-form-
+// submit` controls on every form. Chooses "I'll provide the details
+// myself" on the initial choice panel when one is shown (a fresh draft
+// always shows it) -- the assisted-intake path is exercised separately
+// by its own dedicated spec, not by this generic helper.
 async function fillGenericQuestionnaireAndSubmit(page) {
-  await page.waitForSelector("[data-answer-key]", { timeout: 15_000 });
-  const fields = page.locator("[data-answer-key]");
-  const count = await fields.count();
-  for (let i = 0; i < count; i++) {
-    const field = fields.nth(i);
-    const tag = await field.evaluate((el) => el.tagName.toLowerCase());
-    if (tag === "select") {
-      const optionValues = await field.locator("option").evaluateAll((opts) => opts.map((o) => o.value).filter(Boolean));
-      if (optionValues.length) await field.selectOption(optionValues[0]);
-    } else {
-      await field.fill("Test Value");
+  await page.waitForSelector(".portal-bi-form-detail", { timeout: 15_000 });
+
+  const selfBtn = page.locator(".portal-bi-form-choice-self");
+  if (await selfBtn.count()) await selfBtn.click();
+
+  for (let guard = 0; guard < 12; guard++) {
+    const submitBtn = page.locator(".portal-bi-form-submit");
+    if (await submitBtn.count()) {
+      await submitBtn.click();
+      return;
     }
+
+    // yesno questions render as a pair of radios sharing one
+    // data-answer-key -- resolved FIRST (always "Yes", the first of the
+    // pair), since answering one can reveal an additional showIf-gated
+    // field later in the same step that still needs filling below.
+    const yesRadios = page.locator('.portal-wizard-step-form [data-answer-key][type="radio"][value="true"]:visible');
+    const yesCount = await yesRadios.count();
+    for (let i = 0; i < yesCount; i++) await yesRadios.nth(i).check();
+
+    // Two passes: answering a yesno above can reveal a previously-hidden
+    // conditional field that itself needs filling, and `:visible` is
+    // re-evaluated fresh on each query, so a second pass picks up
+    // anything the first pass's own radio clicks just revealed.
+    for (let pass = 0; pass < 2; pass++) {
+      const textLikeFields = page.locator('.portal-wizard-step-form [data-answer-key]:not([type="radio"]):visible');
+      const textLikeCount = await textLikeFields.count();
+      for (let i = 0; i < textLikeCount; i++) {
+        const field = textLikeFields.nth(i);
+        const tag = await field.evaluate((el) => el.tagName.toLowerCase());
+        if (tag === "select") {
+          const optionValues = await field.locator("option").evaluateAll((opts) => opts.map((o) => o.value).filter(Boolean));
+          if (optionValues.length) await field.selectOption(optionValues[0]);
+        } else {
+          const current = await field.inputValue();
+          if (!current) await field.fill("Test Value");
+        }
+      }
+    }
+
+    const groupTextFields = page.locator(".portal-wizard-step-form [data-sub-key]:visible");
+    const groupCount = await groupTextFields.count();
+    for (let i = 0; i < groupCount; i++) await groupTextFields.nth(i).fill("Test Value");
+
+    const continueBtn = page.locator(".portal-wizard-continue");
+    if (!(await continueBtn.count())) break; // nothing left to advance -- shouldn't normally happen
+    await continueBtn.click();
   }
-  await page.click(".portal-bi-form-submit");
+
+  throw new Error("fillGenericQuestionnaireAndSubmit: never reached the Submit button (wizard loop exhausted)");
 }
 
 async function fillDeliveryAddressIfPresent(page) {
@@ -330,6 +372,42 @@ async function createConfirmedAirportVipBooking(page, serviceId, { emailPrefix, 
   return { bookingId, orderId, clientId, applicationId: orderRows[0].application_id };
 }
 
+// A direct, already-active checkout_services row (plus its required
+// checkout_service_i18n and checkout_price_components rows), inserted the
+// same way the Worker's OWN vitest fixture (worker/test/helpers.js
+// createTestCheckoutService) does -- reused here because the Staff
+// Portal's "Add an Offering" form (createAndActivateOffering above) is a
+// real, separately-maintained UI surface this directive's own BI-forms-
+// wizard verification has no need to drive through; a direct insert of
+// "one already-approved, purchasable service" is the right amount of
+// setup for a journey that is actually testing the CUSTOMER-facing
+// questionnaire wizard, not catalogue administration.
+function createActiveCheckoutServiceDirect({
+  serviceSlug,
+  biFormId = "CCS-A-CDR-2016",
+  title = "E2E Wizard Test Service",
+  supportsDelivery = false,
+} = {}) {
+  const id = `e2e-service-${uniqueSuffix()}`;
+  d1Json(
+    `INSERT INTO checkout_services
+       (id, service_slug, bi_form_id, supports_delivery, display_order, active, offering_type,
+        express_enabled, express_price_php_centavos, express_min_business_days, express_max_business_days,
+        regular_enabled, regular_price_php_centavos, regular_min_business_days, regular_max_business_days)
+     VALUES ('${id}', '${sqlEscape(serviceSlug)}', '${sqlEscape(biFormId)}', ${supportsDelivery ? 1 : 0}, 0, 1, 'document_automated',
+             1, 800000, 2, 3, 1, 500000, 10, 15)`
+  );
+  d1Json(
+    `INSERT INTO checkout_service_i18n (service_id, lang, title, short_description, eligibility_text) ` +
+      `VALUES ('${id}', 'en', '${sqlEscape(title)}', 'E2E test service description', 'Eligible for testing')`
+  );
+  d1Json(
+    `INSERT INTO checkout_price_components (id, service_id, component_type, label, amount_php_centavos) ` +
+      `VALUES ('e2e-price-${uniqueSuffix()}', '${id}', 'service_fee', 'FIS Service Fee', 500000)`
+  );
+  return id;
+}
+
 // A minimal client + application fixture, inserted directly (same
 // established convention used for every synthetic fixture in this suite)
 // -- Journey 6 is about the Client Portal's OWN i18n rendering, not the
@@ -375,4 +453,5 @@ module.exports = {
   ONE_PIXEL_PNG_BASE64,
   createConfirmedAirportVipBooking,
   createTestClientWithApplication,
+  createActiveCheckoutServiceDirect,
 };

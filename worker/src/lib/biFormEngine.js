@@ -70,15 +70,60 @@ export function getFormConfig(biFormId) {
 // The approved object-key convention for the private fis-bi-forms-library
 // R2 bucket (binding BI_FORMS_LIBRARY, see wrangler.toml), per
 // bi-forms-library/inventory/forms-library-inventory.json: every
-// inventoried form's original is at "originals/<formId>.pdf", including
-// all three forms registered above. Centralized here (not hand-typed at
-// each call site) so a future form with a different key only needs an
-// entry in this one map, not a code change at every caller.
+// inventoried form's original is at "originals/<formId>.pdf" -- all 20
+// inventoried PDFs, not just the 3 currently engine-registered. Centralized
+// here (not hand-typed at each call site) so a future form with a
+// different key only needs an entry in this one map, not a code change at
+// every caller.
+//
+// Deliberately NOT gated on KNOWN_BI_FORM_IDS/REGISTRY membership: a
+// blank-form preview (buildWatermarkedFormPreview, below) is a separate
+// capability from fillable-document generation, and directive section 8.2
+// is explicit that "preview availability and generation readiness should
+// be tracked separately" -- a form's original key is needed, and valid,
+// whether or not that form has been through coordinate-mapping yet. Callers
+// that DO require the full engine mapping (e.g. staffBiForms.js's
+// approveBiForm) already call getFormConfig() first, which independently
+// throws for anything not in REGISTRY -- removing the redundant check here
+// does not weaken that gate.
 const ORIGINAL_KEY_OVERRIDES = {};
 export function originalTemplateKey(biFormId) {
-  if (!KNOWN_BI_FORM_IDS.includes(biFormId)) throw new Error(`Unknown BI form id: ${JSON.stringify(biFormId)}`);
   return ORIGINAL_KEY_OVERRIDES[biFormId] || `originals/${biFormId}.pdf`;
 }
+
+// Directive section 8.2's "preview availability, tracked separately from
+// generation readiness": every PDF in the 20-document Forms Library that
+// (a) is an actual fillable application form a prospective customer would
+// benefit from seeing blank before starting a questionnaire, and (b) is
+// NOT reproduction-restricted. Sourced directly from
+// docs/BI_FORMS_LIBRARY_RECONCILIATION.md's own verified classification
+// table (Section B) -- not re-derived or guessed here. Excludes:
+// `2015-08-006` (reproduction prohibited on the form itself -- directive
+// section 3's explicit instruction to preserve this restriction), the two
+// actual government-issued certificate outputs (`ARD04.QF.001`,
+// `ARD04.QF.002` -- never templates FIS fills in), and the Travel Pass
+// checklist (`BIFORM2021-03-002` -- reference material, not a fillable
+// form). A form appearing here has NO implication about whether it is
+// engine-mapped (see REGISTRY/KNOWN_BI_FORM_IDS above) -- those are two
+// independent questions, exactly as the directive requires.
+export const PREVIEWABLE_FORM_IDS = [
+  "CCS-A-CDR-2016",
+  "2014-13-002",
+  "2014-13-006",
+  "2014-01-011",
+  "2014-08-015",
+  "2021-03-001",
+  "ADM05.QF.001",
+  "ARD04.QF.003",
+  "BOC04.QF.001",
+  "BOC04.QF.002",
+  "CCS-A-NTSP-2016",
+  "CCS-C-CPA-2016",
+  "CGAF-002-Rev3",
+  "CGAF-003-Rev 2",
+  "IRD04.QF.004",
+  "IRD04.QF.008",
+];
 
 // Stage 5.3's pre-rendered blank-region background PNG, generated offline
 // via bi-forms-library/engine/scripts/generate-blank-backgrounds.js (see
@@ -103,13 +148,23 @@ export function backgroundTemplateKey(biFormId) {
 // visual context. Lazy-imported for the same pdf-lib/CJS bundling reason
 // as getDocumentBuilders() above.
 const BLANK_FORM_PREVIEW_WATERMARK_OPACITY = 0.15;
-export async function buildWatermarkedFormPreview(originalBytes, coordinateMap) {
+// No longer takes a coordinateMap: per directive section 8.2, a blank
+// preview must be generatable for ANY previewable form (see
+// PREVIEWABLE_FORM_IDS above), including the 16 that have no engine
+// mapping at all and therefore no coordinate-map.json. Each page's own
+// bounds are read directly from the loaded PDF via pdf-lib's
+// getWidth()/getHeight() -- which is also strictly more correct than the
+// single pageWidthPt/pageHeightPt pair the 3 mapped forms' configs
+// recorded, since it watermarks EVERY page at ITS OWN actual size rather
+// than assuming every page of a multi-page original shares page 1's
+// dimensions.
+export async function buildWatermarkedFormPreview(originalBytes) {
   const { PDFDocument, StandardFonts } = await import("pdf-lib");
   const { addWatermark } = await import("../../../bi-forms-library/engine/lib/watermark.js");
   const doc = await PDFDocument.load(originalBytes);
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
-  const bounds = { xLeft: 0, yBottom: 0, width: coordinateMap.pageWidthPt, height: coordinateMap.pageHeightPt };
   for (const page of doc.getPages()) {
+    const bounds = { xLeft: 0, yBottom: 0, width: page.getWidth(), height: page.getHeight() };
     addWatermark(page, "PREVIEW ONLY", font, bounds, BLANK_FORM_PREVIEW_WATERMARK_OPACITY);
   }
   return doc.save();

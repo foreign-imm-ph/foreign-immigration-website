@@ -26,14 +26,46 @@ function notFound() {
   return new Response("Not found", { status: 404 });
 }
 
+// Directive section 9: "exception-based operations -- where all required
+// info is present/verified, prepare the document automatically for
+// review/approval; where missing, flag only the relevant exceptions."
+// Computed with the SAME logic approveBiForm itself uses (requiredStaff
+// Fields minus what staff already supplied, plus any customer-marked
+// "I'm not sure" field) -- not a second, possibly-drifting notion of
+// "exception". Returns null for a submission not yet under review (the
+// concept doesn't apply until staff review has actually started), so the
+// list can distinguish "not applicable yet" from "reviewed, zero
+// exceptions, ready to finalize".
+function exceptionCountFor(submission) {
+  if (submission.status !== "under_review") return null;
+  const { coordinateMap, questionnaire } = getFormConfig(submission.bi_form_id);
+  const customerAnswers = submission.customer_answers_json ? JSON.parse(submission.customer_answers_json) : {};
+  const staffAnswers = submission.staff_answers_json ? JSON.parse(submission.staff_answers_json) : {};
+  const staffFields = staffOwnedFields(coordinateMap);
+  const requiredStaffFields = getRequiredStaffFields(staffFields, questionnaire, customerAnswers);
+  const missingStaffFields = requiredStaffFields.filter((f) => !staffAnswers[f.key] || String(staffAnswers[f.key]).trim() === "");
+  return unsureFieldSet(customerAnswers).size + missingStaffFields.length;
+}
+
+function exceptionBadgeHtml(count) {
+  if (count === null) return '<span class="muted">—</span>';
+  if (count === 0) return '<span class="priority-badge priority-badge--standard">✓ Ready to finalize</span>';
+  return `<span class="priority-badge priority-badge--urgent">⚠ ${count} exception${count === 1 ? "" : "s"}</span>`;
+}
+
 export async function listBiForms(env, staff, url) {
   const status = url.searchParams.get("status") || undefined;
-  const submissions = await listSubmissionsForStaff(env.DB, { status });
-  const rows = submissions
+  const onlyExceptions = url.searchParams.get("onlyExceptions") === "1";
+  let submissions = await listSubmissionsForStaff(env.DB, { status });
+  let decorated = submissions.map((s) => ({ s, exceptionCount: exceptionCountFor(s) }));
+  if (onlyExceptions) decorated = decorated.filter((d) => d.exceptionCount !== null && d.exceptionCount > 0);
+
+  const rows = decorated
     .map(
-      (s) => `<tr>
+      ({ s, exceptionCount }) => `<tr>
         <td><a class="ref" href="/staff/bi-forms/${s.id}">${escapeHtml(s.bi_form_id)}</a></td>
         <td><span class="status">${escapeHtml(s.status)}</span></td>
+        <td>${exceptionBadgeHtml(exceptionCount)}</td>
         <td class="muted">${escapeHtml(s.application_id || "(none)")}</td>
         <td class="muted">${escapeHtml(s.updated_at)}</td>
       </tr>`
@@ -45,12 +77,13 @@ export async function listBiForms(env, staff, url) {
      <div class="filter-bar">
        <a href="/staff/bi-forms/">All</a> |
        ${["draft", "submitted", "under_review", "revision_requested", "approved", "published", "cancelled"]
-         .map((s) => `<a href="/staff/bi-forms/?status=${s}"${status === s ? ' class="filter-active"' : ""}>${s}</a>`)
+         .map((s) => `<a href="/staff/bi-forms/?status=${s}"${status === s && !onlyExceptions ? ' class="filter-active"' : ""}>${s}</a>`)
          .join(" ")}
+       | <a href="/staff/bi-forms/?status=under_review&onlyExceptions=1"${onlyExceptions ? ' class="filter-active"' : ""}>⚠ Needs attention</a>
      </div>
      <table>
-       <tr><th>BI Form</th><th>Status</th><th>Application</th><th>Updated</th></tr>
-       ${rows || '<tr><td colspan="4" class="muted">No BI-form submissions yet.</td></tr>'}
+       <tr><th>BI Form</th><th>Status</th><th>Exceptions</th><th>Application</th><th>Updated</th></tr>
+       ${rows || '<tr><td colspan="5" class="muted">No BI-form submissions yet.</td></tr>'}
      </table>`,
     staff.email
   );

@@ -27,10 +27,23 @@ describe("Public 'Preview Official BI Form' route", () => {
     expect(resp.status).toBe(404);
   });
 
-  it("404s for a document service whose BI form id isn't wired into the engine yet (a real inventoried form that has no engine config)", async () => {
-    const service = await createTestCheckoutService({ offeringType: "document_manual", biFormId: "2014-01-011", supportsDelivery: 0 });
+  it("404s for a document service whose BI form is reproduction-restricted (2015-08-006), regardless of offering type", async () => {
+    const service = await createTestCheckoutService({ offeringType: "document_manual", biFormId: "2015-08-006", supportsDelivery: 0 });
     const resp = await worker.fetch(authedRequest(`/api/instant-services/catalogue/${service.id}/preview-form`), env);
     expect(resp.status).toBe(404);
+  });
+
+  // Directive section 8.2: "Do not make the existence of an engine mapping
+  // an unnecessary prerequisite for displaying a safe blank official-form
+  // preview." 2014-01-011 is a real inventoried application form with a
+  // catalogue association but NO coordinate-map.json/engine registration
+  // (see docs/BI_FORMS_LIBRARY_RECONCILIATION.md) -- it must still be
+  // treated as previewable (reaching the R2 lookup and failing with 501
+  // for a missing object, never a 404 "not eligible").
+  it("does NOT 404 for a real unmapped-but-previewable form -- reaches the R2 lookup (501, not 404) exactly like an engine-mapped one", async () => {
+    const service = await createTestCheckoutService({ offeringType: "document_manual", biFormId: "2014-01-011", supportsDelivery: 0 });
+    const resp = await worker.fetch(authedRequest(`/api/instant-services/catalogue/${service.id}/preview-form`), env);
+    expect(resp.status).toBe(501);
   });
 
   it("404s for an inactive service -- discoverability is refused, same as the existing catalogue-detail route", async () => {
@@ -50,13 +63,15 @@ describe("Public 'Preview Official BI Form' route", () => {
     expect(resp.status).toBe(501);
   });
 
-  it("the public catalogue correctly flags hasOfficialFormPreview only for engine-mapped document services", async () => {
+  it("the public catalogue flags hasOfficialFormPreview for ANY previewable form, engine-mapped or not, and never for a restricted one", async () => {
     const mapped = await createTestCheckoutService({ serviceSlug: "mapped-form-service", biFormId: "CCS-A-CDR-2016" });
-    const unmapped = await createTestCheckoutService({ serviceSlug: "unmapped-form-service", offeringType: "document_manual", biFormId: "2014-01-011", supportsDelivery: 0 });
+    const unmappedButPreviewable = await createTestCheckoutService({ serviceSlug: "unmapped-form-service", offeringType: "document_manual", biFormId: "2014-01-011", supportsDelivery: 0 });
+    const restricted = await createTestCheckoutService({ serviceSlug: "restricted-form-service", offeringType: "document_manual", biFormId: "2015-08-006", supportsDelivery: 0 });
 
     const resp = await worker.fetch(authedRequest("/api/instant-services/catalogue"), env);
     const { services } = await resp.json();
     expect(services.find((s) => s.id === mapped.id).hasOfficialFormPreview).toBe(true);
-    expect(services.find((s) => s.id === unmapped.id).hasOfficialFormPreview).toBe(false);
+    expect(services.find((s) => s.id === unmappedButPreviewable.id).hasOfficialFormPreview).toBe(true);
+    expect(services.find((s) => s.id === restricted.id).hasOfficialFormPreview).toBe(false);
   });
 });

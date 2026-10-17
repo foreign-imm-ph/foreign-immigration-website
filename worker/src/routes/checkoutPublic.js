@@ -11,7 +11,7 @@ import { checkHoneypot, checkRateLimit } from "../lib/abuse.js";
 import { listActiveCatalogue, getServiceById, findOrCreateDraftOrder, shapeServiceForCustomer, getServiceI18n, usesProcessingTiers } from "../lib/checkout.js";
 import { sendInstantServicesVerification } from "../lib/email.js";
 import { ensureServiceTranslations } from "../lib/checkoutTranslation.js";
-import { KNOWN_BI_FORM_IDS, getFormConfig, originalTemplateKey, buildWatermarkedFormPreview } from "../lib/biFormEngine.js";
+import { PREVIEWABLE_FORM_IDS, originalTemplateKey, buildWatermarkedFormPreview } from "../lib/biFormEngine.js";
 
 const CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
 const VERIFICATION_TTL_MINUTES = 15;
@@ -25,8 +25,17 @@ function resolveLang(url) {
 // below) has anything to show for this service -- computed from the
 // already-shaped service's own offeringType/biFormId fields, not a second
 // DB read, so listing the whole catalogue never costs anything extra.
+//
+// Directive section 8.2: gated on PREVIEWABLE_FORM_IDS (reproduction-
+// rights/document-type eligibility), never on KNOWN_BI_FORM_IDS (engine-
+// mapping completeness) -- a form with no fillable-document mapping yet
+// can still have a safe, authorized, applicant-only blank preview. Whether
+// the underlying R2 object actually exists is checked only when the
+// preview is actually requested (handlePreviewOfficialForm), not here --
+// the same "don't re-check per catalogue listing" posture this function
+// already had.
 function withFormPreviewFlag(shaped) {
-  return { ...shaped, hasOfficialFormPreview: usesProcessingTiers(shaped.offeringType) && !!shaped.biFormId && KNOWN_BI_FORM_IDS.includes(shaped.biFormId) };
+  return { ...shaped, hasOfficialFormPreview: usesProcessingTiers(shaped.offeringType) && !!shaped.biFormId && PREVIEWABLE_FORM_IDS.includes(shaped.biFormId) };
 }
 
 export async function handleListCatalogue(request, env, url) {
@@ -75,23 +84,24 @@ export async function handleGetCatalogueService(request, env, url, serviceId) {
 // form is not private information, and requiring sign-in just to preview
 // it would defeat the point of showing it before the customer commits to
 // anything. 404s (not a confusing blank page) for a service with no
-// engine-mapped BI form -- directive: "show an appropriate service
-// explanation instead of a misleading PDF preview button" is the
+// previewable BI form (PREVIEWABLE_FORM_IDS -- directive section 8.2:
+// eligibility is about reproduction rights/document type, NEVER about
+// whether the form has been engine-mapped) -- "show an appropriate
+// service explanation instead of a misleading PDF preview button" is the
 // customer-facing frontend's job once it sees this 404, not this route's.
 export async function handlePreviewOfficialForm(request, env, serviceId) {
   const service = await getServiceById(env.DB, serviceId);
   if (!service || !service.active) throw new HttpError(404, "Not found");
-  if (!usesProcessingTiers(service.offering_type) || !service.bi_form_id || !KNOWN_BI_FORM_IDS.includes(service.bi_form_id)) {
+  if (!usesProcessingTiers(service.offering_type) || !service.bi_form_id || !PREVIEWABLE_FORM_IDS.includes(service.bi_form_id)) {
     throw new HttpError(404, "No official form preview is available for this service.");
   }
 
-  const { coordinateMap } = getFormConfig(service.bi_form_id);
   const originalObject = await env.BI_FORMS_LIBRARY.get(originalTemplateKey(service.bi_form_id));
   if (!originalObject) {
     throw new HttpError(501, "The official form template is not currently available. Please contact FIS directly.");
   }
   const originalBytes = new Uint8Array(await originalObject.arrayBuffer());
-  const watermarked = await buildWatermarkedFormPreview(originalBytes, coordinateMap);
+  const watermarked = await buildWatermarkedFormPreview(originalBytes);
 
   return new Response(watermarked, {
     headers: {

@@ -1,11 +1,11 @@
-// Phase 2 Stage 5.4: the multilingual BI-form questionnaire renderer,
-// extending the existing authenticated Client Portal (portal-app.js)
-// rather than a separate application -- this file only renders into a
-// section portal-app.js's own renderApplicationDetail() already calls
-// into (see wireBiFormsSection below), and reuses the SAME window.portalFetch
-// helper, the same vanilla-JS/escapeHtml/template-literal style, and the
-// same "API is the source of truth, this is presentation only" posture as
-// every other section of the portal.
+// Phase 2 Stage 5.4 (extended): the multilingual BI-form questionnaire
+// renderer, extending the existing authenticated Client Portal
+// (portal-app.js) rather than a separate application -- this file only
+// renders into a section portal-app.js's own renderApplicationDetail()
+// already calls into (see wireBiFormsSection below), and reuses the SAME
+// window.portalFetch helper, the same vanilla-JS/escapeHtml/template-
+// literal style, and the same "API is the source of truth, this is
+// presentation only" posture as every other section of the portal.
 //
 // Does NOT translate or alter the official English BI PDF in any way --
 // this only localizes the QUESTIONNAIRE chrome and field labels (the
@@ -14,10 +14,51 @@
 // Nothing here ever receives or renders a staff-only field, a staff-only
 // note, or the original BI template -- the API this talks to
 // (worker/src/routes/biFormsCustomer.js) already enforces that server-side.
+//
+// "FINAL BI FORMS AUTOMATION & PREMIUM CUSTOMER EXPERIENCE" directive,
+// sections 6-7: this is a genuine multi-step wizard (Step 1 Applicant
+// Info -> Step 2 Service-Specific -> Step 3 Documents -> Step 4 Review),
+// not a flat form with headings, and the assisted-completion pathway
+// ("I'm not sure") now leads to a real, separately-reviewed SHORTER
+// intake rather than an instant mass-mark-unsure-and-submit. Every
+// question's own `required`/`showIf` rule, and the SAME __unsureFields
+// convention the Worker already validates (relaxRequiredForUnsureFields),
+// is reused unchanged -- no parallel validation system was invented.
 (function () {
   "use strict";
 
   var CANONICAL_LANGUAGES = ["en", "zh-CN", "zh-Hant", "ko", "ja", "vi"];
+
+  // The common-customer-information fields every one of the 3 currently
+  // engine-mapped forms' questionnaires (and, by direct inspection, every
+  // other BI form in the inventory that asks for applicant identity at
+  // all) opens with -- the SAME fields the directive's own section 3
+  // calls out for cross-form reuse. Matching by dataKey, not by position
+  // or by a new per-question "step" property, means this works for every
+  // existing form unchanged and for any future form whose questionnaire
+  // reuses these same dataKeys (exactly as the shared answer schema
+  // intends), with zero changes to any config JSON.
+  var APPLICANT_INFO_DATA_KEYS = [
+    "lastName", "firstName", "middleName", "otherName1", "otherName2",
+    "dobDay", "dobMonth", "dobYear", "gender", "placeOfBirth", "citizenship",
+    "address1", "barangay", "provinceZip", "passportNumber",
+  ];
+
+  // The assisted-completion shortened intake's "essential identification"
+  // subset (directive section 7) -- deliberately smaller than the full
+  // applicant-info step above. Contact number is collected separately
+  // (see ASSIST_CONTACT_KEY below), not from this list.
+  var ASSISTED_MINIMUM_DATA_KEYS = ["lastName", "firstName", "middleName", "dobDay", "dobMonth", "dobYear", "citizenship", "passportNumber"];
+
+  // A reserved-key addition to the answers blob, the same established
+  // pattern as __unsureFields (worker/src/routes/biFormsCustomer.js) --
+  // avoids a schema/migration change for a field that only exists in the
+  // assisted-intake UI, never on the official BI form itself. Stripped
+  // back out before anything is shown as an "official form answer" and
+  // simply saved as part of the draft like any other answer; staff can
+  // read it directly off customer_answers_json via the existing Staff
+  // Portal "Customer Answers" view.
+  var ASSIST_CONTACT_KEY = "__assistContactNumber";
 
   // Deterministic, hand-reviewed strings -- never AI-generated at render
   // time, same posture as worker/src/lib/clientLocaleStrings.js. Reuses
@@ -36,7 +77,7 @@
       optionChooseHeading: "Before you begin",
       optionSelfLabel: "I'll provide the details myself",
       optionAssistLabel: "I'm not sure — let FIS help me (quick start)",
-      optionAssistHelp: "We'll mark anything you haven't filled in as needing our assistance and submit your request now with just what you've already provided. FIS will contact you to complete the rest.",
+      optionAssistHelp: "We'll show you a short form with just the essentials. You'll review and confirm before anything is submitted — FIS will then contact you to complete the rest.",
       assistanceRequestedNotice: "We've marked the unanswered questions as needing FIS assistance and submitted your request. FIS will contact you to complete the remaining details.",
       revisionNotice: "Our staff has requested changes to this form. Please review the note below, update your answers, and submit again.",
       historyLabel: "History", requiredMark: "*", yes: "Yes", no: "No",
@@ -49,6 +90,22 @@
       noDocumentsUploaded: "No documents uploaded yet.", uploadError: "Upload failed. Please check the file type (PDF, JPEG, PNG or WebP) and size (under 15MB), then try again.",
       readyLabel: "Your form has been approved and is ready.", downloadLabel: "Download",
       entryLabel: "Entry {n}", readOnlyNotice: "This form is not currently editable.",
+      stepApplicantInfo: "Applicant Information", stepServiceSpecific: "Service-Specific Information",
+      stepDocuments: "Supporting Documents", stepReview: "Review",
+      stepIndicatorLabel: "Step {n} of {total}",
+      backButton: "Back", continueButton: "Continue",
+      validationIncomplete: "Please complete the required fields below, or mark them \"I'm not sure\", before continuing.",
+      reviewIntro: "Please review your answers below before submitting.",
+      editSectionLabel: "Edit",
+      noAnswerYetLabel: "(not yet provided)",
+      reviewUnsureNote: "marked for FIS assistance",
+      assistIntakeHeading: "Quick Start — A Few Essentials",
+      assistIntakeIntro: "Just the essentials for now. FIS will contact you to complete the rest.",
+      assistContactLabel: "Best contact number",
+      assistReviewHeading: "Review Before Submitting",
+      assistReviewIntro: "Here's what you've provided. Anything left blank will be marked as needing FIS's help. Please review before submitting.",
+      confirmAndSubmitButton: "Confirm and Submit",
+      documentsOptionalNotice: "You may upload what you have now and provide the rest later.",
     },
     "zh-CN": {
       sectionTitle: "BI 表格", noForms: "尚未分配 BI 表格。",
@@ -60,7 +117,7 @@
       optionChooseHeading: "开始之前",
       optionSelfLabel: "我自己填写详细信息",
       optionAssistLabel: "不确定——请FIS协助我（快速开始）",
-      optionAssistHelp: "我们会将您尚未填写的内容标记为需要我们协助，并立即以您已提供的信息提交您的申请。FIS将与您联系以完成其余部分。",
+      optionAssistHelp: "我们将为您显示一份仅包含基本信息的简短表格。提交前您可以核对并确认——之后FIS会与您联系以完成其余部分。",
       assistanceRequestedNotice: "我们已将未回答的问题标记为需要FIS协助，并已提交您的申请。FIS将与您联系以完成剩余细节。",
       revisionNotice: "我们的工作人员已要求对此表格进行修改。请查看下方备注，更新您的答案后重新提交。",
       historyLabel: "历史记录", requiredMark: "*", yes: "是", no: "否",
@@ -73,6 +130,22 @@
       noDocumentsUploaded: "尚未上传任何文件。", uploadError: "上传失败。请检查文件类型（PDF、JPEG、PNG 或 WebP）和大小（小于 15MB）后重试。",
       readyLabel: "您的表格已获批准，现已就绪。", downloadLabel: "下载",
       entryLabel: "第 {n} 项", readOnlyNotice: "此表格当前无法编辑。",
+      stepApplicantInfo: "申请人信息", stepServiceSpecific: "服务相关信息",
+      stepDocuments: "所需文件", stepReview: "核对",
+      stepIndicatorLabel: "第 {n} 步，共 {total} 步",
+      backButton: "上一步", continueButton: "继续",
+      validationIncomplete: "请填写以下必填项，或勾选“不确定”，然后再继续。",
+      reviewIntro: "提交前请核对以下您的答案。",
+      editSectionLabel: "编辑",
+      noAnswerYetLabel: "（尚未提供）",
+      reviewUnsureNote: "已标记为需要FIS协助",
+      assistIntakeHeading: "快速开始——仅需几项基本信息",
+      assistIntakeIntro: "现在只需填写基本信息，其余部分FIS将与您联系完成。",
+      assistContactLabel: "最佳联系电话",
+      assistReviewHeading: "提交前核对",
+      assistReviewIntro: "以下是您已提供的信息。留空的内容将标记为需要FIS协助。请在提交前核对。",
+      confirmAndSubmitButton: "确认并提交",
+      documentsOptionalNotice: "您可以先上传现有文件，其余文件稍后再提供。",
     },
     "zh-Hant": {
       sectionTitle: "BI 表格", noForms: "尚未分配 BI 表格。",
@@ -84,7 +157,7 @@
       optionChooseHeading: "開始之前",
       optionSelfLabel: "我自己填寫詳細資料",
       optionAssistLabel: "不確定——請FIS協助我（快速開始）",
-      optionAssistHelp: "我們會將您尚未填寫的內容標記為需要我們協助，並立即以您已提供的資訊提交您的申請。FIS將與您聯繫以完成其餘部分。",
+      optionAssistHelp: "我們將為您顯示一份僅包含基本資訊的簡短表格。提交前您可以核對並確認——之後FIS會與您聯繫以完成其餘部分。",
       assistanceRequestedNotice: "我們已將未回答的問題標記為需要FIS協助，並已提交您的申請。FIS將與您聯繫以完成剩餘細節。",
       revisionNotice: "我們的工作人員已要求對此表格進行修改。請查看下方備註，更新您的答案後重新提交。",
       historyLabel: "歷史記錄", requiredMark: "*", yes: "是", no: "否",
@@ -97,6 +170,22 @@
       noDocumentsUploaded: "尚未上傳任何文件。", uploadError: "上傳失敗。請檢查檔案類型（PDF、JPEG、PNG 或 WebP）及大小（小於 15MB）後再試一次。",
       readyLabel: "您的表格已獲批准，現已就緒。", downloadLabel: "下載",
       entryLabel: "第 {n} 項", readOnlyNotice: "此表格目前無法編輯。",
+      stepApplicantInfo: "申請人資訊", stepServiceSpecific: "服務相關資訊",
+      stepDocuments: "所需文件", stepReview: "核對",
+      stepIndicatorLabel: "第 {n} 步，共 {total} 步",
+      backButton: "上一步", continueButton: "繼續",
+      validationIncomplete: "請填寫以下必填項，或勾選「不確定」，然後再繼續。",
+      reviewIntro: "提交前請核對以下您的答案。",
+      editSectionLabel: "編輯",
+      noAnswerYetLabel: "（尚未提供）",
+      reviewUnsureNote: "已標記為需要FIS協助",
+      assistIntakeHeading: "快速開始——僅需幾項基本資訊",
+      assistIntakeIntro: "現在只需填寫基本資訊，其餘部分FIS將與您聯繫完成。",
+      assistContactLabel: "最佳聯絡電話",
+      assistReviewHeading: "提交前核對",
+      assistReviewIntro: "以下是您已提供的資訊。留空的內容將標記為需要FIS協助。請在提交前核對。",
+      confirmAndSubmitButton: "確認並提交",
+      documentsOptionalNotice: "您可以先上傳現有文件，其餘文件稍後再提供。",
     },
     ko: {
       sectionTitle: "BI 양식", noForms: "아직 배정된 BI 양식이 없습니다.",
@@ -108,7 +197,7 @@
       optionChooseHeading: "시작하기 전에",
       optionSelfLabel: "제가 직접 작성하겠습니다",
       optionAssistLabel: "잘 모르겠어요 — FIS의 도움을 받고 싶어요 (빠른 시작)",
-      optionAssistHelp: "아직 작성하지 않은 항목은 FIS의 도움이 필요한 것으로 표시하고, 지금까지 입력하신 정보만으로 신청서를 바로 제출합니다. FIS가 연락드려 나머지 내용을 완성하겠습니다.",
+      optionAssistHelp: "필수 정보만 담긴 간단한 양식을 보여드립니다. 제출 전에 검토하고 확인하실 수 있으며, 이후 FIS가 연락드려 나머지를 완료하겠습니다.",
       assistanceRequestedNotice: "답변하지 않은 질문을 FIS 도움이 필요한 것으로 표시하고 신청서를 제출했습니다. FIS가 연락드려 나머지 세부 정보를 완성하겠습니다.",
       revisionNotice: "담당 직원이 이 양식의 수정을 요청했습니다. 아래 메모를 확인하고 답변을 수정한 후 다시 제출해 주십시오.",
       historyLabel: "이력", requiredMark: "*", yes: "예", no: "아니요",
@@ -121,6 +210,22 @@
       noDocumentsUploaded: "아직 업로드된 파일이 없습니다.", uploadError: "업로드에 실패했습니다. 파일 형식(PDF, JPEG, PNG 또는 WebP)과 크기(15MB 미만)를 확인한 후 다시 시도해 주십시오.",
       readyLabel: "양식이 승인되어 준비되었습니다.", downloadLabel: "다운로드",
       entryLabel: "항목 {n}", readOnlyNotice: "이 양식은 현재 편집할 수 없습니다.",
+      stepApplicantInfo: "신청인 정보", stepServiceSpecific: "서비스 관련 정보",
+      stepDocuments: "필요 서류", stepReview: "검토",
+      stepIndicatorLabel: "{total}단계 중 {n}단계",
+      backButton: "이전", continueButton: "계속",
+      validationIncomplete: "계속하려면 아래 필수 항목을 작성하거나 \"잘 모르겠어요\"로 표시해 주십시오.",
+      reviewIntro: "제출하기 전에 아래 답변을 검토해 주십시오.",
+      editSectionLabel: "수정",
+      noAnswerYetLabel: "(아직 제공되지 않음)",
+      reviewUnsureNote: "FIS 지원이 필요한 것으로 표시됨",
+      assistIntakeHeading: "빠른 시작 — 몇 가지 필수 정보",
+      assistIntakeIntro: "지금은 필수 정보만 입력해 주세요. 나머지는 FIS가 연락드려 완료하겠습니다.",
+      assistContactLabel: "연락 가능한 전화번호",
+      assistReviewHeading: "제출 전 검토",
+      assistReviewIntro: "입력하신 내용입니다. 비워둔 항목은 FIS의 도움이 필요한 것으로 표시됩니다. 제출 전에 검토해 주십시오.",
+      confirmAndSubmitButton: "확인 및 제출",
+      documentsOptionalNotice: "지금 가지고 있는 서류를 먼저 업로드하고, 나머지는 나중에 제공하실 수 있습니다.",
     },
     ja: {
       sectionTitle: "BI フォーム", noForms: "まだ割り当てられた BI フォームはありません。",
@@ -132,7 +237,7 @@
       optionChooseHeading: "ご記入の前に",
       optionSelfLabel: "自分で情報を入力します",
       optionAssistLabel: "わからない — FISに手伝ってほしい（クイックスタート）",
-      optionAssistHelp: "未記入の項目はFISのサポートが必要として記録し、現在入力済みの情報のみで今すぐ申請を送信します。残りの項目についてはFISがご連絡いたします。",
+      optionAssistHelp: "基本項目のみの簡単なフォームを表示します。送信前にご確認・ご承認いただけます。その後FISがご連絡の上、残りを完了いたします。",
       assistanceRequestedNotice: "未回答の質問をFISのサポートが必要として記録し、申請を送信しました。残りの詳細についてはFISがご連絡いたします。",
       revisionNotice: "担当者よりこのフォームの修正を依頼されました。下記のメモをご確認のうえ回答を修正し、再度提出してください。",
       historyLabel: "履歴", requiredMark: "*", yes: "はい", no: "いいえ",
@@ -145,6 +250,22 @@
       noDocumentsUploaded: "まだアップロードされたファイルはありません。", uploadError: "アップロードに失敗しました。ファイル形式（PDF、JPEG、PNG、WebP）とサイズ（15MB未満）をご確認のうえ、再度お試しください。",
       readyLabel: "フォームが承認され、準備が完了しました。", downloadLabel: "ダウンロード",
       entryLabel: "項目 {n}", readOnlyNotice: "このフォームは現在編集できません。",
+      stepApplicantInfo: "申請者情報", stepServiceSpecific: "サービス関連情報",
+      stepDocuments: "必要書類", stepReview: "確認",
+      stepIndicatorLabel: "{total}ステップ中のステップ{n}",
+      backButton: "戻る", continueButton: "次へ",
+      validationIncomplete: "続ける前に、以下の必須項目にご入力いただくか、「わからない」にチェックしてください。",
+      reviewIntro: "送信する前に、以下の回答をご確認ください。",
+      editSectionLabel: "編集",
+      noAnswerYetLabel: "（未入力）",
+      reviewUnsureNote: "FISのサポートが必要として記録",
+      assistIntakeHeading: "クイックスタート — 基本項目のみ",
+      assistIntakeIntro: "今は基本項目のみで結構です。残りはFISがご連絡の上完了いたします。",
+      assistContactLabel: "連絡先電話番号",
+      assistReviewHeading: "送信前のご確認",
+      assistReviewIntro: "ご入力いただいた内容です。未入力の項目はFISのサポートが必要として記録されます。送信前にご確認ください。",
+      confirmAndSubmitButton: "確認して送信",
+      documentsOptionalNotice: "現在お持ちの資料のみ先にアップロードし、残りは後日ご提出いただけます。",
     },
     vi: {
       sectionTitle: "Mẫu BI", noForms: "Chưa có mẫu BI nào được chỉ định.",
@@ -156,7 +277,7 @@
       optionChooseHeading: "Trước khi bắt đầu",
       optionSelfLabel: "Tôi sẽ tự cung cấp thông tin",
       optionAssistLabel: "Tôi không chắc — hãy để FIS hỗ trợ tôi (bắt đầu nhanh)",
-      optionAssistHelp: "Chúng tôi sẽ đánh dấu những mục bạn chưa điền là cần FIS hỗ trợ và nộp yêu cầu của bạn ngay với những thông tin bạn đã cung cấp. FIS sẽ liên hệ với bạn để hoàn tất phần còn lại.",
+      optionAssistHelp: "Chúng tôi sẽ hiển thị cho quý khách một mẫu ngắn chỉ gồm các thông tin thiết yếu. Quý khách sẽ xem lại và xác nhận trước khi nộp — sau đó FIS sẽ liên hệ để hoàn tất phần còn lại.",
       assistanceRequestedNotice: "Chúng tôi đã đánh dấu các câu hỏi chưa trả lời là cần FIS hỗ trợ và đã nộp yêu cầu của bạn. FIS sẽ liên hệ với bạn để hoàn tất các chi tiết còn lại.",
       revisionNotice: "Nhân viên của chúng tôi đã yêu cầu chỉnh sửa mẫu này. Vui lòng xem ghi chú dưới đây, cập nhật câu trả lời và nộp lại.",
       historyLabel: "Lịch sử", requiredMark: "*", yes: "Có", no: "Không",
@@ -169,6 +290,22 @@
       noDocumentsUploaded: "Chưa có tệp nào được tải lên.", uploadError: "Tải lên không thành công. Vui lòng kiểm tra loại tệp (PDF, JPEG, PNG hoặc WebP) và kích thước (dưới 15MB), sau đó thử lại.",
       readyLabel: "Mẫu của bạn đã được phê duyệt và sẵn sàng.", downloadLabel: "Tải xuống",
       entryLabel: "Mục {n}", readOnlyNotice: "Mẫu này hiện không thể chỉnh sửa.",
+      stepApplicantInfo: "Thông Tin Người Nộp Đơn", stepServiceSpecific: "Thông Tin Liên Quan Đến Dịch Vụ",
+      stepDocuments: "Hồ Sơ Cần Nộp", stepReview: "Xem Lại",
+      stepIndicatorLabel: "Bước {n}/{total}",
+      backButton: "Quay Lại", continueButton: "Tiếp Tục",
+      validationIncomplete: "Vui lòng hoàn thành các mục bắt buộc dưới đây, hoặc đánh dấu \"Tôi không chắc\", trước khi tiếp tục.",
+      reviewIntro: "Vui lòng xem lại câu trả lời của quý khách dưới đây trước khi nộp.",
+      editSectionLabel: "Chỉnh Sửa",
+      noAnswerYetLabel: "(chưa cung cấp)",
+      reviewUnsureNote: "đã đánh dấu cần FIS hỗ trợ",
+      assistIntakeHeading: "Bắt Đầu Nhanh — Một Vài Thông Tin Thiết Yếu",
+      assistIntakeIntro: "Hiện tại chỉ cần những thông tin thiết yếu. FIS sẽ liên hệ với quý khách để hoàn tất phần còn lại.",
+      assistContactLabel: "Số Điện Thoại Liên Hệ Tốt Nhất",
+      assistReviewHeading: "Xem Lại Trước Khi Nộp",
+      assistReviewIntro: "Đây là những gì quý khách đã cung cấp. Những mục để trống sẽ được đánh dấu là cần FIS hỗ trợ. Vui lòng xem lại trước khi nộp.",
+      confirmAndSubmitButton: "Xác Nhận và Nộp",
+      documentsOptionalNotice: "Quý khách có thể tải lên những gì hiện có và cung cấp phần còn lại sau.",
     },
   };
 
@@ -242,6 +379,25 @@
     return answers[showIf.questionId] === showIf.equals;
   }
 
+  function questionKey(q) {
+    return q.type === "repeatable-group" ? q.groupDataKey : q.dataKey;
+  }
+
+  // Splits a form's full question list into the wizard's Step 1
+  // (applicant info) and Step 2 (everything else, i.e. service-specific)
+  // -- directive section 6. A form with no service-specific questions at
+  // all (e.g. CCS-A-CDR-2016, 2014-13-002) simply gets an empty step2,
+  // which the wizard skips (see totalSteps/stepSequence below) --
+  // "step count/order may vary by form" is handled by this split being
+  // computed per-form, not by hardcoding a fixed step count anywhere.
+  function classifyQuestions(questions) {
+    var step1 = [], step2 = [];
+    questions.forEach(function (q) {
+      (APPLICANT_INFO_DATA_KEYS.indexOf(questionKey(q)) !== -1 ? step1 : step2).push(q);
+    });
+    return { step1: step1, step2: step2 };
+  }
+
   function getAnswerValue(formEl, dataKey) {
     var radios = formEl.querySelectorAll('[data-answer-key="' + dataKey + '"][type="radio"]');
     if (radios.length) {
@@ -253,14 +409,14 @@
     return el ? el.value : undefined;
   }
 
-  // Re-evaluates every showIf-gated question's visibility from the form's
-  // OWN current DOM state, without re-rendering (preserves focus/cursor
-  // position while typing). Called on every input/change within the form.
-  function updateConditionalVisibility(formEl, questions) {
-    var answers = {};
-    questions.forEach(function (q) {
-      if (q.type !== "repeatable-group") answers[q.dataKey] = getAnswerValue(formEl, q.dataKey);
-    });
+  // Re-evaluates every showIf-gated question's visibility against an
+  // externally supplied, already-merged `answers` object (see
+  // collectAnswers below) rather than re-reading the whole questionnaire
+  // from the DOM -- necessary now that only ONE step's worth of questions
+  // is ever in the DOM at a time, but a showIf's target question could in
+  // principle live in an earlier step. Called on every input/change
+  // within the current step's form.
+  function updateConditionalVisibility(formEl, questions, answers) {
     questions.forEach(function (q) {
       if (!q.showIf) return;
       var wrapper = formEl.querySelector('[data-question-wrapper="' + q.id + '"]');
@@ -329,11 +485,24 @@
     return '<div class="form-field" ' + wrapperAttrs + '><label>' + label + mark + '</label>' + fieldHtml + unsureCheckboxHtml(lang, q.dataKey, isUnsure(answers, q.dataKey)) + '</div>';
   }
 
-  function collectAnswers(formEl, questions) {
-    var answers = {};
-    var unsureFields = [];
+  // Merges whatever the CURRENTLY RENDERED subset of `questions` holds in
+  // the DOM into `baseAnswers`, leaving every other key (any field that
+  // belongs to a step not currently in the DOM) completely untouched.
+  // This is what makes per-step rendering safe: calling this with only
+  // Step 1's questions while the customer is on Step 1 can never erase
+  // Step 2's already-collected answers, and vice versa. The single flat
+  // read-only view (a submitted/approved submission) still works
+  // correctly too, since it renders every question in one `questions`
+  // list and simply has nothing left over to preserve.
+  function collectAnswers(formEl, questions, baseAnswers) {
+    var answers = Object.assign({}, baseAnswers);
+    var unsureSet = {};
+    (Array.isArray(baseAnswers.__unsureFields) ? baseAnswers.__unsureFields : []).forEach(function (k) { unsureSet[k] = true; });
+
     questions.forEach(function (q) {
       if (q.type === "repeatable-group") {
+        var firstEl = formEl.querySelector('[data-group-key="' + q.groupDataKey + '"][data-group-index="0"]');
+        if (!firstEl) return; // this group isn't part of the currently rendered step
         var items = [];
         for (var i = 0; i < q.maxCount; i++) {
           var item = {};
@@ -344,13 +513,15 @@
           items.push(item);
         }
         answers[q.groupDataKey] = items;
-        if (isUnsureChecked(formEl, q.groupDataKey)) unsureFields.push(q.groupDataKey);
+        if (isUnsureChecked(formEl, q.groupDataKey)) unsureSet[q.groupDataKey] = true; else delete unsureSet[q.groupDataKey];
       } else {
+        if (!formEl.querySelector('[data-answer-key="' + q.dataKey + '"]')) return; // not part of the currently rendered step
         answers[q.dataKey] = getAnswerValue(formEl, q.dataKey);
-        if (isUnsureChecked(formEl, q.dataKey)) unsureFields.push(q.dataKey);
+        if (isUnsureChecked(formEl, q.dataKey)) unsureSet[q.dataKey] = true; else delete unsureSet[q.dataKey];
       }
     });
-    answers.__unsureFields = unsureFields;
+
+    answers.__unsureFields = Object.keys(unsureSet);
     return answers;
   }
 
@@ -359,11 +530,72 @@
     return !!(el && el.checked);
   }
 
-  function renderBiFormDetailHtml(lang, data, docsData) {
+  function hasAnswerValue(q, answers) {
+    var key = questionKey(q);
+    if (q.type === "repeatable-group") {
+      return Array.isArray(answers[key]) && answers[key].some(function (item) { return Object.keys(item || {}).some(function (k) { return item[k]; }); });
+    }
+    return answers[key] !== undefined && answers[key] !== null && answers[key] !== "";
+  }
+
+  // Mirrors (does not duplicate the AUTHORITY of) the Worker's own
+  // relaxRequiredForUnsureFields + validateAnswers rule, scoped to just
+  // the questions passed in -- used to validate ONE step at a time before
+  // letting the customer click Continue. The server re-validates the
+  // WHOLE questionnaire independently at actual submit time regardless;
+  // this only improves the customer-facing experience of finding out
+  // what's missing before they reach the end.
+  function missingRequiredFields(questions, answers) {
+    var unsureSet = {};
+    (Array.isArray(answers.__unsureFields) ? answers.__unsureFields : []).forEach(function (k) { unsureSet[k] = true; });
+    return questions.filter(function (q) {
+      if (q.required === false) return false;
+      if (q.showIf && !isGateSatisfied(q.showIf, answers)) return false;
+      if (unsureSet[questionKey(q)]) return false;
+      return !hasAnswerValue(q, answers);
+    });
+  }
+
+  function stepIndicatorHtml(lang, stepLabels, currentIndex) {
+    var items = stepLabels
+      .map(function (label, i) {
+        var cls = "portal-wizard-step" + (i === currentIndex ? " portal-wizard-step--current" : i < currentIndex ? " portal-wizard-step--done" : "");
+        return '<li class="' + cls + '"><span class="portal-wizard-step__num">' + (i + 1) + '</span><span class="portal-wizard-step__label">' + escapeHtml(label) + '</span></li>';
+      })
+      .join("");
+    return '<ol class="portal-wizard-steps" role="list" aria-label="' + escapeAttr(t(lang, "stepIndicatorLabel").replace("{n}", String(currentIndex + 1)).replace("{total}", String(stepLabels.length))) + '">' + items + '</ol>';
+  }
+
+  function reviewRowHtml(lang, q, answers, onEditStep) {
+    var label = escapeHtml(labelFor(q.labels, lang));
+    var unsure = isUnsure(answers, questionKey(q));
+    var valueHtml;
+    if (q.type === "repeatable-group") {
+      var items = (answers[q.groupDataKey] || []).filter(function (item) { return Object.keys(item || {}).some(function (k) { return item[k]; }); });
+      valueHtml = items.length
+        ? '<ul class="portal-review-group">' + items.map(function (item) {
+            return '<li>' + (q.subQuestions || [])
+              .filter(function (sub) { return item[sub.dataKey]; })
+              .map(function (sub) { return escapeHtml(labelFor(sub.labels, lang)) + ': ' + escapeHtml(item[sub.dataKey]); })
+              .join(", ") + '</li>';
+          }).join("") + '</ul>'
+        : '<span class="muted">' + escapeHtml(t(lang, "noAnswerYetLabel")) + '</span>';
+    } else if (q.type === "yesno") {
+      var v = answers[q.dataKey];
+      valueHtml = v === true ? escapeHtml(t(lang, "yes")) : v === false ? escapeHtml(t(lang, "no")) : '<span class="muted">' + escapeHtml(t(lang, "noAnswerYetLabel")) + '</span>';
+    } else {
+      valueHtml = answers[q.dataKey] ? escapeHtml(answers[q.dataKey]) : '<span class="muted">' + escapeHtml(t(lang, "noAnswerYetLabel")) + '</span>';
+    }
+    var unsureNote = unsure ? ' <span class="portal-review-unsure-note">(' + escapeHtml(t(lang, "reviewUnsureNote")) + ')</span>' : "";
+    return '<div class="portal-review-row"><dt>' + label + '</dt><dd>' + valueHtml + unsureNote + '</dd></div>';
+  }
+
+  function renderBiFormDetailHtml(lang, data, docsData, ui) {
     var submission = data.submission;
     var questionnaire = data.questionnaire;
     var editable = CUSTOMER_EDITABLE_STATUSES[submission.status];
     var availableLangs = questionnaire.languages || CANONICAL_LANGUAGES;
+    var answers = submission.answers || {};
 
     var langOptions = availableLangs
       .map(function (code) {
@@ -378,11 +610,12 @@
         (lastNote ? '<p class="muted">' + escapeHtml(lastNote.note) + '</p>' : "") + '</div>';
     }
 
-    var questionsHtml = questionnaire.questions.map(function (q) { return renderQuestionHtml(q, lang, submission.answers || {}); }).join("");
-
     var uploadsHtml = (docsData.uploads || [])
       .map(function (u) { return '<li>' + escapeHtml(u.original_filename) + '</li>'; })
       .join("") || '<li class="muted">' + escapeHtml(t(lang, "noDocumentsUploaded")) + '</li>';
+    var uploadsBlockHtml = '<h3>' + escapeHtml(t(lang, "documentsLabel")) + '</h3>' +
+      '<ul class="portal-bi-form-uploads">' + uploadsHtml + '</ul>' +
+      (editable ? '<p class="muted">' + escapeHtml(t(lang, "documentsOptionalNotice")) + '</p><label class="portal-upload-label">' + escapeHtml(t(lang, "uploadLabel")) + '<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" class="portal-bi-form-upload"></label>' : "");
 
     var previewHtml = "";
     if (submission.publishedAt && docsData.documents && docsData.documents.length) {
@@ -394,36 +627,107 @@
           .join(" ") + '</div>';
     }
 
-    // Directive section 7: the Option 1/Option 2 choice shown at the
-    // beginning of a fresh (never-yet-answered) application. "I'll
-    // provide the details myself" simply dismisses this panel -- the
-    // questionnaire below is always there regardless, so declining the
-    // offer costs nothing. "I'm not sure -- let FIS help me" is wired in
-    // renderInto() below: it marks every still-unanswered question
-    // unsure and submits immediately with only what's already provided.
-    var hasAnyAnswers = Object.keys(submission.answers || {}).some(function (k) {
-      return k !== "__unsureFields" && submission.answers[k];
-    });
-    var showChoicePanel = editable && submission.status === "draft" && !hasAnyAnswers;
-    var choicePanelHtml = showChoicePanel
-      ? '<div class="portal-bi-form-choice-panel"><h3>' + escapeHtml(t(lang, "optionChooseHeading")) + '</h3>' +
+    var bodyHtml;
+
+    if (!editable) {
+      // Read-only: a flat list of every question is still the clearest
+      // way to show a submitted/under-review/approved/published form's
+      // answers back -- there is no step navigation DECISION to make once
+      // nothing can be changed, so the wizard chrome would add nothing.
+      var questionsHtml = questionnaire.questions.map(function (q) { return renderQuestionHtml(q, lang, answers); }).join("");
+      var unsureFieldsCount = Array.isArray(answers.__unsureFields) ? answers.__unsureFields.length : 0;
+      var actionsHtml = unsureFieldsCount
+        ? '<p class="muted">' + escapeHtml(t(lang, "assistanceRequestedNotice")) + '</p>'
+        : '<p class="muted">' + escapeHtml(t(lang, "readOnlyNotice")) + '</p>';
+      bodyHtml = revisionNote + '<form class="portal-bi-form-form">' + questionsHtml + '</form>' + actionsHtml + uploadsBlockHtml + previewHtml;
+    } else if (ui.mode === "choice") {
+      bodyHtml = revisionNote +
+        '<div class="portal-bi-form-choice-panel"><h3>' + escapeHtml(t(lang, "optionChooseHeading")) + '</h3>' +
         '<p class="enquiry-form-actions">' +
         '<button type="button" class="btn btn-secondary portal-bi-form-choice-self">' + escapeHtml(t(lang, "optionSelfLabel")) + '</button>' +
         '<button type="button" class="btn btn-primary portal-bi-form-choice-assist">' + escapeHtml(t(lang, "optionAssistLabel")) + '</button>' +
-        '</p><p class="muted">' + escapeHtml(t(lang, "optionAssistHelp")) + '</p></div>'
-      : "";
+        '</p><p class="muted">' + escapeHtml(t(lang, "optionAssistHelp")) + '</p></div>';
+    } else if (ui.mode === "assist-intake" || ui.mode === "assist-review") {
+      var minimumQuestions = questionnaire.questions.filter(function (q) { return ASSISTED_MINIMUM_DATA_KEYS.indexOf(questionKey(q)) !== -1; });
+      if (ui.mode === "assist-intake") {
+        var contactValue = escapeAttr(answers[ASSIST_CONTACT_KEY] || "");
+        var minFieldsHtml = minimumQuestions.map(function (q) { return renderQuestionHtml(q, lang, answers); }).join("");
+        bodyHtml = revisionNote +
+          '<h3>' + escapeHtml(t(lang, "assistIntakeHeading")) + '</h3><p class="muted">' + escapeHtml(t(lang, "assistIntakeIntro")) + '</p>' +
+          '<form class="portal-bi-form-form portal-assist-intake-form">' + minFieldsHtml +
+          '<div class="form-field"><label>' + escapeHtml(t(lang, "assistContactLabel")) + '</label><input type="text" data-answer-key="' + ASSIST_CONTACT_KEY + '" value="' + contactValue + '"></div>' +
+          '</form>' + uploadsBlockHtml +
+          '<div class="enquiry-form-actions"><button type="button" class="btn btn-primary portal-wizard-continue">' + escapeHtml(t(lang, "continueButton")) + '</button><p class="portal-bi-form-status form-status" aria-live="polite"></p></div>';
+      } else {
+        var reviewRows = minimumQuestions.map(function (q) { return reviewRowHtml(lang, q, answers); }).join("");
+        var contactRow = '<div class="portal-review-row"><dt>' + escapeHtml(t(lang, "assistContactLabel")) + '</dt><dd>' + (answers[ASSIST_CONTACT_KEY] ? escapeHtml(answers[ASSIST_CONTACT_KEY]) : '<span class="muted">' + escapeHtml(t(lang, "noAnswerYetLabel")) + '</span>') + '</dd></div>';
+        bodyHtml = revisionNote +
+          '<h3>' + escapeHtml(t(lang, "assistReviewHeading")) + '</h3><p class="muted">' + escapeHtml(t(lang, "assistReviewIntro")) + '</p>' +
+          '<dl class="portal-review-list">' + reviewRows + contactRow + '</dl>' +
+          uploadsBlockHtml +
+          '<div class="enquiry-form-actions">' +
+          '<button type="button" class="btn btn-secondary portal-wizard-back">' + escapeHtml(t(lang, "backButton")) + '</button>' +
+          '<button type="button" class="btn btn-primary portal-assist-confirm-submit">' + escapeHtml(t(lang, "confirmAndSubmitButton")) + '</button>' +
+          '<p class="portal-bi-form-status form-status" aria-live="polite"></p></div>';
+      }
+    } else {
+      // Genuine multi-step wizard (directive section 6): Step 1 applicant
+      // info -> Step 2 service-specific (only if the form actually has
+      // any) -> Step 3 documents -> Step 4 review -> existing
+      // Save Draft/Submit actions.
+      var split = classifyQuestions(questionnaire.questions);
+      var stepSequence = ["info"];
+      if (split.step2.length) stepSequence.push("service");
+      stepSequence.push("documents", "review");
+      var stepLabelKeys = { info: "stepApplicantInfo", service: "stepServiceSpecific", documents: "stepDocuments", review: "stepReview" };
+      var currentKey = stepSequence[ui.step] || stepSequence[0];
+      var currentIndex = ui.step;
+      var indicatorHtml = stepIndicatorHtml(lang, stepSequence.map(function (k) { return t(lang, stepLabelKeys[k]); }), currentIndex);
 
-    var unsureFieldsCount = Array.isArray(submission.answers && submission.answers.__unsureFields) ? submission.answers.__unsureFields.length : 0;
-    var actionsHtml = editable
-      ? '<div class="enquiry-form-actions">' +
-        '<button type="button" class="btn btn-secondary portal-bi-form-save">' + escapeHtml(t(lang, "saveDraft")) + '</button>' +
-        '<button type="button" class="btn btn-primary portal-bi-form-submit">' + escapeHtml(t(lang, "submit")) + '</button>' +
-        '<p class="portal-bi-form-status form-status" aria-live="polite"></p>' +
-        '</div>' +
-        '<p class="muted">' + escapeHtml(t(lang, "submitNotice")) + '</p>'
-      : unsureFieldsCount
-        ? '<p class="muted">' + escapeHtml(t(lang, "assistanceRequestedNotice")) + '</p>'
-        : '<p class="muted">' + escapeHtml(t(lang, "readOnlyNotice")) + '</p>';
+      var stepContentHtml;
+      var navHtml;
+      if (currentKey === "info" || currentKey === "service") {
+        var stepQuestions = currentKey === "info" ? split.step1 : split.step2;
+        var fieldsHtml = stepQuestions.map(function (q) { return renderQuestionHtml(q, lang, answers); }).join("");
+        stepContentHtml = '<form class="portal-bi-form-form portal-wizard-step-form">' + fieldsHtml + '</form>';
+        var backBtn = currentIndex > 0 ? '<button type="button" class="btn btn-secondary portal-wizard-back">' + escapeHtml(t(lang, "backButton")) + '</button>' : "";
+        navHtml = '<div class="enquiry-form-actions">' + backBtn +
+          '<button type="button" class="btn btn-secondary portal-bi-form-save">' + escapeHtml(t(lang, "saveDraft")) + '</button>' +
+          '<button type="button" class="btn btn-primary portal-wizard-continue">' + escapeHtml(t(lang, "continueButton")) + '</button>' +
+          '<p class="portal-bi-form-status form-status" aria-live="polite"></p></div>';
+      } else if (currentKey === "documents") {
+        // Step 3: the ONLY step that shows the upload control -- info,
+        // service and review deliberately do not repeat it.
+        stepContentHtml = uploadsBlockHtml;
+        navHtml = '<div class="enquiry-form-actions">' +
+          '<button type="button" class="btn btn-secondary portal-wizard-back">' + escapeHtml(t(lang, "backButton")) + '</button>' +
+          '<button type="button" class="btn btn-primary portal-wizard-continue">' + escapeHtml(t(lang, "continueButton")) + '</button>' +
+          '<p class="portal-bi-form-status form-status" aria-live="polite"></p></div>';
+      } else {
+        // review: a full, read-only summary of every step's answers
+        // (directive: "do not claim the review experience is complete
+        // solely because customers can scroll through and edit the
+        // questionnaire" -- this is a genuinely separate, later step, not
+        // more of the same flat form) plus the uploaded-documents list
+        // (read-only here -- the upload control itself stays on Step 3).
+        var allQuestions = split.step1.concat(split.step2);
+        var reviewRowsHtml = allQuestions.map(function (q) { return reviewRowHtml(lang, q, answers); }).join("");
+        var uploadsReadOnlyHtml = '<h3>' + escapeHtml(t(lang, "documentsLabel")) + '</h3><ul class="portal-bi-form-uploads">' + uploadsHtml + '</ul>';
+        stepContentHtml = '<p class="muted">' + escapeHtml(t(lang, "reviewIntro")) + '</p>' +
+          '<dl class="portal-review-list">' + reviewRowsHtml + '</dl>' +
+          '<button type="button" class="btn btn-secondary portal-review-edit" data-goto-step="0">' + escapeHtml(t(lang, "editSectionLabel")) + ' — ' + escapeHtml(t(lang, stepLabelKeys.info)) + '</button> ' +
+          (split.step2.length ? '<button type="button" class="btn btn-secondary portal-review-edit" data-goto-step="1">' + escapeHtml(t(lang, "editSectionLabel")) + ' — ' + escapeHtml(t(lang, stepLabelKeys.service)) + '</button>' : "") +
+          uploadsReadOnlyHtml;
+        navHtml = '<div class="enquiry-form-actions">' +
+          '<button type="button" class="btn btn-secondary portal-wizard-back">' + escapeHtml(t(lang, "backButton")) + '</button>' +
+          '<button type="button" class="btn btn-secondary portal-bi-form-save">' + escapeHtml(t(lang, "saveDraft")) + '</button>' +
+          '<button type="button" class="btn btn-primary portal-bi-form-submit">' + escapeHtml(t(lang, "submit")) + '</button>' +
+          '<p class="portal-bi-form-status form-status" aria-live="polite"></p></div>' +
+          '<p class="muted">' + escapeHtml(t(lang, "submitNotice")) + '</p>';
+      }
+
+      bodyHtml = revisionNote + indicatorHtml + stepContentHtml + navHtml;
+    }
 
     return '<div class="card portal-detail-card portal-bi-form-detail" data-submission-id="' + submission.id + '" data-lang="' + lang + '">' +
       '<button type="button" class="btn btn-secondary portal-bi-form-back">' + escapeHtml(t(lang, "backToApplication")) + '</button>' +
@@ -431,13 +735,7 @@
       '<p class="muted">' + escapeHtml(t(lang, "technicalReferenceLabel")) + ' ' + escapeHtml(submission.technicalReference || questionnaire.formId) + '</p>' +
       '<p><strong>' + escapeHtml(t(lang, "languageLabel")) + ':</strong> <select class="portal-bi-form-lang">' + langOptions + '</select></p>' +
       '<p class="muted">' + escapeHtml(t(lang, "instructions")) + '</p>' +
-      choicePanelHtml +
-      revisionNote +
-      '<form class="portal-bi-form-form">' + questionsHtml + '</form>' +
-      actionsHtml +
-      '<h3>' + escapeHtml(t(lang, "documentsLabel")) + '</h3>' +
-      '<ul class="portal-bi-form-uploads">' + uploadsHtml + '</ul>' +
-      (editable ? '<label class="portal-upload-label">' + escapeHtml(t(lang, "uploadLabel")) + '<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" class="portal-bi-form-upload"></label>' : "") +
+      bodyHtml +
       previewHtml +
       '</div>';
   }
@@ -462,50 +760,85 @@
       var data = results[0];
       var docsData = results[1];
       var lang = pickLanguage(data.submission, { preferredCommunicationLanguage: clientPreferredLanguage });
-      renderInto(data, docsData, lang);
+
+      // Entry-point decision (directive section 7): a fresh, never-
+      // touched draft shows the Option 1/Option 2 choice first. Anything
+      // else (already has answers, mid-revision, read-only) goes straight
+      // into the wizard/flat view -- declining the choice costs nothing,
+      // it's never shown again once any answer exists.
+      var hasAnyAnswers = Object.keys(data.submission.answers || {}).some(function (k) {
+        return k !== "__unsureFields" && data.submission.answers[k];
+      });
+      var ui = CUSTOMER_EDITABLE_STATUSES[data.submission.status] && data.submission.status === "draft" && !hasAnyAnswers
+        ? { mode: "choice" }
+        : { mode: "wizard", step: 0 };
+
+      renderInto(data, docsData, lang, ui);
     });
 
-    function renderInto(data, docsData, lang) {
-      containerEl.innerHTML = renderBiFormDetailHtml(lang, data, docsData);
+    function renderInto(data, docsData, lang, ui) {
+      containerEl.innerHTML = renderBiFormDetailHtml(lang, data, docsData, ui);
       var root = containerEl.querySelector(".portal-bi-form-detail");
-      var formEl = root.querySelector(".portal-bi-form-form");
       var statusEl = root.querySelector(".portal-bi-form-status");
 
       root.querySelector(".portal-bi-form-back").addEventListener("click", onBack);
 
       root.querySelector(".portal-bi-form-lang").addEventListener("change", function (event) {
-        var newLang = event.target.value;
-        // Current in-progress (unsaved) answers are preserved across a
-        // language switch by collecting them from the DOM before
-        // re-rendering with the new language's labels.
-        data.submission.answers = Object.assign({}, data.submission.answers, collectAnswers(formEl, data.questionnaire.questions));
-        renderInto(data, docsData, newLang);
+        renderInto(data, docsData, event.target.value, ui);
       });
 
-      formEl.addEventListener("input", function () { updateConditionalVisibility(formEl, data.questionnaire.questions); });
-      formEl.addEventListener("change", function () { updateConditionalVisibility(formEl, data.questionnaire.questions); });
-      updateConditionalVisibility(formEl, data.questionnaire.questions);
-
-      var saveBtn = root.querySelector(".portal-bi-form-save");
-      if (saveBtn) {
-        saveBtn.addEventListener("click", function () {
-          var answers = collectAnswers(formEl, data.questionnaire.questions);
-          statusEl.textContent = t(lang, "saving");
-          window
-            .portalFetch("/api/bi-forms/" + submissionId + "/draft", {
-              method: "PATCH",
-              body: JSON.stringify({ answers: answers, preferredLanguage: lang }),
-            })
-            .then(function (resp) {
-              statusEl.textContent = resp.ok ? t(lang, "saved") : t(lang, "saveError");
-              if (resp.ok) data.submission.answers = answers;
-            })
-            .catch(function () { statusEl.textContent = t(lang, "saveError"); });
-        });
+      // The step's own <form>, if this screen has one (choice panel and
+      // the assist-review summary don't).
+      var formEl = root.querySelector(".portal-bi-form-form");
+      var split = classifyQuestions(data.questionnaire.questions);
+      var currentStepQuestions = [];
+      if (ui.mode === "wizard") {
+        var stepSequence = ["info"];
+        if (split.step2.length) stepSequence.push("service");
+        stepSequence.push("documents", "review");
+        var currentKey = stepSequence[ui.step] || stepSequence[0];
+        currentStepQuestions = currentKey === "info" ? split.step1 : currentKey === "service" ? split.step2 : [];
+      } else if (ui.mode === "assist-intake") {
+        currentStepQuestions = data.questionnaire.questions.filter(function (q) { return ASSISTED_MINIMUM_DATA_KEYS.indexOf(questionKey(q)) !== -1; });
       }
 
-      // Shared by the normal Submit button and the "I'm not sure -- let FIS
-      // help me (quick start)" choice-panel button below -- both save the
+      function mergeCollect() {
+        if (!formEl) return data.submission.answers || {};
+        var merged = collectAnswers(formEl, currentStepQuestions, data.submission.answers || {});
+        // The assist-intake contact field is outside the shared
+        // questionnaire schema -- merged separately, same reserved-key
+        // convention as __unsureFields.
+        var contactEl = formEl.querySelector('[data-answer-key="' + ASSIST_CONTACT_KEY + '"]');
+        if (contactEl) merged[ASSIST_CONTACT_KEY] = contactEl.value;
+        data.submission.answers = merged;
+        return merged;
+      }
+
+      if (formEl && currentStepQuestions.length) {
+        formEl.addEventListener("input", function () { updateConditionalVisibility(formEl, currentStepQuestions, mergeCollect()); });
+        formEl.addEventListener("change", function () { updateConditionalVisibility(formEl, currentStepQuestions, mergeCollect()); });
+        updateConditionalVisibility(formEl, currentStepQuestions, data.submission.answers || {});
+      }
+
+      function goTo(nextUi) {
+        if (formEl) mergeCollect();
+        ui = nextUi;
+        renderInto(data, docsData, lang, ui);
+      }
+
+      function saveDraft(answers, onDone) {
+        statusEl.textContent = t(lang, "saving");
+        return window
+          .portalFetch("/api/bi-forms/" + submissionId + "/draft", { method: "PATCH", body: JSON.stringify({ answers: answers, preferredLanguage: lang }) })
+          .then(function (resp) {
+            statusEl.textContent = resp.ok ? t(lang, "saved") : t(lang, "saveError");
+            if (onDone) onDone(resp.ok);
+          })
+          .catch(function () { statusEl.textContent = t(lang, "saveError"); });
+      }
+
+      // Shared by the final Submit button (full wizard review step) and
+      // the assisted-intake's own "Confirm and Submit" -- both save the
       // given answers as the draft, then submit, then re-open the
       // submission so its new (read-only) state is reflected everywhere,
       // including the Staff Portal's own view of the same data.
@@ -527,45 +860,69 @@
           .catch(function () { statusEl.textContent = t(lang, "submitError"); });
       }
 
-      var submitBtn = root.querySelector(".portal-bi-form-submit");
-      if (submitBtn) {
-        submitBtn.addEventListener("click", function () {
-          submitWithAnswers(collectAnswers(formEl, data.questionnaire.questions));
-        });
-      }
-
+      // ---- Choice panel ----
       var choiceSelfBtn = root.querySelector(".portal-bi-form-choice-self");
-      if (choiceSelfBtn) {
-        choiceSelfBtn.addEventListener("click", function () {
-          var panel = root.querySelector(".portal-bi-form-choice-panel");
-          if (panel) panel.remove();
-        });
-      }
-
+      if (choiceSelfBtn) choiceSelfBtn.addEventListener("click", function () { goTo({ mode: "wizard", step: 0 }); });
       var choiceAssistBtn = root.querySelector(".portal-bi-form-choice-assist");
-      if (choiceAssistBtn) {
-        choiceAssistBtn.addEventListener("click", function () {
-          // Directive section 7's full assisted-completion pathway: every
-          // CURRENTLY required-and-unanswered question (same `required`/
-          // `showIf` rules the questionnaire already enforces -- nothing
-          // re-implemented here) is marked unsure, preserving anything the
-          // customer already typed, and the request is submitted now with
-          // just that. Never invents an answer for any of them.
-          var answers = collectAnswers(formEl, data.questionnaire.questions);
+      if (choiceAssistBtn) choiceAssistBtn.addEventListener("click", function () { goTo({ mode: "assist-intake" }); });
+
+      // ---- Assisted shortened intake ----
+      if (ui.mode === "assist-intake") {
+        root.querySelector(".portal-wizard-continue").addEventListener("click", function () { goTo({ mode: "assist-review" }); });
+      }
+      if (ui.mode === "assist-review") {
+        root.querySelector(".portal-wizard-back").addEventListener("click", function () { goTo({ mode: "assist-intake" }); });
+        root.querySelector(".portal-assist-confirm-submit").addEventListener("click", function () {
+          // Directive section 7's full assisted-completion pathway:
+          // deliberate, explicit confirm here -- never auto-submitted
+          // merely by picking "let FIS help me" earlier. Every question
+          // the customer did not answer in the shortened intake (plus
+          // every question outside it entirely, since the full form was
+          // never shown) is marked unsure; nothing is ever invented.
+          var answers = Object.assign({}, data.submission.answers || {});
           var unsure = {};
           (answers.__unsureFields || []).forEach(function (k) { unsure[k] = true; });
           data.questionnaire.questions.forEach(function (q) {
-            var key = q.type === "repeatable-group" ? q.groupDataKey : q.dataKey;
             if (q.required === false) return;
             if (q.showIf && !isGateSatisfied(q.showIf, answers)) return;
-            var hasValue = q.type === "repeatable-group" ? Array.isArray(answers[key]) && answers[key].some(function (item) { return Object.keys(item || {}).some(function (k) { return item[k]; }); }) : !!answers[key];
-            if (!hasValue) unsure[key] = true;
+            if (!hasAnswerValue(q, answers)) unsure[questionKey(q)] = true;
           });
           answers.__unsureFields = Object.keys(unsure);
           submitWithAnswers(answers);
         });
       }
 
+      // ---- Wizard navigation ----
+      if (ui.mode === "wizard") {
+        var continueBtn = root.querySelector(".portal-wizard-continue");
+        if (continueBtn) {
+          continueBtn.addEventListener("click", function () {
+            var answers = mergeCollect();
+            if (currentStepQuestions.length) {
+              var missing = missingRequiredFields(currentStepQuestions, answers);
+              if (missing.length) {
+                statusEl.textContent = t(lang, "validationIncomplete");
+                return;
+              }
+            }
+            goTo({ mode: "wizard", step: ui.step + 1 });
+          });
+        }
+        var backBtn = root.querySelector(".portal-wizard-back");
+        if (backBtn) backBtn.addEventListener("click", function () { goTo({ mode: "wizard", step: Math.max(0, ui.step - 1) }); });
+        root.querySelectorAll(".portal-review-edit").forEach(function (btn) {
+          btn.addEventListener("click", function () { goTo({ mode: "wizard", step: Number(btn.dataset.gotoStep) }); });
+        });
+
+        var saveBtn = root.querySelector(".portal-bi-form-save");
+        if (saveBtn) saveBtn.addEventListener("click", function () { saveDraft(mergeCollect()); });
+
+        var submitBtn = root.querySelector(".portal-bi-form-submit");
+        if (submitBtn) submitBtn.addEventListener("click", function () { submitWithAnswers(data.submission.answers || {}); });
+      }
+
+      // ---- Uploads (available on the Documents step, the review step,
+      // and the assisted-intake screen alike) ----
       var uploadInput = root.querySelector(".portal-bi-form-upload");
       if (uploadInput) {
         uploadInput.addEventListener("change", function () {
@@ -578,18 +935,19 @@
                 return;
               }
               // Refreshes ONLY the uploads list in place, not the whole
-              // form (openBiFormDetail re-fetches from the server and
-              // would otherwise silently discard any answer the customer
-              // has typed but not yet saved as a draft).
+              // screen (re-rendering would otherwise discard any answer
+              // the customer has typed but not yet saved as a draft).
               return window
                 .portalFetch("/api/bi-forms/" + submissionId + "/documents")
                 .then(function (r) { return r.json(); })
                 .then(function (freshDocsData) {
                   docsData.uploads = freshDocsData.uploads;
                   var uploadsEl = root.querySelector(".portal-bi-form-uploads");
-                  uploadsEl.innerHTML =
-                    (freshDocsData.uploads || []).map(function (u) { return "<li>" + escapeHtml(u.original_filename) + "</li>"; }).join("") ||
-                    '<li class="muted">' + escapeHtml(t(lang, "noDocumentsUploaded")) + "</li>";
+                  if (uploadsEl) {
+                    uploadsEl.innerHTML =
+                      (freshDocsData.uploads || []).map(function (u) { return "<li>" + escapeHtml(u.original_filename) + "</li>"; }).join("") ||
+                      '<li class="muted">' + escapeHtml(t(lang, "noDocumentsUploaded")) + "</li>";
+                  }
                 });
             })
             .catch(function () { statusEl.textContent = t(lang, "uploadError"); });
