@@ -54,10 +54,10 @@ Per the master directive's required scheme:
 | Request for Certified True Copy (CTC) of Records | `ADM05.QF.001` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Distinct two-column "OFFICIAL USE ONLY" layout, taller page (612×1008pt), row-shared-bottom-line field style (a genuinely different template family). 8th form mapped. |
 | Emigration Clearance Certificate (ECC) Application Form | `ARD04.QF.003` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 5-option application-type checkbox group, Sex, 6-option Marital Status, Spouse fields, 22-cell SSRN comb, and a staff-only derogatory-record subsection. First form found with a non-zero MediaBox origin (a Canva export artifact); documented in the config's own `mediaBoxOriginNote`. 9th form mapped. |
 | CGAF for Extension of Stay of Temporary Visitor's Visa | `IRD04.QF.004` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Photo-requirement sidebar (handled via the existing document-upload feature, not embedded), Method/Mode/Months checkbox groups, a 7-line reason-for-extension field, and five independent 3-box (not comb-grid) date groups — a genuinely different date-field template family. 10th form mapped. |
-| Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured. |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — eligible, superseded duplicate | `may_be_reproduced` (inventory) | 2-page form. **Duplicate-pair finding reversed this pass** (see section D.1): `BOC04.QF.002` is the better-evidenced current/canonical version, not this one. Not separately mapped. |
-| Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured. |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Determined canonical over `CGAF-002-Rev3` this pass** (see section D.1) — carries the Bureau's formal dated document-control footer, a complete 5-option month/year duration set (Rev3 is missing "6 Months"), and the full prosecution-clause/Data-Privacy-Act consent paragraph (Rev3's is a shorter, less complete paragraph). Not yet coordinate-measured. |
+| Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Investigated this pass, not completed — see section G.** A distinct third template family: every field (not just dates) is a comb-grid of individual character cells, confirmed via direct pixel measurement (a uniform ~12.96pt cell pitch across the whole form). ~45-50 such fields across 2 pages. |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — eligible, superseded duplicate | `may_be_reproduced` (inventory) | 2-page form. **Duplicate-pair finding reversed this pass** (see section D.1): `BOC04.QF.002` is the better-evidenced current/canonical version, not this one. Not separately mapped. Same comb-grid-per-field template family as `BOC04.QF.001`/`BOC04.QF.002` (see section G). |
+| Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured; same comb-grid-per-field template family as `BOC04.QF.001` (see section G). |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Determined canonical over `CGAF-002-Rev3` this pass** (see section D.1) — carries the Bureau's formal dated document-control footer, a complete 5-option month/year duration set (Rev3 is missing "6 Months"), and the full prosecution-clause/Data-Privacy-Act consent paragraph (Rev3's is a shorter, less complete paragraph). Not yet coordinate-measured; same comb-grid-per-field template family as `BOC04.QF.001` (see section G). |
 | Request for Certification of Pending Application | `CCS-C-CPA-2016` | C — reference, not a fillable application | `may_be_reproduced` (inventory) | **Not an application form at all.** It is a checklist plus a staff-only certification block, and its own text explicitly references a separate application form, `CCS-A-CPA-2016`, by name — which does **not exist anywhere in this 20-PDF library**. There is no source document to measure coordinates against. This is a precise, evidenced blocker (a named, missing source document), not a vague "complex form" excuse. |
 | Travel Pass — General Instructions / Documentary Requirements | `BIFORM2021-03-002` | C — reference/checklist | Confirmed on form | Confirmed by direct text inspection: "GENERAL INSTRUCTIONS... CHECKLIST OF DOCUMENTARY REQUIREMENTS FOR TRAVEL PASS." Never a fillable template. |
 | Emigration Clearance Certificate (ECC) — the issued certificate itself | `ARD04.QF.001` | B — government-issued output | `not_found_on_form`; flagged `reproduction_status_unconfirmed` in the inventory | Confirmed by direct text inspection: begins "This is to certify that..." — the certificate BI itself issues after approving an ECC application, never a template FIS fills in and hands back. |
@@ -170,3 +170,57 @@ forms. No other PDF in the library requires or would benefit from
 further engineering work: Class B/C documents are correctly never
 templated, Class D remains correctly excluded, and Class E remains
 blocked on an external confirmation, not on more engineering time.
+
+## G. The `BOC04.QF.001` / `BOC04.QF.002` / `CGAF-003-Rev 2` template family — investigated, not completed this pass
+
+This pass directly measured `BOC04.QF.001`'s real original PDF (both
+pages, 300 DPI raster, `pdftotext -bbox` label positions, direct pixel
+darkness scans) before starting any coordinate-map file, per the same
+process used for the 10 already-mapped forms. That measurement work
+established a precise, evidenced characterization of this form family,
+not a vague complexity claim:
+
+- **A third distinct field-rendering template**, different from both
+  families already mapped this pass. CDR/NTSP/ACR used solid rectangles
+  or combs only for dates; `ARD04.QF.003` and `IRD04.QF.004` mix solid
+  rectangles with comb dates or plain 3-box dates. `BOC04.QF.001`
+  renders **every single field — names, addresses, numbers, dates,
+  everything — as a comb-grid of individual uniform-width character
+  cells**, confirmed by direct pixel measurement of multiple fields
+  (`Present Immigration Status`, `Last Name`, `Other Name(s)/Alias(es)
+  1` and `2`) independently converging on the same ~12.96pt cell pitch.
+- **Confirmed tractable, not abandoned as "too complex."** The cell-pitch
+  constant was verified across unrelated fields, the DD-MMM-YYYY
+  date-group structure (2+3+4 cells, confirmed by a pixel-ruled visual
+  overlay, exactly the same convention as `ARD04.QF.003`'s date combs)
+  was reproduced correctly for all 4 of `BOC04.QF.001`'s date fields,
+  and roughly 30 of the form's ~45-50 fields were successfully measured
+  (borders, cell counts, and x/y bounds all recorded) before this pass
+  stopped.
+- **Why this pass stopped before completing a coordinate-map.json.**
+  Even with the cell-pitch shortcut, this form has roughly 3-4x the
+  number of individually-measured boxes of any single form already
+  mapped (every row is its own comb needing its own top/bottom/left/
+  right measurement, where e.g. `IRD04.QF.004` needed only one box per
+  field) across 2 pages, plus `BOC04.QF.002` and `CGAF-003-Rev 2` share
+  this same family and would each need the same volume of per-field
+  measurement again. Completing even one of the three to this
+  engagement's established bar — full field-level measurement,
+  schema validation, an actually-generated and visually-inspected test
+  PDF, engine registration, and targeted tests — was not achievable
+  within this pass without risking an incomplete, uncommitted,
+  half-measured config being left behind. Per the directive's own
+  instruction not to claim an unfinished mapping complete, **no
+  `coordinate-map.json`/`questionnaire.json` was started or committed
+  for any of the three** — the working tree is clean, and the 10
+  forms mapped this engagement (including this pass's 3:
+  `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`) are the complete,
+  verified, shippable result.
+- **Concrete continuation point for a future pass:** the cell-pitch
+  constant (~12.96pt), the proven measurement approach (box top/bottom
+  via a full-width darkness scan at `min_ratio` ~0.8-0.85, left/right
+  via an outer-column scan at `min_ratio` ~0.5, cell count =
+  `round((xEnd-xStart)/12.96)`), and the confirmed 4-DD-MMM-YYYY-field
+  pattern are all reusable directly against `BOC04.QF.001` first (most
+  measurement already done), then `BOC04.QF.002` and `CGAF-003-Rev 2`
+  (same family, not yet started).
