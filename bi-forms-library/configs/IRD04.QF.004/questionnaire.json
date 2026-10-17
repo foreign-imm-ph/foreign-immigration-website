@@ -1,0 +1,890 @@
+{
+  "formId": "IRD04.QF.004",
+  "languages": [
+    "en",
+    "ja",
+    "ko",
+    "vi",
+    "zh-CN",
+    "zh-Hant"
+  ],
+  "staffFieldRequirements": {
+    "evaluatorNameSignature": {
+      "required": false
+    }
+  },
+  "questions": [
+    {
+      "id": "methodOfApplication",
+      "type": "select",
+      "dataKey": "methodOfApplication",
+      "labels": {
+        "en": "Method of Application",
+        "zh-CN": "申请方式",
+        "zh-Hant": "申請方式",
+        "ko": "신청 방법",
+        "ja": "申請方法",
+        "vi": "Phương thức nộp đơn"
+      },
+      "options": [
+        "Personal",
+        "Authorized Representative"
+      ],
+      "forFields": [
+        "methodPersonal",
+        "methodAuthorizedRep"
+      ]
+    },
+    {
+      "id": "nameOfAuthorizedRep",
+      "type": "text",
+      "dataKey": "nameOfAuthorizedRep",
+      "required": false,
+      "labels": {
+        "en": "Name of Authorized Representative (Last name, First name, Middle name) -- if applicable",
+        "zh-CN": "授权代表姓名（姓、名、中间名）——如适用",
+        "zh-Hant": "授權代表姓名（姓、名、中間名）——如適用",
+        "ko": "공인 대리인 성명 (성, 이름, 중간 이름) - 해당 시",
+        "ja": "正式代理人氏名（姓、名、ミドルネーム）- 該当する場合",
+        "vi": "Tên người đại diện được ủy quyền (Họ, Tên, Tên đệm) - nếu có"
+      },
+      "forFields": [
+        "nameOfAuthorizedRep"
+      ]
+    },
+    {
+      "id": "biAccreditationNumber",
+      "type": "text",
+      "dataKey": "biAccreditationNumber",
+      "required": false,
+      "labels": {
+        "en": "BI Accreditation Number (if applicable)",
+        "zh-CN": "移民局认证编号（如适用）",
+        "zh-Hant": "移民局認證編號（如適用）",
+        "ko": "BI 인가 번호 (해당 시)",
+        "ja": "BI認定番号（該当する場合）",
+        "vi": "Số chứng nhận BI (nếu có)"
+      },
+      "forFields": [
+        "biAccreditationNumber"
+      ]
+    },
+    {
+      "id": "modeOfApplication",
+      "type": "select",
+      "dataKey": "modeOfApplication",
+      "labels": {
+        "en": "Mode of Application",
+        "zh-CN": "申请模式",
+        "zh-Hant": "申請模式",
+        "ko": "신청 모드",
+        "ja": "申請モード",
+        "vi": "Hình thức nộp đơn"
+      },
+      "options": [
+        "Regular",
+        "Express"
+      ],
+      "forFields": [
+        "modeRegular",
+        "modeExpress"
+      ]
+    },
+    {
+      "id": "numberOfMonthsRequested",
+      "type": "select",
+      "dataKey": "numberOfMonthsRequested",
+      "labels": {
+        "en": "Number of Months Requested",
+        "zh-CN": "申请延期月数",
+        "zh-Hant": "申請延期月數",
+        "ko": "요청 개월 수",
+        "ja": "申請月数",
+        "vi": "Số tháng yêu cầu"
+      },
+      "options": [
+        "One (1) month",
+        "Two (2) months",
+        "Six (6) months"
+      ],
+      "forFields": [
+        "monthsOne",
+        "monthsTwo",
+        "monthsSix"
+      ]
+    },
+    {
+      "id": "reasonLine1",
+      "type": "text",
+      "dataKey": "reasonLine1",
+      "labels": {
+        "en": "State your reason for extension of stay including reason for overstaying, if applicable (line 1)",
+        "zh-CN": "申请延期原因（含逾期居留原因，如适用）（第1行）",
+        "zh-Hant": "申請延期原因（含逾期居留原因，如適用）（第1行）",
+        "ko": "체류 연장 사유 및 초과 체류 사유(해당 시) (1행)",
+        "ja": "滞在延長理由および超過滞在理由（該当する場合）（1行目）",
+        "vi": "Lý do gia hạn lưu trú, kể cả lý do quá hạn nếu có (dòng 1)"
+      },
+      "forFields": [
+        "reasonLine1"
+      ]
+    },
+    {
+      "id": "reasonLine2",
+      "type": "text",
+      "dataKey": "reasonLine2",
+      "labels": {
+        "en": "Reason for extension (line 2, continue if needed)",
+        "zh-CN": "延期原因（第2行，如需继续填写）",
+        "zh-Hant": "延期原因（第2行，如需繼續填寫）",
+        "ko": "연장 사유 (2행, 필요 시 계속)",
+        "ja": "延長理由（2行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 2, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine2"
+      ],
+      "required": false
+    },
+    {
+      "id": "reasonLine3",
+      "type": "text",
+      "dataKey": "reasonLine3",
+      "labels": {
+        "en": "Reason for extension (line 3, continue if needed)",
+        "zh-CN": "延期原因（第3行，如需继续填写）",
+        "zh-Hant": "延期原因（第3行，如需繼續填寫）",
+        "ko": "연장 사유 (3행, 필요 시 계속)",
+        "ja": "延長理由（3行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 3, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine3"
+      ],
+      "required": false
+    },
+    {
+      "id": "reasonLine4",
+      "type": "text",
+      "dataKey": "reasonLine4",
+      "labels": {
+        "en": "Reason for extension (line 4, continue if needed)",
+        "zh-CN": "延期原因（第4行，如需继续填写）",
+        "zh-Hant": "延期原因（第4行，如需繼續填寫）",
+        "ko": "연장 사유 (4행, 필요 시 계속)",
+        "ja": "延長理由（4行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 4, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine4"
+      ],
+      "required": false
+    },
+    {
+      "id": "reasonLine5",
+      "type": "text",
+      "dataKey": "reasonLine5",
+      "labels": {
+        "en": "Reason for extension (line 5, continue if needed)",
+        "zh-CN": "延期原因（第5行，如需继续填写）",
+        "zh-Hant": "延期原因（第5行，如需繼續填寫）",
+        "ko": "연장 사유 (5행, 필요 시 계속)",
+        "ja": "延長理由（5行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 5, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine5"
+      ],
+      "required": false
+    },
+    {
+      "id": "reasonLine6",
+      "type": "text",
+      "dataKey": "reasonLine6",
+      "labels": {
+        "en": "Reason for extension (line 6, continue if needed)",
+        "zh-CN": "延期原因（第6行，如需继续填写）",
+        "zh-Hant": "延期原因（第6行，如需繼續填寫）",
+        "ko": "연장 사유 (6행, 필요 시 계속)",
+        "ja": "延長理由（6行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 6, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine6"
+      ],
+      "required": false
+    },
+    {
+      "id": "reasonLine7",
+      "type": "text",
+      "dataKey": "reasonLine7",
+      "labels": {
+        "en": "Reason for extension (line 7, continue if needed)",
+        "zh-CN": "延期原因（第7行，如需继续填写）",
+        "zh-Hant": "延期原因（第7行，如需繼續填寫）",
+        "ko": "연장 사유 (7행, 필요 시 계속)",
+        "ja": "延長理由（7行目、必要に応じて続ける）",
+        "vi": "Lý do gia hạn (dòng 7, tiếp tục nếu cần)"
+      },
+      "forFields": [
+        "reasonLine7"
+      ],
+      "required": false
+    },
+    {
+      "id": "mobileNo",
+      "type": "text",
+      "dataKey": "mobileNo",
+      "labels": {
+        "en": "Mobile No. (in the Philippines)",
+        "zh-CN": "手机号码（在菲律宾）",
+        "zh-Hant": "手機號碼（在菲律賓）",
+        "ko": "휴대폰 번호 (필리핀 내)",
+        "ja": "携帯電話番号（フィリピン国内）",
+        "vi": "Số điện thoại di động (tại Philippines)"
+      },
+      "forFields": [
+        "mobileNo"
+      ]
+    },
+    {
+      "id": "emailAddress",
+      "type": "text",
+      "dataKey": "emailAddress",
+      "labels": {
+        "en": "E-mail address",
+        "zh-CN": "电子邮箱",
+        "zh-Hant": "電子郵箱",
+        "ko": "이메일 주소",
+        "ja": "メールアドレス",
+        "vi": "Địa chỉ email"
+      },
+      "forFields": [
+        "emailAddress"
+      ]
+    },
+    {
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": {
+        "en": "Last name",
+        "zh-CN": "姓",
+        "zh-Hant": "姓",
+        "ko": "성",
+        "ja": "姓",
+        "vi": "Họ"
+      },
+      "forFields": [
+        "lastName"
+      ]
+    },
+    {
+      "id": "firstName",
+      "type": "text",
+      "dataKey": "firstName",
+      "labels": {
+        "en": "First name",
+        "zh-CN": "名",
+        "zh-Hant": "名",
+        "ko": "이름",
+        "ja": "名",
+        "vi": "Tên"
+      },
+      "forFields": [
+        "firstName"
+      ]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "labels": {
+        "en": "Middle name",
+        "zh-CN": "中间名",
+        "zh-Hant": "中間名",
+        "ko": "중간 이름",
+        "ja": "ミドルネーム",
+        "vi": "Tên đệm"
+      },
+      "forFields": [
+        "middleName"
+      ]
+    },
+    {
+      "id": "otherNameAlias",
+      "type": "text",
+      "dataKey": "otherNameAlias",
+      "labels": {
+        "en": "Other name/Alias",
+        "zh-CN": "其他姓名/别名",
+        "zh-Hant": "其他姓名/別名",
+        "ko": "기타 이름/별칭",
+        "ja": "その他の氏名/通称",
+        "vi": "Tên khác/Biệt danh"
+      },
+      "forFields": [
+        "otherNameAlias"
+      ]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": {
+        "en": "Date of Birth - DD",
+        "zh-CN": "出生日期 - 日",
+        "zh-Hant": "出生日期 - 日",
+        "ko": "생년월일 - 일",
+        "ja": "生年月日 - 日",
+        "vi": "Ngày sinh - Ngày"
+      },
+      "forFields": [
+        "dobDay"
+      ]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": {
+        "en": "Date of Birth - MMM",
+        "zh-CN": "出生日期 - 月",
+        "zh-Hant": "出生日期 - 月",
+        "ko": "생년월일 - 월",
+        "ja": "生年月日 - 月",
+        "vi": "Ngày sinh - Tháng"
+      },
+      "forFields": [
+        "dobMonth"
+      ]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": {
+        "en": "Date of Birth - YYYY",
+        "zh-CN": "出生日期 - 年",
+        "zh-Hant": "出生日期 - 年",
+        "ko": "생년월일 - 년",
+        "ja": "生年月日 - 年",
+        "vi": "Ngày sinh - Năm"
+      },
+      "forFields": [
+        "dobYear"
+      ]
+    },
+    {
+      "id": "sex",
+      "type": "select",
+      "dataKey": "sex",
+      "labels": {
+        "en": "Sex",
+        "zh-CN": "性别",
+        "zh-Hant": "性別",
+        "ko": "성별",
+        "ja": "性別",
+        "vi": "Giới tính"
+      },
+      "options": [
+        "M",
+        "F"
+      ],
+      "forFields": [
+        "sexM",
+        "sexF"
+      ]
+    },
+    {
+      "id": "birthplace",
+      "type": "text",
+      "dataKey": "birthplace",
+      "labels": {
+        "en": "Birthplace",
+        "zh-CN": "出生地",
+        "zh-Hant": "出生地",
+        "ko": "출생지",
+        "ja": "出生地",
+        "vi": "Nơi sinh"
+      },
+      "forFields": [
+        "birthplace"
+      ]
+    },
+    {
+      "id": "citizenship",
+      "type": "text",
+      "dataKey": "citizenship",
+      "labels": {
+        "en": "Country of Citizenship",
+        "zh-CN": "国籍",
+        "zh-Hant": "國籍",
+        "ko": "국적",
+        "ja": "国籍",
+        "vi": "Quốc tịch"
+      },
+      "forFields": [
+        "citizenship"
+      ]
+    },
+    {
+      "id": "height",
+      "type": "text",
+      "dataKey": "height",
+      "labels": {
+        "en": "Height (cm)",
+        "zh-CN": "身高（厘米）",
+        "zh-Hant": "身高（公分）",
+        "ko": "키 (cm)",
+        "ja": "身長（cm）",
+        "vi": "Chiều cao (cm)"
+      },
+      "forFields": [
+        "height"
+      ]
+    },
+    {
+      "id": "weight",
+      "type": "text",
+      "dataKey": "weight",
+      "labels": {
+        "en": "Weight (kg)",
+        "zh-CN": "体重（公斤）",
+        "zh-Hant": "體重（公斤）",
+        "ko": "몸무게 (kg)",
+        "ja": "体重（kg）",
+        "vi": "Cân nặng (kg)"
+      },
+      "forFields": [
+        "weight"
+      ]
+    },
+    {
+      "id": "civilStatus",
+      "type": "select",
+      "dataKey": "civilStatus",
+      "labels": {
+        "en": "Civil Status",
+        "zh-CN": "婚姻状况",
+        "zh-Hant": "婚姻狀況",
+        "ko": "혼인 상태",
+        "ja": "婚姻状況",
+        "vi": "Tình trạng hôn nhân"
+      },
+      "options": [
+        "Single",
+        "Married",
+        "Annulled",
+        "Separated",
+        "Widowed",
+        "Divorced"
+      ],
+      "forFields": [
+        "civilSingle",
+        "civilMarried",
+        "civilAnnulled",
+        "civilSeparated",
+        "civilWidowed",
+        "civilDivorced"
+      ]
+    },
+    {
+      "id": "houseUnitStreet",
+      "type": "text",
+      "dataKey": "houseUnitStreet",
+      "labels": {
+        "en": "House/Unit No., Street, Subdivision/Village",
+        "zh-CN": "门牌号、街道、小区/村庄",
+        "zh-Hant": "門牌號、街道、社區/村莊",
+        "ko": "호수, 거리, 단지/마을",
+        "ja": "号室番号、通り、サブディビジョン/村",
+        "vi": "Số nhà/căn hộ, đường, khu dân cư/làng"
+      },
+      "forFields": [
+        "houseUnitStreet"
+      ]
+    },
+    {
+      "id": "barangay",
+      "type": "text",
+      "dataKey": "barangay",
+      "labels": {
+        "en": "Barangay",
+        "zh-CN": "村镇（Barangay）",
+        "zh-Hant": "村鎮（Barangay）",
+        "ko": "바랑가이",
+        "ja": "バランガイ",
+        "vi": "Barangay"
+      },
+      "forFields": [
+        "barangay"
+      ]
+    },
+    {
+      "id": "cityMunicipality",
+      "type": "text",
+      "dataKey": "cityMunicipality",
+      "labels": {
+        "en": "City/Municipality",
+        "zh-CN": "市/镇",
+        "zh-Hant": "市/鎮",
+        "ko": "시/읍",
+        "ja": "市町村",
+        "vi": "Thành phố/Thị trấn"
+      },
+      "forFields": [
+        "cityMunicipality"
+      ]
+    },
+    {
+      "id": "province",
+      "type": "text",
+      "dataKey": "province",
+      "labels": {
+        "en": "Province",
+        "zh-CN": "省份",
+        "zh-Hant": "省份",
+        "ko": "주",
+        "ja": "州",
+        "vi": "Tỉnh"
+      },
+      "forFields": [
+        "province"
+      ]
+    },
+    {
+      "id": "zipCode",
+      "type": "text",
+      "dataKey": "zipCode",
+      "labels": {
+        "en": "Zip Code",
+        "zh-CN": "邮政编码",
+        "zh-Hant": "郵遞區號",
+        "ko": "우편번호",
+        "ja": "郵便番号",
+        "vi": "Mã bưu điện"
+      },
+      "forFields": [
+        "zipCode"
+      ]
+    },
+    {
+      "id": "passportTravelDocNo",
+      "type": "text",
+      "dataKey": "passportTravelDocNo",
+      "labels": {
+        "en": "Passport/Travel Document No.",
+        "zh-CN": "护照/旅行证件号码",
+        "zh-Hant": "護照/旅行證件號碼",
+        "ko": "여권/여행증명서 번호",
+        "ja": "パスポート/渡航文書番号",
+        "vi": "Số hộ chiếu/Giấy tờ đi lại"
+      },
+      "forFields": [
+        "passportTravelDocNo"
+      ]
+    },
+    {
+      "id": "dateValidity1Day",
+      "type": "text",
+      "dataKey": "dateValidity1Day",
+      "labels": {
+        "en": "Date of Validity (Passport) - DD",
+        "zh-CN": "护照有效期 - 日",
+        "zh-Hant": "護照有效期 - 日",
+        "ko": "여권 유효기간 - 일",
+        "ja": "パスポート有効期限 - 日",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Ngày"
+      },
+      "forFields": [
+        "dateValidity1Day"
+      ]
+    },
+    {
+      "id": "dateValidity1Month",
+      "type": "text",
+      "dataKey": "dateValidity1Month",
+      "labels": {
+        "en": "Date of Validity (Passport) - MMM",
+        "zh-CN": "护照有效期 - 月",
+        "zh-Hant": "護照有效期 - 月",
+        "ko": "여권 유효기간 - 월",
+        "ja": "パスポート有効期限 - 月",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Tháng"
+      },
+      "forFields": [
+        "dateValidity1Month"
+      ]
+    },
+    {
+      "id": "dateValidity1Year",
+      "type": "text",
+      "dataKey": "dateValidity1Year",
+      "labels": {
+        "en": "Date of Validity (Passport) - YYYY",
+        "zh-CN": "护照有效期 - 年",
+        "zh-Hant": "護照有效期 - 年",
+        "ko": "여권 유효기간 - 년",
+        "ja": "パスポート有効期限 - 年",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Năm"
+      },
+      "forFields": [
+        "dateValidity1Year"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalDay",
+      "type": "text",
+      "dataKey": "dateLatestArrivalDay",
+      "labels": {
+        "en": "Date of Latest Arrival - DD",
+        "zh-CN": "最近入境日期 - 日",
+        "zh-Hant": "最近入境日期 - 日",
+        "ko": "최근 입국일 - 일",
+        "ja": "直近の入国日 - 日",
+        "vi": "Ngày nhập cảnh gần nhất - Ngày"
+      },
+      "forFields": [
+        "dateLatestArrivalDay"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalMonth",
+      "type": "text",
+      "dataKey": "dateLatestArrivalMonth",
+      "labels": {
+        "en": "Date of Latest Arrival - MMM",
+        "zh-CN": "最近入境日期 - 月",
+        "zh-Hant": "最近入境日期 - 月",
+        "ko": "최근 입국일 - 월",
+        "ja": "直近の入国日 - 月",
+        "vi": "Ngày nhập cảnh gần nhất - Tháng"
+      },
+      "forFields": [
+        "dateLatestArrivalMonth"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalYear",
+      "type": "text",
+      "dataKey": "dateLatestArrivalYear",
+      "labels": {
+        "en": "Date of Latest Arrival - YYYY",
+        "zh-CN": "最近入境日期 - 年",
+        "zh-Hant": "最近入境日期 - 年",
+        "ko": "최근 입국일 - 년",
+        "ja": "直近の入国日 - 年",
+        "vi": "Ngày nhập cảnh gần nhất - Năm"
+      },
+      "forFields": [
+        "dateLatestArrivalYear"
+      ]
+    },
+    {
+      "id": "flightVoyageNumber",
+      "type": "text",
+      "dataKey": "flightVoyageNumber",
+      "labels": {
+        "en": "Flight/Voyage Number",
+        "zh-CN": "航班/航次号",
+        "zh-Hant": "航班/航次號",
+        "ko": "항공편/항해 번호",
+        "ja": "フライト/航海番号",
+        "vi": "Số chuyến bay/chuyến tàu"
+      },
+      "forFields": [
+        "flightVoyageNumber"
+      ]
+    },
+    {
+      "id": "dateValidity2Day",
+      "type": "text",
+      "dataKey": "dateValidity2Day",
+      "labels": {
+        "en": "Latest Tourist Visa Extension - Date of Validity - DD",
+        "zh-CN": "最近旅游签证延期有效期 - 日",
+        "zh-Hant": "最近旅遊簽證延期有效期 - 日",
+        "ko": "최근 관광비자 연장 유효기간 - 일",
+        "ja": "直近の観光ビザ延長有効期限 - 日",
+        "vi": "Ngày hết hạn gia hạn thị thực du lịch gần nhất - Ngày"
+      },
+      "forFields": [
+        "dateValidity2Day"
+      ]
+    },
+    {
+      "id": "dateValidity2Month",
+      "type": "text",
+      "dataKey": "dateValidity2Month",
+      "labels": {
+        "en": "Latest Tourist Visa Extension - Date of Validity - MMM",
+        "zh-CN": "最近旅游签证延期有效期 - 月",
+        "zh-Hant": "最近旅遊簽證延期有效期 - 月",
+        "ko": "최근 관광비자 연장 유효기간 - 월",
+        "ja": "直近の観光ビザ延長有効期限 - 月",
+        "vi": "Ngày hết hạn gia hạn thị thực du lịch gần nhất - Tháng"
+      },
+      "forFields": [
+        "dateValidity2Month"
+      ]
+    },
+    {
+      "id": "dateValidity2Year",
+      "type": "text",
+      "dataKey": "dateValidity2Year",
+      "labels": {
+        "en": "Latest Tourist Visa Extension - Date of Validity - YYYY",
+        "zh-CN": "最近旅游签证延期有效期 - 年",
+        "zh-Hant": "最近旅遊簽證延期有效期 - 年",
+        "ko": "최근 관광비자 연장 유효기간 - 년",
+        "ja": "直近の観光ビザ延長有効期限 - 年",
+        "vi": "Ngày hết hạn gia hạn thị thực du lịch gần nhất - Năm"
+      },
+      "forFields": [
+        "dateValidity2Year"
+      ]
+    },
+    {
+      "id": "placeOfApproval",
+      "type": "text",
+      "dataKey": "placeOfApproval",
+      "labels": {
+        "en": "Place of Approval (e.g. BI Main Office)",
+        "zh-CN": "批准地点（如移民局总部）",
+        "zh-Hant": "批准地點（如移民局總部）",
+        "ko": "승인 장소 (예: BI 본청)",
+        "ja": "承認場所（例：BI本局）",
+        "vi": "Nơi phê duyệt (ví dụ: Trụ sở chính BI)"
+      },
+      "forFields": [
+        "placeOfApproval"
+      ]
+    },
+    {
+      "id": "acrNumber",
+      "type": "text",
+      "dataKey": "acrNumber",
+      "labels": {
+        "en": "Alien Certificate Registration (ACR) Number",
+        "zh-CN": "外侨登记证（ACR）号码",
+        "zh-Hant": "外僑登記證（ACR）號碼",
+        "ko": "외국인 등록증(ACR) 번호",
+        "ja": "外国人登録証明書（ACR）番号",
+        "vi": "Số Giấy chứng nhận đăng ký người nước ngoài (ACR)"
+      },
+      "forFields": [
+        "acrNumber"
+      ]
+    },
+    {
+      "id": "dateValidity3Day",
+      "type": "text",
+      "dataKey": "dateValidity3Day",
+      "labels": {
+        "en": "ACR I-Card - Date of Validity - DD",
+        "zh-CN": "ACR I-Card 有效期 - 日",
+        "zh-Hant": "ACR I-Card 有效期 - 日",
+        "ko": "ACR I-Card 유효기간 - 일",
+        "ja": "ACR I-Card 有効期限 - 日",
+        "vi": "Ngày hết hạn ACR I-Card - Ngày"
+      },
+      "forFields": [
+        "dateValidity3Day"
+      ]
+    },
+    {
+      "id": "dateValidity3Month",
+      "type": "text",
+      "dataKey": "dateValidity3Month",
+      "labels": {
+        "en": "ACR I-Card - Date of Validity - MMM",
+        "zh-CN": "ACR I-Card 有效期 - 月",
+        "zh-Hant": "ACR I-Card 有效期 - 月",
+        "ko": "ACR I-Card 유효기간 - 월",
+        "ja": "ACR I-Card 有効期限 - 月",
+        "vi": "Ngày hết hạn ACR I-Card - Tháng"
+      },
+      "forFields": [
+        "dateValidity3Month"
+      ]
+    },
+    {
+      "id": "dateValidity3Year",
+      "type": "text",
+      "dataKey": "dateValidity3Year",
+      "labels": {
+        "en": "ACR I-Card - Date of Validity - YYYY",
+        "zh-CN": "ACR I-Card 有效期 - 年",
+        "zh-Hant": "ACR I-Card 有效期 - 年",
+        "ko": "ACR I-Card 유효기간 - 년",
+        "ja": "ACR I-Card 有効期限 - 年",
+        "vi": "Ngày hết hạn ACR I-Card - Năm"
+      },
+      "forFields": [
+        "dateValidity3Year"
+      ]
+    },
+    {
+      "id": "ssrn",
+      "type": "text",
+      "dataKey": "ssrn",
+      "required": false,
+      "labels": {
+        "en": "Special Security Registration Number (SSRN)",
+        "zh-CN": "特别安全登记号（SSRN）",
+        "zh-Hant": "特別安全登記號（SSRN）",
+        "ko": "특별 보안 등록 번호(SSRN)",
+        "ja": "特別安全登録番号（SSRN）",
+        "vi": "Số đăng ký an ninh đặc biệt (SSRN)"
+      },
+      "forFields": [
+        "ssrn"
+      ]
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      {
+        "dataKey": "methodOfApplication",
+        "options": {
+          "Personal": "methodPersonal",
+          "Authorized Representative": "methodAuthorizedRep"
+        }
+      },
+      {
+        "dataKey": "modeOfApplication",
+        "options": {
+          "Regular": "modeRegular",
+          "Express": "modeExpress"
+        }
+      },
+      {
+        "dataKey": "numberOfMonthsRequested",
+        "options": {
+          "One (1) month": "monthsOne",
+          "Two (2) months": "monthsTwo",
+          "Six (6) months": "monthsSix"
+        }
+      },
+      {
+        "dataKey": "sex",
+        "options": {
+          "M": "sexM",
+          "F": "sexF"
+        }
+      },
+      {
+        "dataKey": "civilStatus",
+        "options": {
+          "Single": "civilSingle",
+          "Married": "civilMarried",
+          "Annulled": "civilAnnulled",
+          "Separated": "civilSeparated",
+          "Widowed": "civilWidowed",
+          "Divorced": "civilDivorced"
+        }
+      }
+    ]
+  }
+}

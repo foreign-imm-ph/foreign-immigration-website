@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { KNOWN_BI_FORM_IDS, getFormConfig, fieldsForAudience, resolveFieldValues, validateAnswers, getDocumentBuilders } from "../src/lib/biFormEngine.js";
 
 describe("shared engine bridge (biFormEngine.js) loads inside the Workers runtime", () => {
-  it("registers all nine validated forms", () => {
-    expect(KNOWN_BI_FORM_IDS.sort()).toEqual(["2014-13-002", "2014-13-006", "2014-08-015", "2021-03-001", "2014-01-011", "ADM05.QF.001", "ARD04.QF.003", "CCS-A-CDR-2016", "CCS-A-NTSP-2016"].sort());
+  it("registers all ten validated forms", () => {
+    expect(KNOWN_BI_FORM_IDS.sort()).toEqual(["2014-13-002", "2014-13-006", "2014-08-015", "2021-03-001", "2014-01-011", "ADM05.QF.001", "ARD04.QF.003", "IRD04.QF.004", "CCS-A-CDR-2016", "CCS-A-NTSP-2016"].sort());
   });
 
   it("getFormConfig returns a real, schema-validated coordinate map and questionnaire", () => {

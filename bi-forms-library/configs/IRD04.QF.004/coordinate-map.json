@@ -1,0 +1,1246 @@
+{
+  "formId": "IRD04.QF.004",
+  "formTitle": "Consolidated General Application Form (CGAF) for Extension of Stay of Temporary Visitor's Visa",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT for sale.', printed at the top of the page.",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/IRD04.QF.004.pdf), a Microsoft Word export with a standard (0,0)-origin MediaBox (no offset correction needed, unlike ARD04.QF.003). Every date field (Date of Birth, three 'Date of Validity' fields, Date of Latest Arrival) is drawn as THREE SEPARATE single-line boxes -- one each for DD / MMM / YYYY, with a plain dash character printed between them -- not a per-character comb grid like every other previously-mapped form's date fields; confirmed by direct visual inspection before measuring (a first assumption of a comb grid was discarded once the real boxes were seen). All checkboxes on this form are small (~7.3pt square) Word/Wingdings-glyph checkboxes, visually and dimensionally consistent across every group measured.",
+  "measurementNotes": {
+    "dateFieldsAreThreeBoxesNotCombs": "Unlike every other mapped form, this form's DD-MMM-YYYY date fields (dobDay/Month/Year, dateValidity1/2/3 Day/Month/Year, dateLatestArrival Day/Month/Year) are each THREE INDEPENDENT single-line free-text boxes (one full box per Day, Month, Year) with a plain printed dash between them, not a comb grid of individual character cells. Each is therefore mapped as an ordinary freeTextFields entry (e.g. dobDay holds the whole 'DD' value as one string, not split into per-character cells), confirmed via direct visual crop before measuring any coordinates.",
+    "reasonForExtensionSevenLines": "The 'State your reason for extension of stay' field prints SEVEN ruled lines (six full-width lines plus one shorter 7th continuation line sharing its row with the staff-only evaluator box) -- mapped as seven independent freeTextFields (reasonLine1-7), each its own question, with reasonLine1 required and reasonLine2-7 required:false (the applicant fills only as many lines as needed), the same established pattern already used by 2014-08-015's multi-line purpose/documents fields.",
+    "evaluatorFieldStaffOnly": "'Name and signature of evaluator/assessor' (in its own bordered box to the right of reasonLine7) is BI-staff-only -- never auto-filled, consistent with every other form's wet-ink/staff-determination field policy; marked suppliedBy:staff, visibleTo:staff, and optional in staffFieldRequirements.",
+    "photoRequirementNotEmbedded": "The form's photo box (top-left, '2x2 inch colored photograph, white background, permanent glue, taken within the past 3 months') is a physical photo attachment requirement, not a fillable field -- it is NOT mapped as a coordinate field and is NOT embedded into the generated PDF by this automation. It is handled entirely through the existing supporting-document-upload feature of the customer wizard, the same way every other form's physical-attachment requirement (e.g. passport copy, ID copy) already is.",
+    "consentParagraphNotPopulated": "The Data-Privacy-Act consent paragraph's two inline blanks ('I, ___, personally or through my agent/representative ___') are wet-ink declaration elements, deliberately left blank by this automation -- same policy as every other mapped form. Only the signatureBlock's dateLine and signatureLine coordinates (measured via direct pixel scan, since -- unlike the reason lines above -- these bottom lines are drawn as vector graphics, not printed underscore characters) are recorded, never auto-filled.",
+    "methodOfApplicationAndModeNotGated": "Method of Application (Personal/Authorized Representative) and Mode of Application (Regular/Express) are mapped as two independent single-select checkboxSelect groups, same pattern as every other multi-option checkbox group on this form. nameOfAuthorizedRep/biAccreditationNumber are mapped as ordinary (always-askable) freeTextFields rather than conditionally gated on methodOfApplication=AuthorizedRepresentative, consistent with how every other form's conditionally-relevant field (e.g. spouse name, parent/guardian name) is handled elsewhere in this engine: always present as an optional question, answered 'N/A' when not applicable, per the form's own explicit 'write N/A if not applicable' instruction."
+  },
+  "charBoxFields": {},
+  "checkboxFields": {
+    "methodPersonal": {
+      "label": "Personal",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 216.12,
+      "xRightPt": 223.56,
+      "yTopPt": 762.84,
+      "yBottomPt": 755.52
+    },
+    "methodAuthorizedRep": {
+      "label": "Authorized Representative",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 324.24,
+      "xRightPt": 331.68,
+      "yTopPt": 762.84,
+      "yBottomPt": 755.52
+    },
+    "modeRegular": {
+      "label": "Regular",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 217.56,
+      "xRightPt": 225.0,
+      "yTopPt": 683.64,
+      "yBottomPt": 676.32
+    },
+    "modeExpress": {
+      "label": "Express",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 287.28,
+      "xRightPt": 294.72,
+      "yTopPt": 683.64,
+      "yBottomPt": 676.32
+    },
+    "monthsOne": {
+      "label": "One (1) month",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 217.56,
+      "xRightPt": 225.0,
+      "yTopPt": 661.56,
+      "yBottomPt": 654.24
+    },
+    "monthsTwo": {
+      "label": "Two (2) months",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 309.6,
+      "xRightPt": 317.04,
+      "yTopPt": 661.56,
+      "yBottomPt": 654.24
+    },
+    "monthsSix": {
+      "label": "Six (6) months",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 403.44,
+      "xRightPt": 410.88,
+      "yTopPt": 661.56,
+      "yBottomPt": 654.24
+    },
+    "sexM": {
+      "label": "Male",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 240.0,
+      "xRightPt": 253.2,
+      "yTopPt": 386.04,
+      "yBottomPt": 375.72
+    },
+    "sexF": {
+      "label": "Female",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 282.96,
+      "xRightPt": 296.16,
+      "yTopPt": 386.04,
+      "yBottomPt": 375.72
+    },
+    "civilSingle": {
+      "label": "Single",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 362.04,
+      "xRightPt": 369.36,
+      "yTopPt": 357.48,
+      "yBottomPt": 350.04
+    },
+    "civilMarried": {
+      "label": "Married",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 422.76,
+      "xRightPt": 430.08,
+      "yTopPt": 357.48,
+      "yBottomPt": 350.04
+    },
+    "civilAnnulled": {
+      "label": "Annulled",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 482.52,
+      "xRightPt": 489.96,
+      "yTopPt": 357.48,
+      "yBottomPt": 350.04
+    },
+    "civilSeparated": {
+      "label": "Separated",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 361.92,
+      "xRightPt": 369.36,
+      "yTopPt": 347.16,
+      "yBottomPt": 339.72
+    },
+    "civilWidowed": {
+      "label": "Widowed",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 422.88,
+      "xRightPt": 430.32,
+      "yTopPt": 347.16,
+      "yBottomPt": 339.72
+    },
+    "civilDivorced": {
+      "label": "Divorced",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 483.24,
+      "xRightPt": 490.68,
+      "yTopPt": 347.16,
+      "yBottomPt": 339.72
+    }
+  },
+  "freeTextFields": {
+    "nameOfAuthorizedRep": {
+      "label": "Name of Authorized Representative (Last name, First name, Middle name)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 213.48,
+      "xEndPt": 534.6,
+      "baselinePt": 733.64,
+      "maxLines": 1
+    },
+    "biAccreditationNumber": {
+      "label": "BI Accreditation Number (if applicable)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 213.48,
+      "xEndPt": 534.6,
+      "baselinePt": 709.64,
+      "maxLines": 1
+    },
+    "reasonLine1": {
+      "label": "State your reason for extension of stay (line 1)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 624.96,
+      "maxLines": 1
+    },
+    "reasonLine2": {
+      "label": "State your reason for extension of stay (line 2)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 610.53,
+      "maxLines": 1
+    },
+    "reasonLine3": {
+      "label": "State your reason for extension of stay (line 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 596.13,
+      "maxLines": 1
+    },
+    "reasonLine4": {
+      "label": "State your reason for extension of stay (line 4)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 581.73,
+      "maxLines": 1
+    },
+    "reasonLine5": {
+      "label": "State your reason for extension of stay (line 5)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 567.57,
+      "maxLines": 1
+    },
+    "reasonLine6": {
+      "label": "State your reason for extension of stay (line 6)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 534.29,
+      "baselinePt": 553.17,
+      "maxLines": 1
+    },
+    "reasonLine7": {
+      "label": "State your reason for extension of stay (line 7, continuation)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.02,
+      "xEndPt": 276.05,
+      "baselinePt": 538.77,
+      "maxLines": 1
+    },
+    "evaluatorNameSignature": {
+      "label": "Name and signature of evaluator/assessor",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 416.81,
+      "xEndPt": 523.55,
+      "baselinePt": 540.56,
+      "maxLines": 1
+    },
+    "mobileNo": {
+      "label": "Mobile No. (in the Philippines)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 70.08,
+      "xEndPt": 290.76,
+      "baselinePt": 500.72,
+      "maxLines": 1
+    },
+    "emailAddress": {
+      "label": "E-mail address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 312.12,
+      "xEndPt": 532.68,
+      "baselinePt": 500.72,
+      "maxLines": 1
+    },
+    "lastName": {
+      "label": "Last name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 531.0,
+      "baselinePt": 466.16,
+      "maxLines": 1
+    },
+    "firstName": {
+      "label": "First name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 531.0,
+      "baselinePt": 443.24,
+      "maxLines": 1
+    },
+    "middleName": {
+      "label": "Middle name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 531.0,
+      "baselinePt": 420.68,
+      "maxLines": 1
+    },
+    "otherNameAlias": {
+      "label": "Other name/Alias",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 531.0,
+      "baselinePt": 399.08,
+      "maxLines": 1
+    },
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 98.52,
+      "baselinePt": 377.72,
+      "maxLines": 1
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 112.68,
+      "xEndPt": 155.16,
+      "baselinePt": 377.72,
+      "maxLines": 1
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 169.32,
+      "xEndPt": 219.0,
+      "baselinePt": 377.72,
+      "maxLines": 1
+    },
+    "birthplace": {
+      "label": "Birthplace",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 353.88,
+      "xEndPt": 531.0,
+      "baselinePt": 377.72,
+      "maxLines": 1
+    },
+    "citizenship": {
+      "label": "Country of Citizenship",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 70.08,
+      "xEndPt": 219.0,
+      "baselinePt": 348.92,
+      "maxLines": 1
+    },
+    "height": {
+      "label": "Height (cm)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 240.12,
+      "xEndPt": 275.76,
+      "baselinePt": 348.92,
+      "maxLines": 1
+    },
+    "weight": {
+      "label": "Weight (kg)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 290.04,
+      "xEndPt": 332.52,
+      "baselinePt": 348.92,
+      "maxLines": 1
+    },
+    "houseUnitStreet": {
+      "label": "House/Unit No., Street, Subdivision/Village",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 531.0,
+      "baselinePt": 310.76,
+      "maxLines": 1
+    },
+    "barangay": {
+      "label": "Barangay",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 70.08,
+      "xEndPt": 155.16,
+      "baselinePt": 288.44,
+      "maxLines": 1
+    },
+    "cityMunicipality": {
+      "label": "City/Municipality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 178.92,
+      "xEndPt": 296.88,
+      "baselinePt": 288.44,
+      "maxLines": 1
+    },
+    "province": {
+      "label": "Province",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 318.36,
+      "xEndPt": 417.72,
+      "baselinePt": 288.44,
+      "maxLines": 1
+    },
+    "zipCode": {
+      "label": "Zip Code",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 431.64,
+      "xEndPt": 531.0,
+      "baselinePt": 288.44,
+      "maxLines": 1
+    },
+    "passportTravelDocNo": {
+      "label": "Passport/Travel Document No.",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 70.08,
+      "xEndPt": 196.44,
+      "baselinePt": 256.04,
+      "maxLines": 1
+    },
+    "dateValidity1Day": {
+      "label": "Date of Validity (passport) - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 318.36,
+      "xEndPt": 339.48,
+      "baselinePt": 256.04,
+      "maxLines": 1
+    },
+    "dateValidity1Month": {
+      "label": "Date of Validity (passport) - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 353.88,
+      "xEndPt": 388.92,
+      "baselinePt": 256.04,
+      "maxLines": 1
+    },
+    "dateValidity1Year": {
+      "label": "Date of Validity (passport) - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 403.08,
+      "xEndPt": 447.48,
+      "baselinePt": 256.04,
+      "maxLines": 1
+    },
+    "dateLatestArrivalDay": {
+      "label": "Date of Latest Arrival - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 98.52,
+      "baselinePt": 226.52,
+      "maxLines": 1
+    },
+    "dateLatestArrivalMonth": {
+      "label": "Date of Latest Arrival - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 112.68,
+      "xEndPt": 155.16,
+      "baselinePt": 226.52,
+      "maxLines": 1
+    },
+    "dateLatestArrivalYear": {
+      "label": "Date of Latest Arrival - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 169.32,
+      "xEndPt": 219.0,
+      "baselinePt": 226.52,
+      "maxLines": 1
+    },
+    "flightVoyageNumber": {
+      "label": "Flight/Voyage Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 319.8,
+      "xEndPt": 531.0,
+      "baselinePt": 226.52,
+      "maxLines": 1
+    },
+    "dateValidity2Day": {
+      "label": "Latest Tourist Visa Extension Date of Validity - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 69.96,
+      "xEndPt": 98.52,
+      "baselinePt": 187.64,
+      "maxLines": 1
+    },
+    "dateValidity2Month": {
+      "label": "Latest Tourist Visa Extension Date of Validity - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 112.68,
+      "xEndPt": 155.16,
+      "baselinePt": 187.64,
+      "maxLines": 1
+    },
+    "dateValidity2Year": {
+      "label": "Latest Tourist Visa Extension Date of Validity - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 169.32,
+      "xEndPt": 219.0,
+      "baselinePt": 187.64,
+      "maxLines": 1
+    },
+    "placeOfApproval": {
+      "label": "Place of Approval (e.g. BI Main Office)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 319.8,
+      "xEndPt": 531.0,
+      "baselinePt": 187.64,
+      "maxLines": 1
+    },
+    "acrNumber": {
+      "label": "Alien Certificate Registration (ACR) Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 70.08,
+      "xEndPt": 196.44,
+      "baselinePt": 150.92,
+      "maxLines": 1
+    },
+    "dateValidity3Day": {
+      "label": "ACR I-Card Date of Validity - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 217.56,
+      "xEndPt": 238.68,
+      "baselinePt": 150.92,
+      "maxLines": 1
+    },
+    "dateValidity3Month": {
+      "label": "ACR I-Card Date of Validity - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 252.84,
+      "xEndPt": 288.12,
+      "baselinePt": 150.92,
+      "maxLines": 1
+    },
+    "dateValidity3Year": {
+      "label": "ACR I-Card Date of Validity - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 302.16,
+      "xEndPt": 346.68,
+      "baselinePt": 150.92,
+      "maxLines": 1
+    },
+    "ssrn": {
+      "label": "Special Security Registration Number (SSRN)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 364.32,
+      "xEndPt": 530.88,
+      "baselinePt": 150.92,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature and date required by the official form, same policy as every other mapped form. Deliberately left blank -- not populated by this automation.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "signatureLine": {
+      "xStartPt": 76.32,
+      "xEndPt": 226.32,
+      "baselinePt": 35.12
+    },
+    "dateLine": {
+      "xStartPt": 273.6,
+      "xEndPt": 364.32,
+      "baselinePt": 35.12
+    }
+  },
+  "customerPreviewCropBox": {
+    "note": "No separate BI-internal static header/footer region exists on this form -- the only staff-only content is the evaluatorNameSignature field, which is already excluded from customer-audience output by its own roles.visibleTo (field-level filtering), not by cropping. The full page is therefore the customer preview region.",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 0,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Single region, the full page -- see customerPreviewCropBox note.",
+    "regions": [
+      {
+        "id": "full_page",
+        "label": "Entire application form",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 0,
+        "yTopPt": 936
+      }
+    ]
+  },
+  "biOnlySections": [],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature in person when you collect it from FIS."
+    },
+    {
+      "id": "photo_requirement",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "Please upload a recent 2x2 inch colored photograph with a white background (taken within the past 3 months) as a supporting document."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every field's coordinates fall within the full-page customerVisibleRegions; the 1 staff-only field (evaluatorNameSignature) is excluded from customer-audience output by roles.visibleTo, not by region cropping (there is no separate BI-only static section to crop)."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "biOnlySections is empty -- there is no purely-BI-internal static header/footer on this form; the 1 staff-only dynamic field is governed entirely by roles.visibleTo."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}
