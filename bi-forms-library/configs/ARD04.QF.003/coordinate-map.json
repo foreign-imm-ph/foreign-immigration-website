@@ -1,0 +1,1080 @@
+{
+  "formId": "ARD04.QF.003",
+  "formTitle": "Emigration Clearance Certificate (ECC) Application Form",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'THIS DOCUMENT MAY BE REPRODUCED AND IS NOT FOR SALE', printed at the top of the page.",
+  "pageWidthPt": 612,
+  "pageHeightPt": 971.04,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/ARD04.QF.003.pdf). Solid 4-sided rectangle boxes for free text (ACR-style, detected via mean-darkness horizontal/vertical scans at threshold ~100-120) and 3-group DD-MMM-YYYY comb boxes for every date field (DOB, Date of Latest Admission, Valid Authorized Stay, Date of Intended Departure), each measured individually via column-divider pixel scans and cross-checked with pixel-ruled visual crops. The Special Security Registration Number (SSRN) field is a single 22-cell comb box in a separate rounded-corner card shared with the staff-only Derogatory Record section.",
+  "measurementNotes": {
+    "columnAssignmentCorrections": "Two real column-order errors were caught and corrected before building this config, both by direct pdftotext -bbox xMin inspection rather than assuming left-to-right reading order equals left-to-right page position: (1) 'Passport Number' is actually the LEFT column field (xMin 18.19pt) and 'Date of Latest Admission' is actually the RIGHT column field (xMin 319.35pt) on the same row -- the opposite of the naive reading-order assumption; (2) on the 'Date of Intended Departure / Next City/Country of Destination' row, the Date of Intended Departure comb occupies only the narrow left portion of the row (pt 17.52-169.56) and the Next City/Country of Destination free-text box fills essentially the entire remaining width (pt 186.0-592.8) -- not a 50/50 left-right split as a first pass assumed.",
+    "ssrnCellCount": "The SSRN comb box was measured directly via column-divider pixel detection and a pixel-ruled visual overlay crop (not assumed): 23 divider points, confirming 22 cells, not a round number like 20. Bound as a single flat dataKey (ssrn) written across all 22 cells, the same pattern already used for ADM05.QF.001's 8-cell dateRequested comb, since the printed field has no internal DD-MMM-YYYY grouping.",
+    "derogatoryRecordAndVerifierStaffOnly": "The 'Derogatory Record:' two blank lines and the 'Derogatory Verifier' / 'Date and Time (DD MMM YYYY/HH:MM)' signature-style line beneath them are explicitly BI-staff-only per the form's own layout (positioned inside the same card as the SSRN field, which only BI staff complete at intake/clearance). All four are mapped as suppliedBy:staff, visibleTo:staff only, optional (staffFieldRequirements required:false) -- never auto-filled with fabricated content, consistent with every other form's staff-only-field policy.",
+    "fourDateCombsShareColumnGrids": "Date of Latest Admission and Valid Authorized Stay are vertically stacked in the same right-hand column and use the identical colsPt column-divider x-positions (measured once, confirmed present at both row y-positions via a direct pixel scan of each row independently, not assumed from the first measurement alone).",
+    "consentParagraphAndSignatureNotPopulated": "The Prosecution Clause and Data Privacy Consent paragraph's two inline name blanks ('I, ___, personally or through my agent/representative ___') and the bottom-of-form Date / Applicant's Signature over Printed Name line are wet-ink declaration elements, deliberately left blank by this automation -- same policy as every other mapped form. Only the signatureBlock's dateLine and signatureLine coordinates are recorded (for a future wet-ink completion UI), never auto-filled.",
+    "mobileNumberPrefixHandling": "The Mobile Number box has a static printed '+63' prefix inside the box itself (confirmed via pdftotext -bbox: the glyphs end at xMax 35.49pt). freeTextFields.mobileNumber's xStartPt begins at 40pt, after the printed prefix, so the applicant's own digits are never drawn on top of it; sample data supplies only the digits after the country code."
+  },
+  "charBoxFields": {
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 686.52,
+      "yBottomPt": 672.72,
+      "colsPt": [
+        18.36,
+        32.04,
+        45.6
+      ]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 686.52,
+      "yBottomPt": 672.72,
+      "colsPt": [
+        59.64,
+        73.44,
+        87.36,
+        101.04
+      ]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 686.52,
+      "yBottomPt": 672.72,
+      "colsPt": [
+        115.32,
+        129.12,
+        142.92,
+        156.84,
+        170.52
+      ]
+    },
+    "ssrn": {
+      "label": "Special Security Registration Number (SSRN)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 772.92,
+      "yBottomPt": 754.8,
+      "colsPt": [
+        310.08,
+        318.72,
+        331.8,
+        344.88,
+        357.6,
+        370.68,
+        383.52,
+        396.48,
+        409.2,
+        422.28,
+        435.24,
+        448.08,
+        461.04,
+        474.0,
+        486.84,
+        499.68,
+        512.64,
+        525.6,
+        538.56,
+        551.64,
+        564.48,
+        577.2,
+        593.4
+      ]
+    },
+    "admissionDay": {
+      "label": "Date of Latest Admission - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 425.4,
+      "yBottomPt": 411.84,
+      "colsPt": [
+        319.44,
+        333.12,
+        346.8
+      ]
+    },
+    "admissionMonth": {
+      "label": "Date of Latest Admission - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 425.4,
+      "yBottomPt": 411.84,
+      "colsPt": [
+        360.72,
+        374.4,
+        388.32,
+        402.24
+      ]
+    },
+    "admissionYear": {
+      "label": "Date of Latest Admission - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 425.4,
+      "yBottomPt": 411.84,
+      "colsPt": [
+        416.4,
+        430.08,
+        443.76,
+        457.68,
+        471.6
+      ]
+    },
+    "authorizedStayDay": {
+      "label": "Valid Authorized Stay - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 392.28,
+      "yBottomPt": 378.6,
+      "colsPt": [
+        319.44,
+        333.12,
+        346.8
+      ]
+    },
+    "authorizedStayMonth": {
+      "label": "Valid Authorized Stay - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 392.28,
+      "yBottomPt": 378.6,
+      "colsPt": [
+        360.72,
+        374.4,
+        388.32,
+        402.24
+      ]
+    },
+    "authorizedStayYear": {
+      "label": "Valid Authorized Stay - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 392.28,
+      "yBottomPt": 378.6,
+      "colsPt": [
+        416.4,
+        430.08,
+        443.76,
+        457.68,
+        471.6
+      ]
+    },
+    "departureDay": {
+      "label": "Date of Intended Departure - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 349.44,
+      "yBottomPt": 335.76,
+      "colsPt": [
+        17.52,
+        31.2,
+        44.76
+      ]
+    },
+    "departureMonth": {
+      "label": "Date of Intended Departure - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 349.44,
+      "yBottomPt": 335.76,
+      "colsPt": [
+        58.8,
+        72.6,
+        86.52,
+        100.2
+      ]
+    },
+    "departureYear": {
+      "label": "Date of Intended Departure - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 349.44,
+      "yBottomPt": 335.76,
+      "colsPt": [
+        114.48,
+        128.16,
+        141.96,
+        155.88,
+        169.56
+      ]
+    }
+  },
+  "checkboxFields": {
+    "appTypeEcc": {
+      "label": "Emigration Clearance Certificate (ECC)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 18.72,
+      "xRightPt": 33.12,
+      "yTopPt": 812.04,
+      "yBottomPt": 798.24
+    },
+    "appTypeCertOfExemption": {
+      "label": "Certificate of Exemption",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 154.32,
+      "xRightPt": 168.48,
+      "yTopPt": 812.04,
+      "yBottomPt": 798.24
+    },
+    "appTypeEccCeRenewal": {
+      "label": "ECC/CE Renewal",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 246.48,
+      "xRightPt": 260.64,
+      "yTopPt": 812.04,
+      "yBottomPt": 798.24
+    },
+    "appTypePaperBasedEccSrc": {
+      "label": "Paper-Based ECC and SRC (Sec. 47(a)2 exempt visa holder)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 321.36,
+      "xRightPt": 335.52,
+      "yTopPt": 812.04,
+      "yBottomPt": 798.24
+    },
+    "appTypeOrderToLeave": {
+      "label": "Order to Leave",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 525.84,
+      "xRightPt": 540.0,
+      "yTopPt": 812.04,
+      "yBottomPt": 798.24
+    },
+    "sexMale": {
+      "label": "Male",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 215.28,
+      "xRightPt": 229.44,
+      "yTopPt": 686.16,
+      "yBottomPt": 672.48
+    },
+    "sexFemale": {
+      "label": "Female",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 251.04,
+      "xRightPt": 265.2,
+      "yTopPt": 686.16,
+      "yBottomPt": 672.48
+    },
+    "maritalSingle": {
+      "label": "Single",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 18.48,
+      "xRightPt": 32.64,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    },
+    "maritalMarried": {
+      "label": "Married",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 117.36,
+      "xRightPt": 131.76,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    },
+    "maritalWidowed": {
+      "label": "Widowed",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 219.84,
+      "xRightPt": 234.0,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    },
+    "maritalAnnulled": {
+      "label": "Annulled",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 326.88,
+      "xRightPt": 341.28,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    },
+    "maritalDivorced": {
+      "label": "Divorced",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 434.16,
+      "xRightPt": 448.32,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    },
+    "maritalSeparated": {
+      "label": "Separated",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 535.2,
+      "xRightPt": 549.6,
+      "yTopPt": 632.64,
+      "yBottomPt": 618.96
+    }
+  },
+  "freeTextFields": {
+    "lastName": {
+      "label": "Last Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.12,
+      "xEndPt": 292.32,
+      "baselinePt": 755.84,
+      "maxLines": 1
+    },
+    "givenName": {
+      "label": "First/Given Name(s)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.48,
+      "xEndPt": 292.8,
+      "baselinePt": 729.68,
+      "maxLines": 1
+    },
+    "otherNameAlias": {
+      "label": "Other Name(s) Alias(es)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.48,
+      "xEndPt": 292.8,
+      "baselinePt": 701.84,
+      "maxLines": 1
+    },
+    "placeOfBirth": {
+      "label": "Place of Birth",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.12,
+      "xEndPt": 292.32,
+      "baselinePt": 647.6,
+      "maxLines": 1
+    },
+    "citizenship": {
+      "label": "Citizenship/Nationality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 313.8,
+      "xEndPt": 591.6,
+      "baselinePt": 650.48,
+      "maxLines": 1
+    },
+    "spouseName": {
+      "label": "Spouse Name (Last Name, Given Name, Middle Name)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.84,
+      "xEndPt": 591.6,
+      "baselinePt": 591.32,
+      "maxLines": 1
+    },
+    "parentGuardianName": {
+      "label": "Parent/Guardian Name traveling with the minor applicant in the [Certificate of Exemption] (Last Name, Given Name, Middle Name)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.84,
+      "xEndPt": 591.6,
+      "baselinePt": 562.4,
+      "maxLines": 1
+    },
+    "houseUnitStreet": {
+      "label": "House/Unit No., Street, Subdivision/Village",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.84,
+      "xEndPt": 591.6,
+      "baselinePt": 521.36,
+      "maxLines": 1
+    },
+    "barangayMunicipality": {
+      "label": "Barangay, Municipality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.48,
+      "xEndPt": 293.04,
+      "baselinePt": 495.68,
+      "maxLines": 1
+    },
+    "provinceZipCode": {
+      "label": "Province, Zip Code",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 317.52,
+      "xEndPt": 592.08,
+      "baselinePt": 496.4,
+      "maxLines": 1
+    },
+    "mobileNumber": {
+      "label": "Mobile Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 40.0,
+      "xEndPt": 170.4,
+      "baselinePt": 450.68,
+      "maxLines": 1
+    },
+    "emailAddress": {
+      "label": "E-mail Address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 182.16,
+      "xEndPt": 431.16,
+      "baselinePt": 450.68,
+      "maxLines": 1
+    },
+    "landlineNumber": {
+      "label": "Landline Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 443.04,
+      "xEndPt": 594.24,
+      "baselinePt": 450.68,
+      "maxLines": 1
+    },
+    "passportNumber": {
+      "label": "Passport Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.12,
+      "xEndPt": 292.32,
+      "baselinePt": 410.72,
+      "maxLines": 1
+    },
+    "visaStatus": {
+      "label": "Applicant's Visa Status per Latest Admission",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.12,
+      "xEndPt": 292.32,
+      "baselinePt": 380.24,
+      "maxLines": 1
+    },
+    "reasonForLeaving": {
+      "label": "Reason for Leaving",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 91.2,
+      "xEndPt": 584.16,
+      "baselinePt": 365.36,
+      "maxLines": 1
+    },
+    "nextCityCountryDestination": {
+      "label": "Next City/Country of Destination",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 186.0,
+      "xEndPt": 592.8,
+      "baselinePt": 337.52,
+      "maxLines": 1
+    },
+    "airlineVesselDetails": {
+      "label": "Airline/Vessel Details",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 18.72,
+      "xEndPt": 594.48,
+      "baselinePt": 304.16,
+      "maxLines": 1
+    },
+    "derogatoryRecordLine1": {
+      "label": "Derogatory Record (line 1)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 318.0,
+      "xEndPt": 575.76,
+      "baselinePt": 733.38,
+      "maxLines": 1
+    },
+    "derogatoryRecordLine2": {
+      "label": "Derogatory Record (line 2)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 318.0,
+      "xEndPt": 575.76,
+      "baselinePt": 723.1,
+      "maxLines": 1
+    },
+    "derogatoryVerifier": {
+      "label": "Derogatory Verifier",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 317.76,
+      "xEndPt": 446.88,
+      "baselinePt": 699.46,
+      "maxLines": 1
+    },
+    "dateTimeVerified": {
+      "label": "Date and Time Verified (DD MMM YYYY/HH:MM)",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 451.2,
+      "xEndPt": 580.56,
+      "baselinePt": 699.46,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature and date required by the official form, same policy as every other mapped form. Deliberately left blank -- not populated by this automation.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "signatureLine": {
+      "xStartPt": 417.69,
+      "xEndPt": 577.99,
+      "baselinePt": 90.94
+    },
+    "dateLine": {
+      "xStartPt": 36.64,
+      "xEndPt": 193.39,
+      "baselinePt": 90.94
+    }
+  },
+  "customerPreviewCropBox": {
+    "note": "No separate BI-internal static header/footer region exists on this form (unlike ADM05.QF.001's 'OFFICIAL USE ONLY' bar) -- the only staff-only content is the Derogatory Record / Derogatory Verifier fields, which are already excluded from customer-audience output by their own roles.visibleTo (field-level filtering), not by cropping. The full page is therefore the customer preview region.",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 7.29,
+    "yTopPt": 971.04
+  },
+  "customerVisibleRegions": {
+    "note": "Single region, the full page -- see customerPreviewCropBox note.",
+    "regions": [
+      {
+        "id": "full_page",
+        "label": "Entire application form",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 7.29,
+        "yTopPt": 971.04
+      }
+    ]
+  },
+  "biOnlySections": [],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature in person when you collect it from FIS."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every field's coordinates fall within the full-page customerVisibleRegions; the 4 staff-only fields (derogatoryRecordLine1/2, derogatoryVerifier, dateTimeVerified) are excluded from customer-audience output by roles.visibleTo, not by region cropping (there is no separate BI-only static section to crop)."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "biOnlySections is empty -- there is no purely-BI-internal static header/footer on this form; the 4 staff-only dynamic fields are governed entirely by roles.visibleTo."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  },
+  "mediaBoxOriginNote": "This PDF (unlike every other mapped form) has a non-zero MediaBox lower-left y (MediaBox: 0.00 7.29 612.00 971.04, confirmed via `pdfinfo -box`), a Canva export artifact. pdf-lib draws text/boxes using the PDF's raw content-stream coordinates, which follow the real MediaBox, not a normalized (0,0)-origin page -- so every yTopPt/yBottomPt/baselinePt below is the TRUE content-space y (visual-bottom-of-page y=7.29, visual-top y=971.04), not a naive pageHeight-minus-topdown value assuming a zero origin. Caught by a first generated test PDF rendering every field's text systematically ~7-10pt too low, overlapping the row below -- root-caused by comparing the rendered text's actual pixel position against the expected baseline pixel position, which differed by almost exactly 7.29pt (the MediaBox offset), then confirmed directly via `pdfinfo -box`. pageWidthPt needed no equivalent correction (MediaBox xMin is 0)."
+}

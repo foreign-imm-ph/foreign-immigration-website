@@ -30,6 +30,8 @@ import coordinateMapRecon from "../../../bi-forms-library/configs/2014-01-011/co
 import questionnaireRecon from "../../../bi-forms-library/configs/2014-01-011/questionnaire.json" with { type: "json" };
 import coordinateMapADM05 from "../../../bi-forms-library/configs/ADM05.QF.001/coordinate-map.json" with { type: "json" };
 import questionnaireADM05 from "../../../bi-forms-library/configs/ADM05.QF.001/questionnaire.json" with { type: "json" };
+import coordinateMapARD04 from "../../../bi-forms-library/configs/ARD04.QF.003/coordinate-map.json" with { type: "json" };
+import questionnaireARD04 from "../../../bi-forms-library/configs/ARD04.QF.003/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
 import { fieldsForAudience, staffOwnedFields } from "../../../bi-forms-library/engine/lib/field-permissions.js";
@@ -64,6 +66,7 @@ const REGISTRY = {
   "2021-03-001": { coordinateMap: coordinateMapTravelPass, questionnaire: questionnaireTravelPass },
   "2014-01-011": { coordinateMap: coordinateMapRecon, questionnaire: questionnaireRecon },
   "ADM05.QF.001": { coordinateMap: coordinateMapADM05, questionnaire: questionnaireADM05 },
+  "ARD04.QF.003": { coordinateMap: coordinateMapARD04, questionnaire: questionnaireARD04 },
 };
 
 // Fail-closed at module load, not per-request: if any registered form's
