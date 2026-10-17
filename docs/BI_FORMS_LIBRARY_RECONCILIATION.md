@@ -51,13 +51,13 @@ Per the master directive's required scheme:
 | Application Form for ACR I-Card Certification | `2014-08-015` | A — mapped | Confirmed on form | **Mapped & automated this directive.** Label-above-box layout (a genuine structural difference from the CDR/NTSP family), 18 charBoxFields, 2 checkboxes, 6 staff free-text fields. One real measurement bug caught and fixed (a spurious third "blank line" inside the DOCUMENT(s)/COPIES TO BE CERTIFIED boxes, which was actually the box's own printed border). |
 | Travel Pass Application Form | `2021-03-001` | A — mapped | Confirmed on form | **Mapped & automated this directive — the required complex-form proof.** 4 sections, 2 checkbox groups (4-option visa type, 6-option marital status), 27 fields, 2 genuine two-column rows discovered and corrected via visual inspection. Entirely customer-supplied (no BI-staff-only section at all — a first for this library). Proven end-to-end in `e2e/tests/10-travel-pass-form-automation.spec.js`. |
 | Request for Reconsideration on the Updating and Extension of Authorized Stay | `2014-01-011` | A — mapped | Confirmed on form | **Mapped & automated this directive.** A structurally different document type: a narrative/affidavit letter with inline blanks in running text, not a comb-box grid. One real measurement bug caught and fixed (the Nationality blank's position, initially misread, overlapped the civil-status checkboxes in the first test render). |
-| Request for Certified True Copy (CTC) of Records | `ADM05.QF.001` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | Distinct two-column "OFFICIAL USE ONLY" layout, taller page (612×1008pt) — genuinely different template family from every form mapped so far; confirmed by direct text-structure inspection. Not yet coordinate-measured. |
-| Emigration Clearance Certificate (ECC) Application Form | `ARD04.QF.003` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 5-option application-type checkbox group, Sex, 6-option Marital Status, Spouse fields, and a staff-only derogatory-record subsection — confirmed by direct text-structure inspection. Not yet coordinate-measured. |
-| CGAF for Extension of Stay of Temporary Visitor's Visa | `IRD04.QF.004` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | Photo-requirement sidebar, Method/Mode/Months checkbox groups, conditional Representative fields — confirmed by direct text-structure inspection. Not yet coordinate-measured. |
+| Request for Certified True Copy (CTC) of Records | `ADM05.QF.001` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Distinct two-column "OFFICIAL USE ONLY" layout, taller page (612×1008pt), row-shared-bottom-line field style (a genuinely different template family). 8th form mapped. |
+| Emigration Clearance Certificate (ECC) Application Form | `ARD04.QF.003` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 5-option application-type checkbox group, Sex, 6-option Marital Status, Spouse fields, 22-cell SSRN comb, and a staff-only derogatory-record subsection. First form found with a non-zero MediaBox origin (a Canva export artifact); documented in the config's own `mediaBoxOriginNote`. 9th form mapped. |
+| CGAF for Extension of Stay of Temporary Visitor's Visa | `IRD04.QF.004` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Photo-requirement sidebar (handled via the existing document-upload feature, not embedded), Method/Mode/Months checkbox groups, a 7-line reason-for-extension field, and five independent 3-box (not comb-grid) date groups — a genuinely different date-field template family. 10th form mapped. |
 | Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured. |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Determined canonical over `BOC04.QF.002` below (see section D). Not yet coordinate-measured. |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — eligible, superseded duplicate | `may_be_reproduced` (inventory) | 2-page form. **Duplicate-pair finding reversed this pass** (see section D.1): `BOC04.QF.002` is the better-evidenced current/canonical version, not this one. Not separately mapped. |
 | Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured. |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — eligible, superseded duplicate | `may_be_reproduced` (inventory) | Same title as `CGAF-002-Rev3`, different file size. Direct `diff`/`md5sum`/file-size comparison plus an explicit "Rev 3" marker in `CGAF-002-Rev3`'s own header text: concluded `CGAF-002-Rev3` is the canonical/current version. This is evidence-based inference, not asserted as absolute fact — final confirmation from the form owner is still open. Not separately mapped; would inherit `CGAF-002-Rev3`'s mapping if/when confirmed identical in content. |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Determined canonical over `CGAF-002-Rev3` this pass** (see section D.1) — carries the Bureau's formal dated document-control footer, a complete 5-option month/year duration set (Rev3 is missing "6 Months"), and the full prosecution-clause/Data-Privacy-Act consent paragraph (Rev3's is a shorter, less complete paragraph). Not yet coordinate-measured. |
 | Request for Certification of Pending Application | `CCS-C-CPA-2016` | C — reference, not a fillable application | `may_be_reproduced` (inventory) | **Not an application form at all.** It is a checklist plus a staff-only certification block, and its own text explicitly references a separate application form, `CCS-A-CPA-2016`, by name — which does **not exist anywhere in this 20-PDF library**. There is no source document to measure coordinates against. This is a precise, evidenced blocker (a named, missing source document), not a vague "complex form" excuse. |
 | Travel Pass — General Instructions / Documentary Requirements | `BIFORM2021-03-002` | C — reference/checklist | Confirmed on form | Confirmed by direct text inspection: "GENERAL INSTRUCTIONS... CHECKLIST OF DOCUMENTARY REQUIREMENTS FOR TRAVEL PASS." Never a fillable template. |
 | Emigration Clearance Certificate (ECC) — the issued certificate itself | `ARD04.QF.001` | B — government-issued output | `not_found_on_form`; flagged `reproduction_status_unconfirmed` in the inventory | Confirmed by direct text inspection: begins "This is to certify that..." — the certificate BI itself issues after approving an ECC application, never a template FIS fills in and hands back. |
@@ -68,22 +68,19 @@ Per the master directive's required scheme:
 ## D. Exact reconciled count
 
 - **20 PDFs total** (independently verified, section A).
-- **Class A, mapped and automated: 7** — `CCS-A-CDR-2016`, `2014-13-002`,
+- **Class A, mapped and automated: 10** — `CCS-A-CDR-2016`, `2014-13-002`,
   `2014-13-006`, `CCS-A-NTSP-2016`, `2014-08-015`, `2021-03-001`,
-  `2014-01-011`.
-- **Class A, eligible but not yet coordinate-mapped: 7** —
-  `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`, `BOC04.QF.001`,
-  `CGAF-002-Rev3`, `CGAF-003-Rev 2`, `BOC04.QF.002` (the last as a
-  superseded duplicate of `CGAF-002-Rev3`, not a separate mapping target).
-  Every one of these 7 is structurally confirmed fillable and
-  reproducible; what remains is the same per-field pixel-measurement work
-  already done for the other 7 — not yet performed within this
-  directive's resource budget. This is a volume/time constraint, stated
-  plainly, not a complexity-avoidance claim: the single most structurally
-  complex form in the library (`2021-03-001`, 4 sections, 2 checkbox
-  groups) and a structurally distinct document type (`2014-01-011`,
-  narrative-letter format) were both mapped this directive specifically
-  to demonstrate that no category of form was skipped for being hard.
+  `2014-01-011`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`. The last
+  three were mapped this pass (see each one's own row above for what
+  made it structurally distinct).
+- **Class A, eligible but not yet coordinate-mapped: 4** —
+  `BOC04.QF.001`, `CGAF-003-Rev 2`, `BOC04.QF.002`, `CGAF-002-Rev3` (the
+  last two as a resolved duplicate pair — `BOC04.QF.002` is the
+  canonical mapping target, `CGAF-002-Rev3` a superseded duplicate not
+  separately mapped; see D.1). All 4 are structurally confirmed fillable
+  and reproducible, each a genuinely large 2-page, 50+ field form (on
+  the order of 2-3x a typical single-page form's field count); the
+  per-field pixel-measurement work itself has not yet been performed.
 - **Class B, government-issued outputs: 2** — `ARD04.QF.001`,
   `ARD04.QF.002`.
 - **Class C, reference/checklist, not fillable applications: 2** —
@@ -91,9 +88,60 @@ Per the master directive's required scheme:
 - **Class D, restricted: 1** — `2015-08-006`.
 - **Class E, unresolved with a documented reason: 1** — `IRD04.QF.008`.
 
-7 + 7 + 2 + 2 + 1 + 1 = **20.** Every PDF in the library is accounted for
-in exactly one class, with the evidence for that class stated above —
+10 + 4 + 2 + 2 + 1 + 1 = **20.** Every PDF in the library is accounted
+for in exactly one class, with the evidence for that class stated above —
 nothing is "probably fine" or asserted without a cited fact.
+
+### D.1 `BOC04.QF.002` / `CGAF-002-Rev3` duplicate-pair resolution
+
+A prior pass of this engagement concluded `CGAF-002-Rev3` was the
+canonical version, based on weak evidence (the presence of a "Rev 3"
+label in its own header text, plus general template-family similarity).
+This pass re-examined both original PDFs directly and reverses that
+conclusion, with concrete, cited evidence:
+
+- **Not exact duplicates.** `md5sum` and file size differ outright
+  (`BOC04.QF.002`: 383,809 bytes, md5 `e621822f…`; `CGAF-002-Rev3`:
+  188,579 bytes, md5 `77ccfae1…`). Both are real, 2-page, genuinely
+  different files — ruled out as classification (A).
+- **Document-control footer.** `BOC04.QF.002` carries the Bureau's
+  formal, dated document-control footer — `"BOC04.QF.002 Rev. Lev. 0
+  Effective: 05 AUG 2024"` — printed identically on both pages.
+  `CGAF-002-Rev3` has **no such footer anywhere**: no form code, no
+  revision level, no effective date on either page, confirmed by a full
+  text extraction of both files. A consistently dated, Bureau-stamped
+  control footer is strong, direct evidence of an officially maintained,
+  current document; its total absence from `CGAF-002-Rev3` is evidence
+  of the opposite.
+- **Content completeness.** `BOC04.QF.002` is the more complete form in
+  several substantive, compliance-relevant respects: it offers a 5-option
+  duration set ("3 Months, 6 Months, 1 Year, 2 Years, 3 Years"), while
+  `CGAF-002-Rev3` is missing the "6 Months" option entirely (4 options
+  only); `BOC04.QF.002`'s "CERTIFICATION AND CONSENT" section includes
+  the full numbered prosecution-clause declaration *and* the Data
+  Privacy Act consent paragraph with its representative-name blank,
+  while `CGAF-002-Rev3`'s "CERTIFICATION" section is a single short
+  paragraph missing both; `BOC04.QF.002` supports two distinct
+  petitioner types (employer company *or* spouse), while
+  `CGAF-002-Rev3` only supports a company petitioner.
+- **Template-quality artifacts.** `CGAF-002-Rev3`'s own extracted title
+  text contains visible garbling/duplication (`"FOR NON-IMMIGRANT
+  IMMIGRANT VIS VISA,, SPECIAL WORK PERMIT..."`) — the signature of an
+  imperfectly maintained or stale template, not a clean, finalized
+  current revision, despite its own "-Rev3" self-label.
+- **One point the other way.** `CGAF-002-Rev3` has two Character
+  Reference slots where `BOC04.QF.002` has one — the single respect in
+  which `CGAF-002-Rev3` is more complete. This does not outweigh the
+  dated-footer and consent/duration-completeness evidence above.
+
+**Classification: (B) — different revisions of the same form.**
+`BOC04.QF.002` is the better-evidenced current/canonical version.
+`CGAF-002-Rev3` is preserved in the library as a superseded prior
+revision, not deleted or hidden, per the standing instruction to
+preserve both originals regardless of which is canonical. `BOC04.QF.002`
+is the mapping target if/when this form family is coordinate-measured;
+`CGAF-002-Rev3` would only need separate mapping if a future owner
+confirms both versions remain independently in active use.
 
 ## E. Preview availability (decoupled from engine-mapping)
 
@@ -113,10 +161,12 @@ fact changes that determination.
 
 ## F. What remains
 
-The 7 eligible-not-yet-mapped Class A forms are the complete, exact scope
-of further coordinate-mapping work this library needs before every
-eligible application form is automated. No other PDF in the library
-requires or would benefit from further engineering work: Class B/C
-documents are correctly never templated, Class D remains correctly
-excluded, and Class E remains blocked on an external confirmation, not
-on more engineering time.
+The 4 eligible-not-yet-mapped Class A forms (`BOC04.QF.001`,
+`CGAF-003-Rev 2`, `BOC04.QF.002`, and `CGAF-002-Rev3` as `BOC04.QF.002`'s
+superseded duplicate) are the complete, exact scope of further
+coordinate-mapping work this library needs before every eligible
+application form is automated. All four are large, 2-page, 50+ field
+forms. No other PDF in the library requires or would benefit from
+further engineering work: Class B/C documents are correctly never
+templated, Class D remains correctly excluded, and Class E remains
+blocked on an external confirmation, not on more engineering time.
