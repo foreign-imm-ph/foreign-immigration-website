@@ -20,22 +20,46 @@ const { populateCharField, drawCheckbox, drawFreeText, drawWrappedFreeText } = r
 const { resolveFieldValues } = require("./field-bindings");
 const { applyMetadataStandard } = require("./metadata");
 
-// Draws a given field set (as returned by fieldsForAudience) onto a page.
-// `values`/`checkboxMarks`/`wrappedPairs` come from field-bindings.js's
-// resolveFieldValues() -- this function is purely mechanical and has no
-// per-form knowledge at all.
-function drawFields(page, font, coordinateMap, fields, resolved, overflowReport) {
+// Every form mapped before BOC04.QF.001 was a single PDF page, so every
+// field implicitly belonged to "the page" and this module took a single
+// `page` object. BOC04.QF.001 is the first genuinely multi-page form (2
+// pages) -- some fields (Character References, Petitioner's Information,
+// ACR I-Card, the signature block) print on page 2, not page 1. A field's
+// optional `page` property (0-indexed; omitted = page 0) now says which
+// PDF page it belongs to, and `pages` (the full array from
+// doc.getPages(), not a single page) is threaded through so each field is
+// drawn onto its own real page rather than every field landing on page 1
+// regardless of where it actually prints. This is a pure routing change --
+// every single-page form's fields all implicitly resolve to pages[0],
+// unchanged from before.
+function pageFor(pages, field) {
+  const idx = typeof field.page === "number" ? field.page : 0;
+  const page = pages[idx];
+  if (!page) throw new Error(`Field references page ${idx} but the document only has ${pages.length} page(s).`);
+  return page;
+}
+
+// Draws a given field set (as returned by fieldsForAudience) across the
+// document's real pages. `values`/`checkboxMarks`/`wrappedPairs` come from
+// field-bindings.js's resolveFieldValues() -- this function is purely
+// mechanical and has no per-form knowledge at all.
+function drawFields(pages, font, coordinateMap, fields, resolved, overflowReport) {
   for (const key of Object.keys(fields.charBoxFields)) {
     if (key in resolved.values) {
+      const page = pageFor(pages, coordinateMap.charBoxFields[key]);
       populateCharField(page, font, coordinateMap, key, resolved.values[key], overflowReport);
     }
   }
   for (const key of Object.keys(fields.checkboxFields)) {
-    if (resolved.checkboxMarks[key]) drawCheckbox(page, font, coordinateMap, key);
+    if (resolved.checkboxMarks[key]) {
+      const page = pageFor(pages, coordinateMap.checkboxFields[key]);
+      drawCheckbox(page, font, coordinateMap, key);
+    }
   }
   const wrappedKeys = new Set();
   for (const pair of resolved.values.__wrappedPairs || []) {
     if (pair.line1 in fields.freeTextFields) {
+      const page = pageFor(pages, coordinateMap.freeTextFields[pair.line1]);
       drawWrappedFreeText(page, font, coordinateMap, pair.line1, pair.line2, pair.text, overflowReport);
       wrappedKeys.add(pair.line1);
       wrappedKeys.add(pair.line2);
@@ -44,6 +68,7 @@ function drawFields(page, font, coordinateMap, fields, resolved, overflowReport)
   for (const key of Object.keys(fields.freeTextFields)) {
     if (wrappedKeys.has(key)) continue;
     if (key in resolved.values) {
+      const page = pageFor(pages, coordinateMap.freeTextFields[key]);
       drawFreeText(page, font, coordinateMap, key, String(resolved.values[key] ?? ""), overflowReport);
     }
   }
@@ -52,27 +77,29 @@ function drawFields(page, font, coordinateMap, fields, resolved, overflowReport)
 async function buildStaffDocument(originalBytes, coordinateMap, bindings, data) {
   const doc = await PDFDocument.load(originalBytes);
   const font = await doc.embedFont(StandardFonts.Helvetica);
-  const page = doc.getPages()[0];
+  const pages = doc.getPages();
   const overflowReport = [];
   const resolved = resolveFieldValues(bindings, data);
   const staffFields = fieldsForAudience(coordinateMap, "staff");
-  drawFields(page, font, coordinateMap, staffFields, resolved, overflowReport);
+  drawFields(pages, font, coordinateMap, staffFields, resolved, overflowReport);
   await applyMetadataStandard(doc, coordinateMap.formTitle);
   const stampFont = await doc.embedFont(StandardFonts.HelveticaOblique);
-  page.drawText("PROTOTYPE - FICTIONAL DATA - NOT FOR FILING", {
-    x: 36, y: 16, size: 7, font: stampFont, color: rgb(0.55, 0.55, 0.55),
-  });
+  for (const page of pages) {
+    page.drawText("PROTOTYPE - FICTIONAL DATA - NOT FOR FILING", {
+      x: 36, y: 16, size: 7, font: stampFont, color: rgb(0.55, 0.55, 0.55),
+    });
+  }
   return { bytes: await doc.save(), overflowReport };
 }
 
 async function buildCustomerFieldsDocument(originalBytes, coordinateMap, bindings, data) {
   const doc = await PDFDocument.load(originalBytes);
   const font = await doc.embedFont(StandardFonts.Helvetica);
-  const page = doc.getPages()[0];
+  const pages = doc.getPages();
   const overflowReport = [];
   const resolved = resolveFieldValues(bindings, data);
   const customerFields = fieldsForAudience(coordinateMap, "customer");
-  drawFields(page, font, coordinateMap, customerFields, resolved, overflowReport);
+  drawFields(pages, font, coordinateMap, customerFields, resolved, overflowReport);
   await applyMetadataStandard(doc, coordinateMap.formTitle);
   return { bytes: await doc.save(), overflowReport };
 }
@@ -108,6 +135,7 @@ const REGION_DIVIDER_PT = 22;
 function getCanvasDims(coordinateMap) {
   const regions = getRegions(coordinateMap);
   const regionHeightsPt = regions.map((r) => r.yTopPt - r.yBottomPt);
+  const regionPages = regions.map((r) => (typeof r.page === "number" ? r.page : 0));
   const regionCount = regions.length;
   const dividerPt = regionCount > 1 ? REGION_DIVIDER_PT : 0;
   const heightPt = regionHeightsPt.reduce((s, h) => s + h, 0) + dividerPt * Math.max(0, regionCount - 1);
@@ -117,6 +145,7 @@ function getCanvasDims(coordinateMap) {
     dividerPt,
     regionHeightsPt,
     regionCount,
+    regionPages,
   };
 }
 

@@ -33,6 +33,8 @@ import questionnaireADM05 from "../../../bi-forms-library/configs/ADM05.QF.001/q
 import coordinateMapARD04 from "../../../bi-forms-library/configs/ARD04.QF.003/coordinate-map.json" with { type: "json" };
 import questionnaireARD04 from "../../../bi-forms-library/configs/ARD04.QF.003/questionnaire.json" with { type: "json" };
 import coordinateMapIRD04 from "../../../bi-forms-library/configs/IRD04.QF.004/coordinate-map.json" with { type: "json" };
+import coordinateMapBOC01 from "../../../bi-forms-library/configs/BOC04.QF.001/coordinate-map.json" with { type: "json" };
+import questionnaireBOC01 from "../../../bi-forms-library/configs/BOC04.QF.001/questionnaire.json" with { type: "json" };
 import questionnaireIRD04 from "../../../bi-forms-library/configs/IRD04.QF.004/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
@@ -70,6 +72,7 @@ const REGISTRY = {
   "ADM05.QF.001": { coordinateMap: coordinateMapADM05, questionnaire: questionnaireADM05 },
   "ARD04.QF.003": { coordinateMap: coordinateMapARD04, questionnaire: questionnaireARD04 },
   "IRD04.QF.004": { coordinateMap: coordinateMapIRD04, questionnaire: questionnaireIRD04 },
+  "BOC04.QF.001": { coordinateMap: coordinateMapBOC01, questionnaire: questionnaireBOC01 },
 };
 
 // Fail-closed at module load, not per-request: if any registered form's

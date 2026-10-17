@@ -23,18 +23,42 @@ const PYTHON_BIN = "python3.13"; // system interpreter with Pillow pre-installed
 const COMPOSE_SCRIPT = path.join(__dirname, "raster", "compose_canvas.py");
 
 async function composeCustomerCanvas(customerFieldsBytes, coordinateMap, dpi = 300) {
-  const pngBytes = await raster.rasterize(customerFieldsBytes, dpi);
   const regions = getRegions(coordinateMap);
+  // Every form mapped before BOC04.QF.001 has all its customerVisibleRegions
+  // on page 0 (the only page the form has), so rasterizing just page 1
+  // (rasterize()) and cropping every region from it is exactly what always
+  // ran here. A genuinely multi-page form can have regions on more than one
+  // real PDF page -- rasterizeAllPages() is only invoked when that's
+  // actually true, so the common single-page case's behavior (and its
+  // already-proven golden-reference tests) is completely unchanged.
+  const pagesNeeded = [...new Set(regions.map((r) => (typeof r.page === "number" ? r.page : 0)))];
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fis-compose-"));
   try {
-    const srcPng = path.join(tmpDir, "src.png");
+    const srcsByPage = {};
+    if (pagesNeeded.length === 1 && pagesNeeded[0] === 0) {
+      const pngBytes = await raster.rasterize(customerFieldsBytes, dpi);
+      const srcPng = path.join(tmpDir, "src-0.png");
+      fs.writeFileSync(srcPng, pngBytes);
+      srcsByPage["0"] = srcPng;
+    } else {
+      const allPagePngs = await raster.rasterizeAllPages(customerFieldsBytes, dpi);
+      for (const pageIdx of pagesNeeded) {
+        if (!allPagePngs[pageIdx]) {
+          throw new Error(`composeCustomerCanvas: a customerVisibleRegions entry references page ${pageIdx} but the rasterized document only has ${allPagePngs.length} page(s).`);
+        }
+        const srcPng = path.join(tmpDir, `src-${pageIdx}.png`);
+        fs.writeFileSync(srcPng, allPagePngs[pageIdx]);
+        srcsByPage[String(pageIdx)] = srcPng;
+      }
+    }
+    const srcsJson = path.join(tmpDir, "srcs.json");
     const regionsJson = path.join(tmpDir, "regions.json");
     const outPng = path.join(tmpDir, "canvas.png");
     const outDims = path.join(tmpDir, "dims.json");
-    fs.writeFileSync(srcPng, pngBytes);
+    fs.writeFileSync(srcsJson, JSON.stringify(srcsByPage));
     fs.writeFileSync(regionsJson, JSON.stringify(regions));
     const scale = dpi / 72.0;
-    execFileSync(PYTHON_BIN, [COMPOSE_SCRIPT, srcPng, String(coordinateMap.pageHeightPt), String(scale), String(REGION_DIVIDER_PT), regionsJson, outPng, outDims]);
+    execFileSync(PYTHON_BIN, [COMPOSE_SCRIPT, srcsJson, String(coordinateMap.pageHeightPt), String(scale), String(REGION_DIVIDER_PT), regionsJson, outPng, outDims]);
     return { canvasPng: fs.readFileSync(outPng), dims: JSON.parse(fs.readFileSync(outDims, "utf8")) };
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -52,7 +76,18 @@ async function finalizeCustomerPreview(canvasPngBytes, dims, coordinateMap, wate
 
   if (dims.regionCount > 1 && dims.dividerPt > 0) {
     const italic = await doc.embedFont(StandardFonts.HelveticaOblique);
-    const caption = "FIS staff prepare the remaining sections of this form";
+    // Two different meanings share this one divider slot (this code has
+    // always assumed exactly 2 regions when regionCount > 1): the original
+    // meaning is a SAME-page split where the lower, staff-only part of that
+    // one page is cropped out entirely -- the existing caption. A
+    // genuinely multi-page form's regions can instead be two DIFFERENT
+    // real pages stacked in full (BOC04.QF.001) -- an ordinary page break,
+    // not a hidden-content split, so the staff caption would be actively
+    // misleading there.
+    const samePage = !dims.regionPages || dims.regionPages.length < 2 || dims.regionPages[0] === dims.regionPages[1];
+    const caption = samePage
+      ? "FIS staff prepare the remaining sections of this form"
+      : "This form continues on the next page";
     const capSize = 9;
     const regionAHeightPt = dims.regionHeightsPt[0];
     const dividerCenterY = dims.heightPt - regionAHeightPt - dims.dividerPt / 2;

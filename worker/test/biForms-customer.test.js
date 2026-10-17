@@ -75,6 +75,25 @@ describe("customer-facing BI-form routes", () => {
     }
   });
 
+  it("BOC04.QF.001 (the engine's first genuinely multi-page form) is served through the exact same generic customer route with full six-language labels", async () => {
+    const client = await createTestClient();
+    const cookie = await createSessionCookieFor(client);
+    const staff = await createTestStaff();
+    const submission = await assignForm(client, null, staff, { biFormId: "BOC04.QF.001" });
+
+    const resp = await worker.fetch(authedRequest(`/api/bi-forms/${submission.id}`, { cookie }), env);
+    expect(resp.status).toBe(200);
+    const body = await resp.json();
+    expect(body.submission.biFormId).toBe("BOC04.QF.001");
+    expect(body.questionnaire.questions.length).toBeGreaterThan(0);
+    expect(body.questionnaire.languages.sort()).toEqual(["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"].sort());
+    for (const q of body.questionnaire.questions) {
+      for (const lang of body.questionnaire.languages) {
+        expect(q.labels[lang], `${q.id}.${lang}`).toBeTruthy();
+      }
+    }
+  });
+
   it("client B cannot read client A's submission by ID", async () => {
     const clientA = await createTestClient();
     const staff = await createTestStaff();

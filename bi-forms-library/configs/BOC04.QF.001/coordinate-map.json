@@ -1,0 +1,3232 @@
+{
+  "formId": "BOC04.QF.001",
+  "formTitle": "Consolidated General Application Form for Immigrant Visa",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'THIS DOCUMENT MAY BE REPRODUCED AND IS NOT FOR SALE', printed at the top of both pages.",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured from 300 DPI rasters of both pages of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/BOC04.QF.001.pdf), a Microsoft Word export with a standard (0,0)-origin MediaBox. A third distinct template family within this library: every applicant-facing field (not just dates) is rendered as a comb-grid of individual character cells, with a form-wide uniform cell pitch of 12.96pt (independently confirmed across multiple unrelated fields -- Present Immigration Status, Last Name, Other Name(s)/Alias(es) -- via direct pixel measurement, then used to auto-generate colsPt for every field from just its outer left/right bounds, rather than measuring every internal divider by hand). Date fields use the same DD-MMM-YYYY 3-group (2+3+4 cell) convention already established for ARD04.QF.003, each group its own charBoxFields entry.",
+  "measurementNotes": {
+    "uniformCellPitchDiscovery": "The first two fields measured (Present Immigration Status, Last Name) independently converged on a ~12.96pt cell pitch via direct column-divider pixel detection. This was then used as a form-wide constant: for every other field, only the box's outer left/right/top/bottom bounds were measured directly, and colsPt was generated as evenly-spaced points between them (cell count = round(width/12.96)) -- cutting the per-field measurement burden roughly in half versus measuring every internal divider by hand, while still deriving every coordinate from the real original PDF, never estimated from memory.",
+    "checkboxPositionCorrection": "Checkboxes on this form sit noticeably closer to their row's own label text than on the Word-template forms mapped previously (IRD04.QF.004) -- an initial x-range guess based on the printed label's own text position caught only stray anti-aliased text pixels and returned no clean border. Corrected by a pixel-ruled visual-grid overlay crop (Type of Visa Application / Method of Application rows) that located the true checkbox bounds directly, after which Sex and Civil Status used the same corrected-range approach from the start.",
+    "landlineMobilePairsNotSharedBorder": "Unlike the row-shared-bottom-line style seen on ADM05.QF.001, this form's Landline/Mobile field pairs (Section III contact info, Character References, Petitioner section) are two fully independent boxes with their own top and bottom borders and a label line in between -- confirmed by direct visual crop after an initial assumption (based on the otherAlias1/otherAlias2 and spouseAlias1/spouseAlias2 pairs elsewhere on this same form, which DO share a border) proved wrong for this specific field pair.",
+    "childDateOfBirthIsThreeGroupsNotOneComb": "child1Dob/child2Dob initially measured as a single outer-bounds comb (coincidentally yielding a plausible-looking 11-cell count, since the combined width of the real 2+3+4-cell groups plus their two inter-group gaps is close to 11 cells). A pixel-ruled visual crop showed this was wrong: each is the same 3-group DD-MMM-YYYY structure (2+3+4 cells, with gaps) as every other date field on this form, not one continuous comb -- corrected to match, with column positions matching the ACR section's own date fields on page 2 almost exactly (confirming this x-position is a reused template row, not coincidence).",
+    "claimStubAndRepresentativeBlockNotPopulated": "The 'APPLICANT'S ACR I-CARD CLAIM STUB' (bottom of page 1: Applicant's Name, ACR Number, Visa Type) and the back-page 'Name of Representative / Accredited Travel Agency / BI Accreditation No. / Contact No. / Residential-Office Address / Signature' block (very bottom of page 2, used only when an authorized representative physically claims the printed ACR I-Card) are both claim-time, BI-counter-completed sections, not part of the online application itself -- consistent with the same treatment already given to ADM05.QF.001's own Claim Stub. Neither is mapped as a fillable field; both are excluded from customer-audience output structurally (no charBoxFields/checkboxFields reference them), not via cropping.",
+    "acrSectionTreatedAsCustomerOptional": "Section V's ACR Number/Date of Issuance/Expiry/CRN fields (left column) are NOT under the form's own 'DO NOT FILL OUT THIS PORTION' label (which covers only the right-column Application Number/Received-Recommended-by/Reviewed-by/Approved-by block) -- they are for an applicant who already holds a prior ACR I-Card to declare it, so they are mapped as ordinary, optional ('N/A' if inapplicable) customer fields, consistent with the same treatment given to ACR/SSRN fields on ARD04.QF.003 and IRD04.QF.004.",
+    "visualInspectionCorrections": "Caught via rendering the real test PDF and visually inspecting every field (not just a successful CLI run), as required: (1) Section III Landline/Mobile xStart was mismeasured at 48.24pt, overlapping the 'Landline'/'Mobile' row labels with the first 3 of 15 drawn cells -- a pixel-divider scan against the real original showed the box actually starts at 87.48pt (12 cells, ending at 243.0pt, matching the Mobile row exactly), corrected accordingly. (2) The Height [cm] field was originally measured with only 3 boundary points (2 cells), causing a genuine 3-character sample value ('165') to show an overflow/truncation warning -- a pixel-divider scan showed the real box has 4 dividers (3 cells, starting at 87.48pt, not 100.68pt), so the first cell had simply been missed; corrected to the full 3-cell box, which resolves the overflow entirely (no longer a genuine form limitation)."
+  },
+  "charBoxFields": {
+    "presentImmigrationStatus": {
+      "label": "Present Immigration Status",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 778.92,
+      "yBottomPt": 766.92,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ]
+    },
+    "typeOfVisa": {
+      "label": "Type of Visa",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 735.72,
+      "yBottomPt": 723.72,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ]
+    },
+    "biAccreditationNumber": {
+      "label": "BI Accreditation Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 693.96,
+      "yBottomPt": 682.2,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ]
+    },
+    "nameOfAuthorizedRep": {
+      "label": "Name of Authorized Representative [Last Name, First/Given Name, Middle Name]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 671.4,
+      "yBottomPt": 659.64,
+      "colsPt": [
+        35.52,
+        48.47,
+        61.43,
+        74.38,
+        87.34,
+        100.29,
+        113.25,
+        126.2,
+        139.15,
+        152.11,
+        165.06,
+        178.02,
+        190.97,
+        203.93,
+        216.88,
+        229.83,
+        242.79,
+        255.74,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.51,
+        333.47,
+        346.42,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.19,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.87,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "passportNumber": {
+      "label": "Passport Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 640.44,
+      "yBottomPt": 628.68,
+      "colsPt": [
+        35.52,
+        48.5,
+        61.47,
+        74.44,
+        87.42,
+        100.4,
+        113.37,
+        126.34,
+        139.32,
+        152.29,
+        165.27,
+        178.25,
+        191.22,
+        204.19,
+        217.17,
+        230.15,
+        243.12
+      ]
+    },
+    "placeOfIssuance": {
+      "label": "Place of Issuance",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 595.56,
+      "yBottomPt": 583.8,
+      "colsPt": [
+        35.52,
+        48.49,
+        61.46,
+        74.44,
+        87.41,
+        100.38,
+        113.35,
+        126.32,
+        139.3,
+        152.27,
+        165.24,
+        178.21,
+        191.18,
+        204.16,
+        217.13,
+        230.1,
+        243.07,
+        256.04,
+        269.02,
+        281.99,
+        294.96
+      ]
+    },
+    "dateLatestArrivalDay": {
+      "label": "Date of Latest Arrival - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 640.44,
+      "yBottomPt": 626.28,
+      "colsPt": [
+        347.04,
+        360.0,
+        372.96
+      ]
+    },
+    "dateLatestArrivalMonth": {
+      "label": "Date of Latest Arrival - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 640.44,
+      "yBottomPt": 626.28,
+      "colsPt": [
+        385.56,
+        398.52,
+        411.48,
+        424.44
+      ]
+    },
+    "dateLatestArrivalYear": {
+      "label": "Date of Latest Arrival - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 640.44,
+      "yBottomPt": 626.28,
+      "colsPt": [
+        437.4,
+        450.36,
+        463.32,
+        476.28,
+        489.24
+      ]
+    },
+    "expiryDateDay": {
+      "label": "Expiry Date/Valid Until - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 618.36,
+      "yBottomPt": 606.6,
+      "colsPt": [
+        36.12,
+        49.08,
+        62.04
+      ]
+    },
+    "expiryDateMonth": {
+      "label": "Expiry Date/Valid Until - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 618.36,
+      "yBottomPt": 606.6,
+      "colsPt": [
+        70.44,
+        84.36,
+        97.32,
+        110.28
+      ]
+    },
+    "expiryDateYear": {
+      "label": "Expiry Date/Valid Until - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 618.36,
+      "yBottomPt": 606.6,
+      "colsPt": [
+        117.24,
+        130.2,
+        143.4,
+        156.36,
+        169.32
+      ]
+    },
+    "lastDayAuthStayDay": {
+      "label": "Last Day of Authorized Stay - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 597.96,
+      "yBottomPt": 582.6,
+      "colsPt": [
+        347.04,
+        360.0,
+        372.96
+      ]
+    },
+    "lastDayAuthStayMonth": {
+      "label": "Last Day of Authorized Stay - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 597.96,
+      "yBottomPt": 582.6,
+      "colsPt": [
+        385.56,
+        398.52,
+        411.48,
+        424.44
+      ]
+    },
+    "lastDayAuthStayYear": {
+      "label": "Last Day of Authorized Stay - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 597.96,
+      "yBottomPt": 582.6,
+      "colsPt": [
+        437.4,
+        450.36,
+        463.32,
+        476.28,
+        489.24
+      ]
+    },
+    "lastName": {
+      "label": "Last Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 565.56,
+      "yBottomPt": 553.8,
+      "colsPt": [
+        35.52,
+        48.47,
+        61.43,
+        74.38,
+        87.34,
+        100.29,
+        113.25,
+        126.2,
+        139.15,
+        152.11,
+        165.06,
+        178.02,
+        190.97,
+        203.93,
+        216.88,
+        229.83,
+        242.79,
+        255.74,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.51,
+        333.47,
+        346.42,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.19,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.87,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "firstGivenName": {
+      "label": "First/Given Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 544.2,
+      "yBottomPt": 532.44,
+      "colsPt": [
+        35.52,
+        48.47,
+        61.43,
+        74.38,
+        87.34,
+        100.29,
+        113.25,
+        126.2,
+        139.15,
+        152.11,
+        165.06,
+        178.02,
+        190.97,
+        203.93,
+        216.88,
+        229.83,
+        242.79,
+        255.74,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.51,
+        333.47,
+        346.42,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.19,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.87,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "middleName": {
+      "label": "Middle Name (if applicable)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 525.48,
+      "yBottomPt": 513.48,
+      "colsPt": [
+        35.52,
+        48.47,
+        61.43,
+        74.38,
+        87.34,
+        100.29,
+        113.25,
+        126.2,
+        139.15,
+        152.11,
+        165.06,
+        178.02,
+        190.97,
+        203.93,
+        216.88,
+        229.83,
+        242.79,
+        255.74,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.51,
+        333.47,
+        346.42,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.19,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.87,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "otherAlias1": {
+      "label": "Other Name(s)/Alias(es) 1",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 504.12,
+      "yBottomPt": 492.36,
+      "colsPt": [
+        61.44,
+        74.39,
+        87.35,
+        100.3,
+        113.26,
+        126.21,
+        139.16,
+        152.12,
+        165.07,
+        178.03,
+        190.98,
+        203.93,
+        216.89,
+        229.84,
+        242.8,
+        255.75,
+        268.7,
+        281.66,
+        294.61,
+        307.57,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.34,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.11,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "otherAlias2": {
+      "label": "Other Name(s)/Alias(es) 2",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 491.4,
+      "yBottomPt": 479.4,
+      "colsPt": [
+        61.44,
+        74.39,
+        87.35,
+        100.3,
+        113.26,
+        126.21,
+        139.16,
+        152.12,
+        165.07,
+        178.03,
+        190.98,
+        203.93,
+        216.89,
+        229.84,
+        242.8,
+        255.75,
+        268.7,
+        281.66,
+        294.61,
+        307.57,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.34,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.11,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.28,
+      "yBottomPt": 458.28,
+      "colsPt": [
+        36.72,
+        49.68,
+        62.76
+      ]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.28,
+      "yBottomPt": 458.28,
+      "colsPt": [
+        70.92,
+        83.88,
+        96.84,
+        109.8
+      ]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.28,
+      "yBottomPt": 458.28,
+      "colsPt": [
+        118.68,
+        131.64,
+        144.6,
+        157.56,
+        170.52
+      ]
+    },
+    "countryOfBirth": {
+      "label": "Country of Birth",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 470.76,
+      "yBottomPt": 458.76,
+      "colsPt": [
+        311.52,
+        324.48,
+        337.44,
+        350.4,
+        363.36,
+        376.32,
+        389.28,
+        402.24,
+        415.2,
+        428.16,
+        441.12,
+        454.08,
+        467.04,
+        480.0,
+        492.96,
+        505.92,
+        518.88,
+        531.84,
+        544.8,
+        557.76,
+        570.72
+      ]
+    },
+    "countryOfCitizenship": {
+      "label": "Country of Citizenship",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 448.68,
+      "yBottomPt": 436.92,
+      "colsPt": [
+        35.76,
+        48.72,
+        61.68,
+        74.64,
+        87.6,
+        100.56,
+        113.52,
+        126.48,
+        139.44,
+        152.4,
+        165.36,
+        178.32,
+        191.28,
+        204.24,
+        217.2,
+        230.16,
+        243.12,
+        256.08,
+        269.04,
+        282.0,
+        294.96
+      ]
+    },
+    "height": {
+      "label": "Height [cm]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 436.92,
+      "yBottomPt": 423.96,
+      "colsPt": [
+        87.48,
+        100.44,
+        113.4,
+        126.36
+      ]
+    },
+    "weight": {
+      "label": "Weight [kg]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 436.92,
+      "yBottomPt": 423.96,
+      "colsPt": [
+        255.96,
+        268.92,
+        281.88,
+        294.84
+      ]
+    },
+    "profession": {
+      "label": "Profession/Occupation",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 408.12,
+      "yBottomPt": 396.12,
+      "colsPt": [
+        35.52,
+        48.49,
+        61.46,
+        74.44,
+        87.41,
+        100.38,
+        113.35,
+        126.32,
+        139.3,
+        152.27,
+        165.24,
+        178.21,
+        191.18,
+        204.16,
+        217.13,
+        230.1,
+        243.07,
+        256.04,
+        269.02,
+        281.99,
+        294.96
+      ]
+    },
+    "landline": {
+      "label": "Landline",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 386.76,
+      "yBottomPt": 375.0,
+      "colsPt": [
+        87.48,
+        100.44,
+        113.4,
+        126.36,
+        139.32,
+        152.28,
+        165.24,
+        178.2,
+        191.16,
+        204.12,
+        217.08,
+        230.04,
+        243.0
+      ]
+    },
+    "mobile": {
+      "label": "Mobile",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 374.04,
+      "yBottomPt": 360.84,
+      "colsPt": [
+        87.48,
+        100.44,
+        113.4,
+        126.36,
+        139.32,
+        152.28,
+        165.24,
+        178.2,
+        191.16,
+        204.12,
+        217.08,
+        230.04,
+        243.0
+      ]
+    },
+    "emailAddress": {
+      "label": "E-mail Address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 386.04,
+      "yBottomPt": 373.32,
+      "colsPt": [
+        310.8,
+        323.76,
+        336.72,
+        349.68,
+        362.64,
+        375.6,
+        388.56,
+        401.52,
+        414.48,
+        427.44,
+        440.4,
+        453.36,
+        466.32,
+        479.28,
+        492.24,
+        505.2,
+        518.16,
+        531.12,
+        544.08,
+        557.04,
+        570.0
+      ]
+    },
+    "resPhHouseUnit": {
+      "label": "House/Unit No., Street, Subdivision/Village Barangay (PH)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 343.56,
+      "yBottomPt": 331.56,
+      "colsPt": [
+        35.52,
+        48.49,
+        61.46,
+        74.44,
+        87.41,
+        100.38,
+        113.35,
+        126.32,
+        139.3,
+        152.27,
+        165.24,
+        178.21,
+        191.18,
+        204.16,
+        217.13,
+        230.1,
+        243.07,
+        256.04,
+        269.02,
+        281.99,
+        294.96
+      ]
+    },
+    "resAbroadHouseUnit": {
+      "label": "House/Unit No., Street, Subdivision/Village (Abroad)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 343.32,
+      "yBottomPt": 331.44,
+      "colsPt": [
+        311.52,
+        324.48,
+        337.44,
+        350.4,
+        363.36,
+        376.32,
+        389.28,
+        402.24,
+        415.2,
+        428.16,
+        441.12,
+        454.08,
+        467.04,
+        480.0,
+        492.96,
+        505.92,
+        518.88,
+        531.84,
+        544.8,
+        557.76,
+        570.72
+      ]
+    },
+    "resPhMunicipality": {
+      "label": "Municipality/City (PH)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 322.2,
+      "yBottomPt": 310.2,
+      "colsPt": [
+        35.52,
+        48.49,
+        61.46,
+        74.44,
+        87.41,
+        100.38,
+        113.35,
+        126.32,
+        139.3,
+        152.27,
+        165.24,
+        178.21,
+        191.18,
+        204.16,
+        217.13,
+        230.1,
+        243.07,
+        256.04,
+        269.02,
+        281.99,
+        294.96
+      ]
+    },
+    "resAbroadCityState": {
+      "label": "City, State (Abroad)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 321.96,
+      "yBottomPt": 310.2,
+      "colsPt": [
+        311.76,
+        324.71,
+        337.66,
+        350.6,
+        363.55,
+        376.5,
+        389.45,
+        402.4,
+        415.34,
+        428.29,
+        441.24,
+        454.19,
+        467.14,
+        480.08,
+        493.03,
+        505.98,
+        518.93,
+        531.88,
+        544.82,
+        557.77,
+        570.72
+      ]
+    },
+    "resPhProvinceZip": {
+      "label": "Province, Zip Code (PH)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 301.08,
+      "yBottomPt": 289.32,
+      "colsPt": [
+        35.76,
+        48.73,
+        61.7,
+        74.68,
+        87.65,
+        100.62,
+        113.59,
+        126.56,
+        139.54,
+        152.51,
+        165.48,
+        178.45,
+        191.42,
+        204.4,
+        217.37,
+        230.34,
+        243.31,
+        256.28,
+        269.26,
+        282.23,
+        295.2
+      ]
+    },
+    "resAbroadCountryZip": {
+      "label": "Country, Zip Code (Abroad)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 301.32,
+      "yBottomPt": 289.32,
+      "colsPt": [
+        311.76,
+        324.72,
+        337.68,
+        350.64,
+        363.6,
+        376.56,
+        389.52,
+        402.48,
+        415.44,
+        428.4,
+        441.36,
+        454.32,
+        467.28,
+        480.24,
+        493.2,
+        506.16,
+        519.12,
+        532.08,
+        545.04,
+        558.0,
+        570.96
+      ]
+    },
+    "spouseName": {
+      "label": "Name of Spouse [Last Name, First/Given Name, Middle Name]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 280.92,
+      "yBottomPt": 269.16,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ]
+    },
+    "spouseAlias1": {
+      "label": "Spouse Other Name(s)/Alias(es) 1",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 248.52,
+      "yBottomPt": 235.8,
+      "colsPt": [
+        61.44,
+        74.39,
+        87.35,
+        100.3,
+        113.26,
+        126.21,
+        139.16,
+        152.12,
+        165.07,
+        178.03,
+        190.98,
+        203.93,
+        216.89,
+        229.84,
+        242.8,
+        255.75,
+        268.7,
+        281.66,
+        294.61,
+        307.57,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.34,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.11,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "spouseAlias2": {
+      "label": "Spouse Other Name(s)/Alias(es) 2",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 235.8,
+      "yBottomPt": 223.56,
+      "colsPt": [
+        61.44,
+        74.39,
+        87.35,
+        100.3,
+        113.26,
+        126.21,
+        139.16,
+        152.12,
+        165.07,
+        178.03,
+        190.98,
+        203.93,
+        216.89,
+        229.84,
+        242.8,
+        255.75,
+        268.7,
+        281.66,
+        294.61,
+        307.57,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.34,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.11,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "child1Name": {
+      "label": "Name(s) of Child(ren) 1 [Last Name, First/Given Name, Middle Name]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 223.56,
+      "yBottomPt": 211.8,
+      "colsPt": [
+        48.48,
+        61.43,
+        74.39,
+        87.34,
+        100.3,
+        113.25,
+        126.2,
+        139.16,
+        152.11,
+        165.07,
+        178.02,
+        190.98,
+        203.93,
+        216.88,
+        229.84,
+        242.79,
+        255.75,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "child1DobDay": {
+      "label": "Child 1 Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 202.44,
+      "yBottomPt": 190.44,
+      "colsPt": [
+        35.88,
+        48.84,
+        61.92
+      ]
+    },
+    "child1DobMonth": {
+      "label": "Child 1 Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 202.44,
+      "yBottomPt": 190.44,
+      "colsPt": [
+        74.76,
+        87.72,
+        100.68,
+        113.64
+      ]
+    },
+    "child1DobYear": {
+      "label": "Child 1 Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 202.44,
+      "yBottomPt": 190.44,
+      "colsPt": [
+        126.6,
+        139.56,
+        152.52,
+        165.48,
+        178.44
+      ]
+    },
+    "child2Name": {
+      "label": "Name(s) of Child(ren) 2 [Last Name, First/Given Name, Middle Name]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 181.08,
+      "yBottomPt": 169.08,
+      "colsPt": [
+        48.48,
+        61.43,
+        74.39,
+        87.34,
+        100.3,
+        113.25,
+        126.2,
+        139.16,
+        152.11,
+        165.07,
+        178.02,
+        190.98,
+        203.93,
+        216.88,
+        229.84,
+        242.79,
+        255.75,
+        268.7,
+        281.65,
+        294.61,
+        307.56,
+        320.52,
+        333.47,
+        346.43,
+        359.38,
+        372.33,
+        385.29,
+        398.24,
+        411.2,
+        424.15,
+        437.1,
+        450.06,
+        463.01,
+        475.97,
+        488.92,
+        501.88,
+        514.83,
+        527.78,
+        540.74,
+        553.69,
+        566.65,
+        579.6
+      ]
+    },
+    "child2DobDay": {
+      "label": "Child 2 Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 161.16,
+      "yBottomPt": 149.4,
+      "colsPt": [
+        35.88,
+        48.84,
+        61.92
+      ]
+    },
+    "child2DobMonth": {
+      "label": "Child 2 Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 161.16,
+      "yBottomPt": 149.4,
+      "colsPt": [
+        74.76,
+        87.72,
+        100.68,
+        113.64
+      ]
+    },
+    "child2DobYear": {
+      "label": "Child 2 Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 161.16,
+      "yBottomPt": 149.4,
+      "colsPt": [
+        126.6,
+        139.56,
+        152.52,
+        165.48,
+        178.44
+      ]
+    },
+    "charRefName": {
+      "label": "Character Reference Last Name, First/Given Name, Middle Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 784.44,
+      "yBottomPt": 771.48,
+      "colsPt": [
+        36.48,
+        49.48,
+        62.48,
+        75.48,
+        88.48,
+        101.48,
+        114.48,
+        127.48,
+        140.48,
+        153.48,
+        166.48,
+        179.48,
+        192.48,
+        205.48,
+        218.48,
+        231.48,
+        244.48,
+        257.48,
+        270.48,
+        283.48,
+        296.48,
+        309.48,
+        322.48,
+        335.48,
+        348.48,
+        361.48,
+        374.48,
+        387.48,
+        400.48,
+        413.48,
+        426.48,
+        439.48,
+        452.48,
+        465.48,
+        478.48,
+        491.48,
+        504.48,
+        517.48,
+        530.48,
+        543.48,
+        556.48,
+        569.48,
+        582.48
+      ],
+      "page": 1
+    },
+    "charRefHouseUnit": {
+      "label": "Character Reference House/Unit No., Street, Subdivision/Village, Barangay",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 753.48,
+      "yBottomPt": 740.52,
+      "colsPt": [
+        35.52,
+        48.48,
+        61.44,
+        74.4,
+        87.36,
+        100.32,
+        113.28,
+        126.24,
+        139.2,
+        152.16,
+        165.12,
+        178.08,
+        191.04,
+        204.0,
+        216.96,
+        229.92,
+        242.88,
+        255.84,
+        268.8,
+        281.76,
+        294.72
+      ],
+      "page": 1
+    },
+    "charRefMunicipality": {
+      "label": "Character Reference Municipality/City",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 732.12,
+      "yBottomPt": 719.16,
+      "colsPt": [
+        35.52,
+        48.48,
+        61.44,
+        74.4,
+        87.36,
+        100.32,
+        113.28,
+        126.24,
+        139.2,
+        152.16,
+        165.12,
+        178.08,
+        191.04,
+        204.0,
+        216.96,
+        229.92,
+        242.88,
+        255.84,
+        268.8,
+        281.76,
+        294.72
+      ],
+      "page": 1
+    },
+    "charRefProvinceZip": {
+      "label": "Character Reference Province, Zip Code",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 712.68,
+      "yBottomPt": 699.72,
+      "colsPt": [
+        35.76,
+        48.72,
+        61.68,
+        74.64,
+        87.6,
+        100.56,
+        113.52,
+        126.48,
+        139.44,
+        152.4,
+        165.36,
+        178.32,
+        191.28,
+        204.24,
+        217.2,
+        230.16,
+        243.12,
+        256.08,
+        269.04,
+        282.0,
+        294.96
+      ],
+      "page": 1
+    },
+    "charRefLandline": {
+      "label": "Character Reference Landline",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 754.2,
+      "yBottomPt": 741.24,
+      "colsPt": [
+        319.92,
+        332.88,
+        345.84,
+        358.8,
+        371.76,
+        384.72,
+        397.68,
+        410.64,
+        423.6,
+        436.56,
+        449.52,
+        462.48,
+        475.44
+      ],
+      "page": 1
+    },
+    "charRefMobile": {
+      "label": "Character Reference Mobile",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 732.96,
+      "yBottomPt": 720.36,
+      "colsPt": [
+        319.92,
+        332.88,
+        345.84,
+        358.8,
+        371.76,
+        384.72,
+        397.68,
+        410.64,
+        423.6,
+        436.56,
+        449.52,
+        462.48,
+        475.44
+      ],
+      "page": 1
+    },
+    "charRefEmail": {
+      "label": "Character Reference E-mail Address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 711.84,
+      "yBottomPt": 699.6,
+      "colsPt": [
+        319.92,
+        332.96,
+        346.01,
+        359.05,
+        372.1,
+        385.14,
+        398.18,
+        411.23,
+        424.27,
+        437.32,
+        450.36,
+        463.4,
+        476.45,
+        489.49,
+        502.54,
+        515.58,
+        528.62,
+        541.67,
+        554.71,
+        567.76,
+        580.8
+      ],
+      "page": 1
+    },
+    "petLastName": {
+      "label": "Petitioner Last Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 683.4,
+      "yBottomPt": 670.2,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ],
+      "page": 1
+    },
+    "petFirstGivenName": {
+      "label": "Petitioner First/Given Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 661.8,
+      "yBottomPt": 648.6,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ],
+      "page": 1
+    },
+    "petMiddleName": {
+      "label": "Petitioner Middle Name (if applicable)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 640.2,
+      "yBottomPt": 627.0,
+      "colsPt": [
+        35.76,
+        48.71,
+        61.67,
+        74.62,
+        87.58,
+        100.53,
+        113.49,
+        126.44,
+        139.39,
+        152.35,
+        165.3,
+        178.26,
+        191.21,
+        204.17,
+        217.12,
+        230.07,
+        243.03,
+        255.98,
+        268.94,
+        281.89,
+        294.85,
+        307.8,
+        320.75,
+        333.71,
+        346.66,
+        359.62,
+        372.57,
+        385.53,
+        398.48,
+        411.43,
+        424.39,
+        437.34,
+        450.3,
+        463.25,
+        476.21,
+        489.16,
+        502.11,
+        515.07,
+        528.02,
+        540.98,
+        553.93,
+        566.89,
+        579.84
+      ],
+      "page": 1
+    },
+    "petHouseUnit": {
+      "label": "Petitioner House/Unit No., Street, Subdivision/Village",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 609.96,
+      "yBottomPt": 597.0,
+      "colsPt": [
+        35.52,
+        48.48,
+        61.44,
+        74.4,
+        87.36,
+        100.32,
+        113.28,
+        126.24,
+        139.2,
+        152.16,
+        165.12,
+        178.08,
+        191.04,
+        204.0,
+        216.96,
+        229.92,
+        242.88,
+        255.84,
+        268.8,
+        281.76,
+        294.72
+      ],
+      "page": 1
+    },
+    "petBarangayMunicipality": {
+      "label": "Petitioner Barangay, Municipality/City",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 588.6,
+      "yBottomPt": 575.64,
+      "colsPt": [
+        35.52,
+        48.48,
+        61.44,
+        74.4,
+        87.36,
+        100.32,
+        113.28,
+        126.24,
+        139.2,
+        152.16,
+        165.12,
+        178.08,
+        191.04,
+        204.0,
+        216.96,
+        229.92,
+        242.88,
+        255.84,
+        268.8,
+        281.76,
+        294.72
+      ],
+      "page": 1
+    },
+    "petProvinceZip": {
+      "label": "Petitioner Province, Zip Code",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 560.76,
+      "yBottomPt": 547.8,
+      "colsPt": [
+        35.76,
+        48.72,
+        61.68,
+        74.64,
+        87.6,
+        100.56,
+        113.52,
+        126.48,
+        139.44,
+        152.4,
+        165.36,
+        178.32,
+        191.28,
+        204.24,
+        217.2,
+        230.16,
+        243.12,
+        256.08,
+        269.04,
+        282.0,
+        294.96
+      ],
+      "page": 1
+    },
+    "petLandline": {
+      "label": "Petitioner Landline",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 609.72,
+      "yBottomPt": 595.32,
+      "colsPt": [
+        320.64,
+        333.6,
+        346.56,
+        359.52,
+        372.48,
+        385.44,
+        398.4,
+        411.36,
+        424.32,
+        437.28,
+        450.24,
+        463.2,
+        476.16
+      ],
+      "page": 1
+    },
+    "petMobile": {
+      "label": "Petitioner Mobile",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 586.2,
+      "yBottomPt": 573.24,
+      "colsPt": [
+        320.4,
+        333.36,
+        346.32,
+        359.28,
+        372.24,
+        385.2,
+        398.16,
+        411.12,
+        424.08,
+        437.04,
+        450.0,
+        462.96,
+        475.92
+      ],
+      "page": 1
+    },
+    "petEmail": {
+      "label": "Petitioner E-mail Address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 560.88,
+      "yBottomPt": 548.76,
+      "colsPt": [
+        320.64,
+        333.7,
+        346.75,
+        359.81,
+        372.86,
+        385.92,
+        398.98,
+        412.03,
+        425.09,
+        438.14,
+        451.2,
+        464.26,
+        477.31,
+        490.37,
+        503.42,
+        516.48,
+        529.54,
+        542.59,
+        555.65,
+        568.7,
+        581.76
+      ],
+      "page": 1
+    },
+    "acrNumber": {
+      "label": "Alien Certificate of Registration (ACR) Number",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 531.72,
+      "yBottomPt": 518.76,
+      "colsPt": [
+        35.76,
+        48.72,
+        61.68,
+        74.64,
+        87.6,
+        100.56,
+        113.52,
+        126.48,
+        139.44,
+        152.4,
+        165.36,
+        178.32,
+        191.28,
+        204.24,
+        217.2,
+        230.16,
+        243.12,
+        256.08,
+        269.04,
+        282.0,
+        294.96
+      ],
+      "page": 1
+    },
+    "dateOfIssuanceDay": {
+      "label": "Date of Issuance - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 510.36,
+      "yBottomPt": 497.4,
+      "colsPt": [
+        35.88,
+        48.84,
+        61.92
+      ],
+      "page": 1
+    },
+    "dateOfIssuanceMonth": {
+      "label": "Date of Issuance - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 510.36,
+      "yBottomPt": 497.4,
+      "colsPt": [
+        74.76,
+        87.72,
+        100.68,
+        113.64
+      ],
+      "page": 1
+    },
+    "dateOfIssuanceYear": {
+      "label": "Date of Issuance - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 510.36,
+      "yBottomPt": 497.4,
+      "colsPt": [
+        126.6,
+        139.56,
+        152.52,
+        165.48,
+        178.44
+      ],
+      "page": 1
+    },
+    "acrExpiryDateDay": {
+      "label": "ACR Expiry Date/Valid Until - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 489.0,
+      "yBottomPt": 476.04,
+      "colsPt": [
+        35.88,
+        48.84,
+        61.92
+      ],
+      "page": 1
+    },
+    "acrExpiryDateMonth": {
+      "label": "ACR Expiry Date/Valid Until - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 489.0,
+      "yBottomPt": 476.04,
+      "colsPt": [
+        74.76,
+        87.72,
+        100.68,
+        113.64
+      ],
+      "page": 1
+    },
+    "acrExpiryDateYear": {
+      "label": "ACR Expiry Date/Valid Until - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 489.0,
+      "yBottomPt": 476.04,
+      "colsPt": [
+        126.6,
+        139.56,
+        152.52,
+        165.48,
+        178.44
+      ],
+      "page": 1
+    },
+    "crn": {
+      "label": "Certificate of Residence Number (CRN)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 467.64,
+      "yBottomPt": 453.96,
+      "colsPt": [
+        35.52,
+        48.48,
+        61.44,
+        74.4,
+        87.36,
+        100.32,
+        113.28,
+        126.24,
+        139.2,
+        152.16,
+        165.12,
+        178.08,
+        191.04,
+        204.0,
+        216.96,
+        229.92,
+        242.88,
+        255.84,
+        268.8,
+        281.76,
+        294.72
+      ],
+      "page": 1
+    },
+    "applicationNumber": {
+      "label": "Application Number",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "yTopPt": 516.84,
+      "yBottomPt": 498.12,
+      "colsPt": [
+        341.4,
+        353.16,
+        365.64,
+        377.76,
+        389.88,
+        401.88,
+        413.88,
+        425.88,
+        437.88,
+        449.88,
+        461.88,
+        473.88,
+        485.88,
+        497.88,
+        509.88,
+        522.0,
+        533.88,
+        546.0,
+        558.12,
+        570.0,
+        579.72
+      ],
+      "page": 1
+    }
+  },
+  "checkboxFields": {
+    "typeVisaConversion": {
+      "label": "Conversion",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 35.76,
+      "xRightPt": 48.96,
+      "yTopPt": 758.52,
+      "yBottomPt": 747.72
+    },
+    "typeVisaAmendment": {
+      "label": "Amendment",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 100.32,
+      "xRightPt": 113.52,
+      "yTopPt": 758.52,
+      "yBottomPt": 747.72
+    },
+    "typeVisaInclusion": {
+      "label": "Inclusion",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 165.12,
+      "xRightPt": 178.32,
+      "yTopPt": 758.52,
+      "yBottomPt": 747.72
+    },
+    "methodPersonal": {
+      "label": "Personal",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 34.8,
+      "xRightPt": 48.0,
+      "yTopPt": 715.32,
+      "yBottomPt": 704.52
+    },
+    "methodAuthorizedRep": {
+      "label": "Authorized Representative",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 84.96,
+      "xRightPt": 97.92,
+      "yTopPt": 715.32,
+      "yBottomPt": 704.52
+    },
+    "sexM": {
+      "label": "M",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 203.04,
+      "xRightPt": 216.24,
+      "yTopPt": 471.78,
+      "yBottomPt": 457.8
+    },
+    "sexF": {
+      "label": "F",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 228.24,
+      "xRightPt": 241.44,
+      "yTopPt": 471.78,
+      "yBottomPt": 457.8
+    },
+    "civilSingle": {
+      "label": "Single",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 321.12,
+      "xRightPt": 334.32,
+      "yTopPt": 446.88,
+      "yBottomPt": 433.92
+    },
+    "civilMarried": {
+      "label": "Married",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 398.64,
+      "xRightPt": 411.84,
+      "yTopPt": 446.88,
+      "yBottomPt": 433.92
+    },
+    "civilAnnulled": {
+      "label": "Annulled",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 476.4,
+      "xRightPt": 489.6,
+      "yTopPt": 446.88,
+      "yBottomPt": 433.92
+    },
+    "civilSeparated": {
+      "label": "Separated",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 321.12,
+      "xRightPt": 334.32,
+      "yTopPt": 432.24,
+      "yBottomPt": 420.04
+    },
+    "civilWidowed": {
+      "label": "Widowed",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 398.64,
+      "xRightPt": 411.84,
+      "yTopPt": 432.24,
+      "yBottomPt": 420.04
+    },
+    "civilDivorced": {
+      "label": "Divorced",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 476.4,
+      "xRightPt": 489.6,
+      "yTopPt": 432.24,
+      "yBottomPt": 420.04
+    }
+  },
+  "freeTextFields": {},
+  "signatureBlock": {
+    "note": "Wet-ink signatures and date required by the official form -- this form uniquely requires THREE wet-ink elements (Date, Petitioner's Signature, Applicant's Signature), unlike every other mapped form's two. Deliberately left blank -- not populated by this automation. The inline consent-paragraph name blanks ('I, ___, personally or through my agent/representative ___') on page 2 follow the same policy and are not separately mapped.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "dateLine": {
+      "page": 1,
+      "xStartPt": 40.8,
+      "xEndPt": 139.92,
+      "baselinePt": 167.84
+    },
+    "signatureLine": {
+      "page": 1,
+      "xStartPt": 414.0,
+      "xEndPt": 578.64,
+      "baselinePt": 167.84
+    },
+    "petitionerSignatureLine": {
+      "note": "Extra, form-specific: this form requires the PETITIONER's own wet-ink signature in addition to the applicant's, distinct from the schema's required signatureLine (the applicant's own). Positioned between the Date and Applicant's Signature columns.",
+      "page": 1,
+      "xStartPt": 188.88,
+      "xEndPt": 357.84,
+      "baselinePt": 167.84
+    }
+  },
+  "customerPreviewCropBox": {
+    "note": "No separate BI-internal static header/footer region exists on this form -- the Claim Stub, the back-page Representative block, and the staff-only Application Number/Received-Reviewed-Approved section are all excluded from customer-audience output structurally (none are mapped as charBoxFields/checkboxFields at all, or -- for Application Number -- via roles.visibleTo), not via region cropping. The full page is therefore the customer preview region for both pages. This single-region box describes ONE page's own bounds (used by consumers that only expect a single crop box); the two real pages' own full-page regions are declared separately in customerVisibleRegions below, since this is the engine's first genuinely multi-page form.",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 0,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Two regions, the full extent of each of the form's two real PDF pages (not a same-page staff-only split like 2014-13-006's two regions) -- see customerPreviewCropBox note. The composited customer preview therefore shows both full pages stacked, with a plain page-break divider (no 'FIS staff prepare the remaining sections' caption, since nothing is hidden -- see raster-pipeline.js/svg-compose.js's own comments on this distinction).",
+    "regions": [
+      {
+        "id": "page1",
+        "label": "Page 1 of 2",
+        "page": 0,
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 0,
+        "yTopPt": 936
+      },
+      {
+        "id": "page2",
+        "label": "Page 2 of 2",
+        "page": 1,
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 0,
+        "yTopPt": 936
+      }
+    ]
+  },
+  "biOnlySections": [
+    {
+      "label": "Applicant's ACR I-Card Claim Stub (bottom of page 1 -- completed at BI counter when the card is claimed)",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    },
+    {
+      "label": "Back-page Representative/Accredited Travel Agency claim block (bottom of page 2 -- completed at BI counter)",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature (and your petitioner's signature) in person when you collect it from FIS."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every customer field's coordinates fall within the full-page customerVisibleRegions; the single staff-only field (applicationNumber) is excluded from customer-audience output by roles.visibleTo, not by region cropping."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "biOnlySections (Claim Stub, back-page Representative block) have no entries in charBoxFields/checkboxFields -- structurally cannot be populated by this automation."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}

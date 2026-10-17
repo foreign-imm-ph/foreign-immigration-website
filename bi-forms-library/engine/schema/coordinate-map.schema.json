@@ -118,6 +118,7 @@
       "properties": {
         "label": { "type": "string", "minLength": 1 },
         "roles": { "$ref": "#/$defs/roles" },
+        "page": { "type": "integer", "minimum": 0, "description": "0-indexed PDF page this field is drawn on. Omitted = page 0, which every single-page form (every form mapped before BOC04.QF.001) relies on implicitly -- this default keeps all of them unchanged." },
         "yTopPt": { "type": "number" },
         "yBottomPt": { "type": "number" },
         "colsPt": {
@@ -133,6 +134,7 @@
       "properties": {
         "label": { "type": "string", "minLength": 1 },
         "roles": { "$ref": "#/$defs/roles" },
+        "page": { "type": "integer", "minimum": 0, "description": "0-indexed PDF page this field is drawn on. Omitted = page 0." },
         "xLeftPt": { "type": "number" },
         "xRightPt": { "type": "number" },
         "yTopPt": { "type": "number" },
@@ -145,6 +147,7 @@
       "properties": {
         "label": { "type": "string", "minLength": 1 },
         "roles": { "$ref": "#/$defs/roles" },
+        "page": { "type": "integer", "minimum": 0, "description": "0-indexed PDF page this field is drawn on. Omitted = page 0." },
         "xStartPt": { "type": "number" },
         "xEndPt": { "type": "number" },
         "baselinePt": { "type": "number" },
@@ -165,6 +168,7 @@
       "type": "object",
       "required": ["xStartPt", "xEndPt", "baselinePt"],
       "properties": {
+        "page": { "type": "integer", "minimum": 0, "description": "0-indexed PDF page this line is drawn on. Omitted = page 0." },
         "xStartPt": { "type": "number" },
         "xEndPt": { "type": "number" },
         "baselinePt": { "type": "number" }
@@ -189,7 +193,8 @@
           "required": ["id", "label"],
           "properties": {
             "id": { "type": "string", "minLength": 1 },
-            "label": { "type": "string", "minLength": 1 }
+            "label": { "type": "string", "minLength": 1 },
+            "page": { "type": "integer", "minimum": 0, "description": "0-indexed real PDF page this region is cropped from. Omitted = page 0, which every single-page form (every form mapped before BOC04.QF.001) relies on implicitly." }
           }
         }
       ]

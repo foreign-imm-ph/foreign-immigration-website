@@ -377,30 +377,46 @@ for (const formId of FORM_IDS) {
 
     const custFields = await buildCustomerFieldsDocument(originalBytes, coordinateMap, bindings, sampleData);
     const dpi = 300;
-    const png = await raster.rasterize(custFields.bytes, dpi);
-    const tmpPng = path.join(require("os").tmpdir(), `fis-inktest-${formId}-${Date.now()}.png`);
-    fs.writeFileSync(tmpPng, png);
-    try {
-      const customerFieldSet = fieldsForAudience(coordinateMap, "customer");
-      const expectCustomerVisible = {};
-      for (const key of Object.keys(customerFieldSet.charBoxFields)) expectCustomerVisible[key] = true;
-      // Only check char-box fields here -- checkFieldInk's box geometry is
-      // keyed to charBoxFields; checkbox/free-text leakage is already
-      // covered by the content-stream audit above.
-      const subsetMap = { ...coordinateMap, charBoxFields: Object.fromEntries(Object.keys(coordinateMap.charBoxFields).map((k) => [k, coordinateMap.charBoxFields[k]])) };
-      const ink = await checkFieldInk(tmpPng, subsetMap, { values: resolved.values }, dpi);
-      for (const r of ink.results) {
-        const isCustomerVisible = Boolean(customerFieldSet.charBoxFields[r.key]);
-        const hasValue = typeof resolved.values[r.key] === "string" && resolved.values[r.key].trim() !== "";
-        if (isCustomerVisible && hasValue) {
-          assert.ok(r.hasInk, `expected ink for customer-visible field "${r.key}" (value ${JSON.stringify(resolved.values[r.key])}) but found none -- possible coordinate regression`);
+    // Every form before BOC04.QF.001 is single-page, so rasterizing just
+    // page 1 (raster.rasterize) and checking every field against it was
+    // always correct. A genuinely multi-page form's own fields can live on
+    // different real PDF pages (via each field's optional `page`,
+    // default 0) -- raster.rasterizeAllPages() + grouping fields by their
+    // own page below is what makes this check meaningful for those too,
+    // without changing anything about the single-page case (it still
+    // takes exactly one raster.rasterize() call internally, now just
+    // emitted by the allPages path at index 0).
+    const allPagePngs = await raster.rasterizeAllPages(custFields.bytes, dpi);
+    const fieldsByPage = new Map();
+    for (const [key, field] of Object.entries(coordinateMap.charBoxFields)) {
+      const pageIdx = typeof field.page === "number" ? field.page : 0;
+      if (!fieldsByPage.has(pageIdx)) fieldsByPage.set(pageIdx, {});
+      fieldsByPage.get(pageIdx)[key] = field;
+    }
+    const customerFieldSet = fieldsForAudience(coordinateMap, "customer");
+    const tmpDir = require("os").tmpdir();
+    for (const [pageIdx, pageFields] of fieldsByPage) {
+      const tmpPng = path.join(tmpDir, `fis-inktest-${formId}-p${pageIdx}-${Date.now()}.png`);
+      fs.writeFileSync(tmpPng, allPagePngs[pageIdx]);
+      try {
+        // Only check char-box fields here -- checkFieldInk's box geometry
+        // is keyed to charBoxFields; checkbox/free-text leakage is already
+        // covered by the content-stream audit above.
+        const subsetMap = { ...coordinateMap, charBoxFields: pageFields };
+        const ink = await checkFieldInk(tmpPng, subsetMap, { values: resolved.values }, dpi);
+        for (const r of ink.results) {
+          const isCustomerVisible = Boolean(customerFieldSet.charBoxFields[r.key]);
+          const hasValue = typeof resolved.values[r.key] === "string" && resolved.values[r.key].trim() !== "";
+          if (isCustomerVisible && hasValue) {
+            assert.ok(r.hasInk, `expected ink for customer-visible field "${r.key}" (value ${JSON.stringify(resolved.values[r.key])}) but found none -- possible coordinate regression`);
+          }
+          if (!isCustomerVisible) {
+            assert.ok(!r.hasInk || !hasValue, `staff-only field "${r.key}" unexpectedly has ink in the customer-fields document`);
+          }
         }
-        if (!isCustomerVisible) {
-          assert.ok(!r.hasInk || !hasValue, `staff-only field "${r.key}" unexpectedly has ink in the customer-fields document`);
-        }
+      } finally {
+        fs.unlinkSync(tmpPng);
       }
-    } finally {
-      fs.unlinkSync(tmpPng);
     }
   });
 
@@ -507,30 +523,45 @@ for (const formId of FORM_IDS) {
     const tmpPng = path.join(require("os").tmpdir(), `fis-resvg-inktest-${formId}-${Date.now()}.png`);
     fs.writeFileSync(tmpPng, png);
     try {
-      // lastName's first character box, mapped from original-page PDF
-      // space into this form's (possibly region-cropped) canvas space --
-      // lastName always falls in each form's first (topmost) region,
-      // which always starts at the original page's own top edge (see
-      // each form's customerVisibleRegions), so the only shift needed is
-      // subtracting that region's own yBottomPt (how much was cropped
-      // off the BOTTOM of the page before this region's canvas began).
-      // checkFieldInk() is written in terms of a coordinateMap +
-      // pageHeightPt, so a minimal synthetic map standing in for "canvas
-      // space" is enough to reuse it as-is.
-      const f = coordinateMap.charBoxFields.lastName;
+      // A known customer-visible field's character box, mapped from
+      // original-page PDF space into this form's (possibly region-cropped)
+      // canvas space. Different forms name their equivalent field
+      // differently ("lastName" does not exist on every form's own
+      // coordinate-map.json), so the field used here is picked dynamically
+      // -- the first customer-visible charBoxField (in declaration order)
+      // with a non-empty sample value that falls on region[0]'s own real
+      // PDF page, rather than one hardcoded key. Region[0] always starts
+      // at its own page's top edge (see each form's customerVisibleRegions),
+      // so the only shift needed is subtracting that region's own
+      // yBottomPt (how much was cropped off the BOTTOM of the page before
+      // this region's canvas began). checkFieldInk() is written in terms
+      // of a coordinateMap + pageHeightPt, so a minimal synthetic map
+      // standing in for "canvas space" is enough to reuse it as-is.
+      const resolved = resolveFieldValues(questionnaire.fieldBindings || {}, sampleData);
+      const customerFields = fieldsForAudience(coordinateMap, "customer");
       const regions = getRegions(coordinateMap);
+      const region0Page = typeof regions[0].page === "number" ? regions[0].page : 0;
+      const candidateKey = Object.keys(customerFields.charBoxFields).find((key) => {
+        const v = resolved.values[key];
+        if (typeof v !== "string" || v.trim() === "") return false;
+        const field = coordinateMap.charBoxFields[key];
+        const fieldPage = typeof field.page === "number" ? field.page : 0;
+        return fieldPage === region0Page && field.yBottomPt >= regions[0].yBottomPt - 0.1 && field.yTopPt <= regions[0].yTopPt + 0.1;
+      });
+      if (!candidateKey) return; // this form's customer-visible content is entirely freeTextFields/checkboxFields (no comb-grid charBoxFields at all) -- checkFieldInk()'s geometry is charBoxFields-only, nothing to check here
+      const f = coordinateMap.charBoxFields[candidateKey];
       const firstRegionYBottomPt = regions[0].yBottomPt;
       const canvasMap = {
         charBoxFields: {
-          lastName: { ...f, yTopPt: f.yTopPt - firstRegionYBottomPt, yBottomPt: f.yBottomPt - firstRegionYBottomPt },
+          [candidateKey]: { ...f, yTopPt: f.yTopPt - firstRegionYBottomPt, yBottomPt: f.yBottomPt - firstRegionYBottomPt },
         },
         pageHeightPt: dims.heightPt,
       };
-      const expectedValue = String(sampleData.lastName).toUpperCase();
-      assert.ok(expectedValue.length > 0, "fixture sanity: lastName must be non-empty for this check to mean anything");
-      const ink = await checkFieldInk(tmpPng, canvasMap, { values: { lastName: sampleData.lastName } }, dpi);
-      const result = ink.results.find((r) => r.key === "lastName");
-      assert.ok(result && result.hasInk, `expected ink at the lastName field's position in the resvg-rendered canvas for ${formId}, found none`);
+      const expectedValue = String(sampleData[candidateKey] ?? resolved.values[candidateKey]).toUpperCase();
+      assert.ok(expectedValue.length > 0, `fixture sanity: ${candidateKey} must be non-empty for this check to mean anything`);
+      const ink = await checkFieldInk(tmpPng, canvasMap, { values: { [candidateKey]: resolved.values[candidateKey] } }, dpi);
+      const result = ink.results.find((r) => r.key === candidateKey);
+      assert.ok(result && result.hasInk, `expected ink at the "${candidateKey}" field's position in the resvg-rendered canvas for ${formId}, found none`);
     } finally {
       fs.unlinkSync(tmpPng);
     }

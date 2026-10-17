@@ -143,6 +143,61 @@ describe("staff-facing BI-form routes", () => {
 
   it.todo("a successful approve stores both documents and transitions to approved (blocked by the harness limitation described above)");
 
+  it("BOC04.QF.001 (the engine's first genuinely multi-page form) works up through every precondition check before generation, same as a single-page form", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("BOC04.QF.001");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "BOC04.QF.001", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(
+        JSON.stringify({
+          presentImmigrationStatus: "9(A) TEMPORARY VISITOR", typeOfVisaApplication: "Conversion", typeOfVisa: "13(A) SPOUSE",
+          methodOfApplication: "Personal", biAccreditationNumber: "N/A", nameOfAuthorizedRep: "N/A", passportNumber: "PA1234567",
+          dateLatestArrivalDay: "12", dateLatestArrivalMonth: "JUN", dateLatestArrivalYear: "2024",
+          expiryDateDay: "05", expiryDateMonth: "MAR", expiryDateYear: "2029", placeOfIssuance: "MANILA",
+          lastDayAuthStayDay: "12", lastDayAuthStayMonth: "JUN", lastDayAuthStayYear: "2027",
+          lastName: "KOVACS", firstGivenName: "ESZTER", middleName: "N/A", otherAlias1: "N/A", otherAlias2: "N/A",
+          dobDay: "18", dobMonth: "APR", dobYear: "1990", sex: "F", countryOfBirth: "HUNGARY", countryOfCitizenship: "HUNGARIAN",
+          civilStatus: "Married", height: "165", weight: "58", profession: "GRAPHIC DESIGNER", landline: "N/A", mobile: "09179876543",
+          emailAddress: "e.kovacs@ex.com",
+        }),
+        submission.id
+      )
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/start-review`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(303);
+    submission = await getSubmissionById(env.DB, submission.id);
+    expect(submission.status).toBe("under_review");
+
+    // BOC04.QF.001's one staff-only field (applicationNumber, on page 2's
+    // "DO NOT FILL OUT THIS PORTION" section) is intentionally
+    // staffFieldRequirements.required: false -- it's the BI office's own
+    // physical-counter tracking number, which legitimately doesn't exist
+    // yet at digital-preparation time -- so approval proceeds straight
+    // through the staff-completeness check with nothing filled in, same as
+    // it correctly would for a real submission. It still exercises the
+    // staff-fields endpoint itself (writable, not required) before hitting
+    // the one precondition check this harness genuinely cannot get past.
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { applicationNumber: "" },
+    });
+    expect(resp.status).toBe(303);
+
+    // Same documented harness limitation as every other form's own test
+    // above: the actual pdf-lib generation call (which is where this
+    // form's page-routing fix lives) cannot be exercised through
+    // worker.fetch() in this harness -- independently verified correct by
+    // the engine's own test suite instead (bi-forms-library/tests/run-all.js,
+    // run against the real original PDF).
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500);
+  });
+
   it("publish and cancel work correctly once reached through the lifecycle's own rules, independent of generation", async () => {
     // Fast-forwards status via transitionStatus() directly (bypassing the
     // approve HTTP action, which needs pdf-lib) to test publish/cancel in

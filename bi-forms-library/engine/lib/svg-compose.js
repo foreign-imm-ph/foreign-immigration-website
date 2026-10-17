@@ -100,10 +100,27 @@ function bytesToBase64(bytes) {
 // region by each form's own visibility design (see each coordinate-map.json's
 // visibilityDesignNote), so a point outside every region indicates a real
 // coordinate-map/region mismatch, not a value to guess at.
-function mapPointToCanvasTdPt(pageHeightPt, regions, dims, yPdf, hintYBottom, hintYTop) {
-  const idx = regions.findIndex((r) => hintYBottom >= r.yBottomPt - 0.01 && hintYTop <= r.yTopPt + 0.01);
+//
+// `fieldPage` (0-indexed, default 0) is the field's OWN real PDF page.
+// Every page of a multi-page form reuses the same (0..pageHeightPt)
+// bottom-up coordinate space, so a y-range alone can match a region on the
+// WRONG page (e.g. two full-page regions, one per page, have identical
+// yBottomPt/yTopPt) -- the page must also agree, not just the y-range.
+function mapPointToCanvasTdPt(pageHeightPt, regions, dims, yPdf, hintYBottom, hintYTop, fieldPage = 0) {
+  // Tolerance of 0.1pt, not 0.01pt: a field's own yBottomPt/yTopPt and its
+  // region's are independently measured/rounded values (both to 2 decimal
+  // places), so a field sitting exactly on a region's own edge can differ
+  // from it by a couple of hundredths of a point (e.g. 2014-08-015's own
+  // passportNumber field at 401.88pt vs its region's yBottomPt at
+  // 401.9pt) without that being an actual coordinate-map mistake -- a real
+  // wrong-region mistake is off by many points, not a fraction of one (see
+  // the identical reasoning already used for this same comparison in
+  // tests/run-all.js's own canvas-height tolerance).
+  const idx = regions.findIndex(
+    (r) => (typeof r.page === "number" ? r.page : 0) === fieldPage && hintYBottom >= r.yBottomPt - 0.1 && hintYTop <= r.yTopPt + 0.1
+  );
   if (idx === -1) {
-    throw new Error(`Field at [${hintYBottom},${hintYTop}] does not fall within any approved customerVisibleRegions -- refusing to draw it.`);
+    throw new Error(`Field on page ${fieldPage} at [${hintYBottom},${hintYTop}] does not fall within any approved customerVisibleRegions -- refusing to draw it.`);
   }
   const region = regions[idx];
   const regionTdTop = pageHeightPt - region.yTopPt;
@@ -134,7 +151,7 @@ function buildFieldTextElements(coordinateMap, measureFont, resolved) {
     const size = fitCharFontSize(measureFont, chars, f.colsPt[1] - f.colsPt[0], f.yTopPt - f.yBottomPt);
     const capHeight = size * 0.718;
     const baselinePdf = f.yBottomPt + (f.yTopPt - f.yBottomPt - capHeight) / 2;
-    const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, baselinePdf, f.yBottomPt, f.yTopPt);
+    const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, baselinePdf, f.yBottomPt, f.yTopPt, f.page || 0);
     chars.forEach((ch, i) => {
       if (!ch || ch === " ") return;
       const cx = (f.colsPt[i] + f.colsPt[i + 1]) / 2;
@@ -150,7 +167,7 @@ function buildFieldTextElements(coordinateMap, measureFont, resolved) {
     const size = fitCharFontSize(measureFont, ["X"], f.xRightPt - f.xLeftPt, f.yTopPt - f.yBottomPt, 12);
     const capHeight = size * 0.718;
     const baselinePdf = f.yBottomPt + (f.yTopPt - f.yBottomPt - capHeight) / 2;
-    const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, baselinePdf, f.yBottomPt, f.yTopPt);
+    const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, baselinePdf, f.yBottomPt, f.yTopPt, f.page || 0);
     const cx = (f.xLeftPt + f.xRightPt) / 2;
     elements.push(
       `<text x="${(cx * SCALE).toFixed(2)}" y="${(tdPt * SCALE).toFixed(2)}" font-size="${(size * SCALE).toFixed(2)}" text-anchor="middle" font-family="Liberation Sans" fill="black">X</text>`
@@ -200,7 +217,7 @@ function buildFieldTextElements(coordinateMap, measureFont, resolved) {
 function pushFreeTextElement(elements, measureFont, pageHeightPt, regions, dims, f, text, availableWidthPt) {
   if (!text) return;
   const { size } = fitFreeTextSize(measureFont, text, availableWidthPt);
-  const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, f.baselinePt, f.baselinePt, f.baselinePt);
+  const tdPt = mapPointToCanvasTdPt(pageHeightPt, regions, dims, f.baselinePt, f.baselinePt, f.baselinePt, f.page || 0);
   const x = f.xStartPt + 3;
   elements.push(
     `<text x="${(x * SCALE).toFixed(2)}" y="${(tdPt * SCALE).toFixed(2)}" font-size="${(size * SCALE).toFixed(2)}" text-anchor="start" font-family="Liberation Sans" fill="black">${escapeXmlText(text)}</text>`
@@ -238,9 +255,16 @@ function buildDividerCaptionElement(dims) {
   const yPx = (dividerCenterTdPt * SCALE).toFixed(2);
   const xPx = ((dims.widthPt / 2) * SCALE).toFixed(2);
   const lineY = ((regionAHeightPt + dims.dividerPt / 2) * SCALE).toFixed(2);
+  // Mirrors raster-pipeline.js's finalizeCustomerPreview -- see its own
+  // comment for why a same-page split (hidden staff-only content below)
+  // and a genuine cross-page break need different caption text.
+  const samePage = !dims.regionPages || dims.regionPages.length < 2 || dims.regionPages[0] === dims.regionPages[1];
+  const caption = samePage
+    ? "FIS staff prepare the remaining sections of this form"
+    : "This form continues on the next page";
   return (
     `<line x1="${(40 * SCALE).toFixed(2)}" y1="${lineY}" x2="${((dims.widthPt - 40) * SCALE).toFixed(2)}" y2="${lineY}" stroke="rgb(190,190,190)" stroke-width="${(2 * SCALE).toFixed(2)}"/>` +
-    `<text x="${xPx}" y="${(parseFloat(yPx) - 4 * SCALE).toFixed(2)}" font-size="${(9 * SCALE).toFixed(2)}" text-anchor="middle" font-family="Liberation Sans" font-style="italic" fill="rgb(115,115,115)">FIS staff prepare the remaining sections of this form</text>`
+    `<text x="${xPx}" y="${(parseFloat(yPx) - 4 * SCALE).toFixed(2)}" font-size="${(9 * SCALE).toFixed(2)}" text-anchor="middle" font-family="Liberation Sans" font-style="italic" fill="rgb(115,115,115)">${escapeXmlText(caption)}</text>`
   );
 }
 

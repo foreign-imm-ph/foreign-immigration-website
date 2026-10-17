@@ -31,4 +31,17 @@ async function rasterize(pdfBytes, dpi) {
   return backend.rasterize(pdfBytes, dpi);
 }
 
-module.exports = { rasterize, BACKENDS, ACTIVE_BACKEND };
+/**
+ * Renders every real PDF page (as bytes) to one PNG (as bytes) each, in
+ * page order. Needed only for genuinely multi-page forms -- see
+ * poppler-backend.js's own comment.
+ * @param {Buffer} pdfBytes
+ * @param {number} dpi
+ * @returns {Promise<Buffer[]>} one PNG buffer per PDF page
+ */
+async function rasterizeAllPages(pdfBytes, dpi) {
+  const backend = BACKENDS[ACTIVE_BACKEND];
+  return backend.rasterizeAllPages(pdfBytes, dpi);
+}
+
+module.exports = { rasterize, rasterizeAllPages, BACKENDS, ACTIVE_BACKEND };
