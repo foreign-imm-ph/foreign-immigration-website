@@ -1,0 +1,548 @@
+{
+  "formId": "ADM05.QF.001",
+  "formTitle": "Request for Certified True Copy (CTC) of Records",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE'. Also independently confirmed by the existing R2 inventory: reproduction=\"may_be_reproduced\".",
+  "pageWidthPt": 612,
+  "pageHeightPt": 1008,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/ADM05.QF.001.pdf). A genuinely different template family from every other form mapped so far: fields are drawn as a short left-edge TICK MARK plus a continuous full-row-width bottom border SHARED by both the left- and right-column fields on that row (not a comb-grid, not a self-contained 4-sided rectangle per field) -- confirmed only after an initial misreading: a first attempt assumed a solid rectangle per field (matching the CDR/NTSP/ACR template family) and a plain darkness-mean scan under that assumption found nothing, because the actual border is this row-shared tick+line style and a MEAN-based scan over a wide x-range dilutes a thin line's darkness below threshold -- resolved by switching to a MIN-based scan (as already learned from 2021-03-001's dashed checkboxes) and, critically, by directly viewing a pixel-ruled crop before trusting any further measurement, which is what caught the true row-sharing structure.",
+  "measurementNotes": {
+    "rowSharedBottomLineDiscovery": "Each printed row (e.g. Last Name / Other Name/ALIAS) is bounded by ONE continuous bottom border spanning the full row width (both columns), not two separate boxes -- confirmed by scanning a bottom-border row's full pixel width and finding it ran from the page's left field all the way to the right field with no break. Each field's own xStartPt is therefore its own left tick mark's position (not the row's own left edge), and xEndPt is set at the midpoint gap before the next field's tick mark (left column) or the row's own right edge (right column) -- not arbitrary, but measured directly for each row.",
+    "dateOfBirthComb": "The one comb-box field on this form (Date of Birth, 9 cells for DD-MMM-YYYY) was measured the same way as every other mapped form's comb fields -- directly, via column-divider pixel detection -- once the correct, full x-range was scanned (an initial narrower scan window missed the first 2-3 dividers near the field's own left edge, corrected by widening the scan range and re-verifying against a pixel-ruled crop).",
+    "genderCheckboxesStackedNotSideBySide": "Unlike every other form's Gender checkboxes (always side by side, M then F), this form draws Male directly ABOVE Female in two stacked rows, both to the right of the Date of Birth comb box -- confirmed by direct visual inspection before finalizing coordinates.",
+    "consentParagraphNotPopulated": "The form includes a Data-Privacy-Act consent paragraph with its own checkbox and two inline blanks ('I, ___, personally or through my agent/representative ___'). These are not separately mapped: the applicant's own name is already captured by the Subject Information block above (Last Name/Given Name/Middle Name), and the representative-name blank is a rarely-used edge case not essential to the form's core purpose. The checkbox itself and its blanks are left unpopulated by this automation, same treatment as every other form's wet-ink signature elements.",
+    "staffOnlySection": "Unlike 2021-03-001/2014-01-011 (entirely customer-supplied), this form has a genuine staff-only section explicitly marked on the form itself ('[To be filled out by Records Section Personnel Only]'): Verified By, Date/Time, Remarks, Document(s) to be CTC, Copies to be CTC -- all suppliedBy:staff. The 'OFFICIAL USE ONLY' header at the very top (Date/Application No./Client No.) is also staff-only but is not mapped as a field at all, consistent with how other forms' pure BI-internal headers are handled -- it is covered by customerPreviewCropBox exclusion, not by populating it.",
+    "contactNoAndEmailXRangeCorrection": "A first automated pass estimated contactNo and emailAddress's xStartPt/xEndPt by eye from a labeled crop rather than direct measurement. Generating a real test PDF with a realistic sample email address failed the engine's own overflow check ('yuki.nakamura.sample@example.com' needs 101.4pt, the estimated line only provided 82.0pt). Re-measured precisely via a row darkness scan (contactNo: 230.64-299.28pt; emailAddress: 352.08-413.28pt) -- the real printed E-mail Address line on this form is genuinely only 61.2pt wide, confirmed by direct measurement, not a mapping error: this is a real constraint of the original government form, not something this mapping can correct. The regenerated test PDF, using a shorter but still realistic sample email, produced zero overflow warnings.",
+    "dateRequestedAndPurposeCorrection": "The first generated test PDF showed two real bugs caught by direct visual inspection: (1) dateRequested's sample value rendered overlapping the printed '1' and '2' field-number indicator boxes at the top of the form -- a first pass had treated this field as plain free text with an estimated xEndPt, when the original form actually draws it as a 9-cell DD-MMM-YYYY comb box (8 dividers found, matching the DOB field's own pattern) ending exactly at the '2' indicator box's left edge; corrected by converting dateRequested to a charBoxFields comb entry measured the same way as DOB. (2) purpose's sample text rendered starting underneath the '2' indicator box itself, because its xStartPt was set to the box's own left edge (1027px) rather than its right edge (1119px); corrected to start just past the box.",
+    "genderCheckboxXCorrection": "The first generated test PDF showed the Female checkbox's 'X' mark rendering outside the printed checkbox entirely, overlapping the end of the DOB comb box instead. Direct pixel measurement of the actual rendered checkbox borders (not just the original form) showed the true box position was approximately 10pt further right than the first pass's eyeballed estimate. Corrected both genderMale and genderFemale to the directly-measured box coordinates (479.1-497.8pt x) and confirmed the X lands inside the box in a regenerated test PDF.",
+    "documentsToBeCTCLabelOverlapCorrection": "A first pass set documentsToBeCTC's xStartPt to 368pt, which the generated test PDF showed overlapping the tail of its own 'Document(s) to be CTC:' label (which pdftotext -bbox shows actually extends to xMax 405.08pt, not the ~360pt assumed). Corrected to start at 409pt, just past the real label."
+  },
+  "charBoxFields": {
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 607.2,
+      "yBottomPt": 585.84,
+      "colsPt": [
+        268.56,
+        299.04,
+        317.76
+      ]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 607.2,
+      "yBottomPt": 585.84,
+      "colsPt": [
+        317.76,
+        336.0,
+        354.48,
+        374.16
+      ]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "yTopPt": 607.2,
+      "yBottomPt": 585.84,
+      "colsPt": [
+        374.16,
+        395.52,
+        415.92,
+        437.28,
+        455.52
+      ]
+    },
+    "dateRequested": {
+      "label": "Date Requested",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": ["customer_before_submission", "staff_with_audit_after"],
+        "approvedBy": "staff",
+        "visibleTo": ["customer", "staff"]
+      },
+      "yTopPt": 784.56,
+      "yBottomPt": 767.52,
+      "colsPt": [55.92, 78.96, 101.04, 123.6, 147.6, 173.52, 198.24, 224.4, 246.48]
+    }
+  },
+  "checkboxFields": {
+    "genderMale": {
+      "label": "Gender - Male",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 479.1,
+      "xRightPt": 497.8,
+      "yTopPt": 613.8,
+      "yBottomPt": 601.2
+    },
+    "genderFemale": {
+      "label": "Gender - Female",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 479.1,
+      "xRightPt": 497.8,
+      "yTopPt": 601.2,
+      "yBottomPt": 584.2
+    }
+  },
+  "freeTextFields": {
+    "purpose": {
+      "label": "Purpose",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 296,
+      "xEndPt": 567.84,
+      "baselinePt": 769.52,
+      "maxLines": 1
+    },
+    "lastName": {
+      "label": "Last Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 58.16,
+      "xEndPt": 288.08,
+      "baselinePt": 715.64,
+      "maxLines": 1
+    },
+    "otherNameAlias": {
+      "label": "Other Name/ALIAS",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 301.8,
+      "xEndPt": 567.36,
+      "baselinePt": 715.64,
+      "maxLines": 1
+    },
+    "givenName": {
+      "label": "Given Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 58.16,
+      "xEndPt": 288.08,
+      "baselinePt": 680.96,
+      "maxLines": 1
+    },
+    "residentialAddress": {
+      "label": "Residential Address in the Philippines",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 301.8,
+      "xEndPt": 567.36,
+      "baselinePt": 680.96,
+      "maxLines": 1
+    },
+    "middleName": {
+      "label": "Middle Name",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 58.16,
+      "xEndPt": 288.08,
+      "baselinePt": 644.72,
+      "maxLines": 1
+    },
+    "contactNumberLandlineMobile": {
+      "label": "Contact Number [Landline/Mobile No.]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 301.8,
+      "xEndPt": 567.36,
+      "baselinePt": 644.72,
+      "maxLines": 1
+    },
+    "countryOfCitizenship": {
+      "label": "Country of Citizenship / Nationality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 58.16,
+      "xEndPt": 288.08,
+      "baselinePt": 609.44,
+      "maxLines": 1
+    },
+    "countryOfBirth": {
+      "label": "Country of Birth",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 58.16,
+      "xEndPt": 288.08,
+      "baselinePt": 571.52,
+      "maxLines": 1
+    },
+    "contactNo": {
+      "label": "Contact no. (Mobile number)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 230.64,
+      "xEndPt": 299.28,
+      "baselinePt": 402.77,
+      "maxLines": 1
+    },
+    "emailAddress": {
+      "label": "E-mail Address",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 352.08,
+      "xEndPt": 413.28,
+      "baselinePt": 402.77,
+      "maxLines": 1
+    },
+    "verifiedBy": {
+      "label": "Verified By",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 95,
+      "xEndPt": 310,
+      "baselinePt": 351.5,
+      "maxLines": 1
+    },
+    "dateTimeVerified": {
+      "label": "Date/Time",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 95,
+      "xEndPt": 310,
+      "baselinePt": 330.34,
+      "maxLines": 1
+    },
+    "remarks": {
+      "label": "Remarks",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 95,
+      "xEndPt": 310,
+      "baselinePt": 296.3,
+      "maxLines": 1
+    },
+    "documentsToBeCTC": {
+      "label": "Document(s) to be CTC",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 409,
+      "xEndPt": 567,
+      "baselinePt": 352.1,
+      "maxLines": 1
+    },
+    "copiesToBeCTC": {
+      "label": "Copies to be CTC",
+      "roles": {
+        "suppliedBy": "staff",
+        "editableBy": [
+          "staff"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "staff"
+        ]
+      },
+      "xStartPt": 385,
+      "xEndPt": 567,
+      "baselinePt": 302.3,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature required (the applicant's own). Deliberately left blank -- not populated by this automation.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "signatureLine": {
+      "xStartPt": 180,
+      "xEndPt": 460,
+      "baselinePt": 432
+    },
+    "dateLine": {
+      "xStartPt": 58.16,
+      "xEndPt": 236.48,
+      "baselinePt": 769.76,
+      "note": "Reuses dateRequested's own position to satisfy the shared schema's required dateLine property; never drawn twice."
+    }
+  },
+  "customerPreviewCropBox": {
+    "note": "Excludes the 'OFFICIAL USE ONLY' header bar at the very top (pdf_y 925.94-935.65) and the staff-only Records Section block at the bottom (starting at Verified By, pdf_y~351.5) plus the entire Claim Stub below it.",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 360,
+    "yTopPt": 920
+  },
+  "customerVisibleRegions": {
+    "note": "Single region, numbers copied verbatim from customerPreviewCropBox above.",
+    "regions": [
+      {
+        "id": "applicant_fields",
+        "label": "Applicant request and subject information",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 360,
+        "yTopPt": 920
+      }
+    ]
+  },
+  "biOnlySections": [
+    {
+      "label": "OFFICIAL USE ONLY header (Date/Application No./Client No.)",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    },
+    {
+      "label": "Claim Stub (entire lower section, BI-staff-completed)",
+      "roles": {
+        "suppliedBy": "bi_staff",
+        "editableBy": [
+          "none"
+        ],
+        "approvedBy": "n/a",
+        "visibleTo": [
+          "staff"
+        ]
+      }
+    }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature in person when you collect it from FIS."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every customer-visible field's coordinates fall within customerVisibleRegions (yBottomPt 360 to yTopPt 920); the 5 staff-only fields (Verified By, Date/Time, Remarks, Document(s)/Copies to be CTC) all have baselinePt below 360, outside the approved region."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "biOnlySections (OFFICIAL USE ONLY header, Claim Stub) have no entries in charBoxFields/checkboxFields/freeTextFields -- structurally cannot be populated."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}

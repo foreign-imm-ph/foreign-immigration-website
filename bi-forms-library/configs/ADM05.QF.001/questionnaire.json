@@ -1,0 +1,131 @@
+{
+  "formId": "ADM05.QF.001",
+  "languages": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"],
+  "staffFieldRequirements": {
+    "verifiedBy": { "required": false },
+    "dateTimeVerified": { "required": false },
+    "remarks": { "required": false },
+    "documentsToBeCTC": { "required": false },
+    "copiesToBeCTC": { "required": false }
+  },
+  "questions": [
+    {
+      "id": "dateRequested",
+      "type": "text",
+      "dataKey": "dateRequested",
+      "labels": { "en": "Date Requested", "zh-CN": "申请日期", "zh-Hant": "申請日期", "ko": "신청일", "ja": "申請日", "vi": "Ngày yêu cầu" },
+      "forFields": ["dateRequested"]
+    },
+    {
+      "id": "purpose",
+      "type": "text",
+      "dataKey": "purpose",
+      "labels": { "en": "Purpose", "zh-CN": "用途", "zh-Hant": "用途", "ko": "목적", "ja": "目的", "vi": "Mục đích" },
+      "forFields": ["purpose"]
+    },
+    {
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": { "en": "Last Name", "zh-CN": "姓", "zh-Hant": "姓", "ko": "성", "ja": "姓", "vi": "Họ" },
+      "forFields": ["lastName"]
+    },
+    {
+      "id": "otherNameAlias",
+      "type": "text",
+      "dataKey": "otherNameAlias",
+      "labels": { "en": "Other Name/ALIAS", "zh-CN": "其他姓名/别名", "zh-Hant": "其他姓名/別名", "ko": "기타 이름/별칭", "ja": "その他の氏名/通称", "vi": "Tên khác/Biệt danh" },
+      "forFields": ["otherNameAlias"]
+    },
+    {
+      "id": "givenName",
+      "type": "text",
+      "dataKey": "givenName",
+      "labels": { "en": "Given Name", "zh-CN": "名", "zh-Hant": "名", "ko": "이름", "ja": "名", "vi": "Tên" },
+      "forFields": ["givenName"]
+    },
+    {
+      "id": "residentialAddress",
+      "type": "text",
+      "dataKey": "residentialAddress",
+      "labels": { "en": "Residential Address in the Philippines", "zh-CN": "菲律宾居住地址", "zh-Hant": "菲律賓居住地址", "ko": "필리핀 내 거주지 주소", "ja": "フィリピンでの居住先住所", "vi": "Địa chỉ cư trú tại Philippines" },
+      "forFields": ["residentialAddress"]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "labels": { "en": "Middle Name", "zh-CN": "中间名", "zh-Hant": "中間名", "ko": "중간 이름", "ja": "ミドルネーム", "vi": "Tên đệm" },
+      "forFields": ["middleName"]
+    },
+    {
+      "id": "contactNumberLandlineMobile",
+      "type": "text",
+      "dataKey": "contactNumberLandlineMobile",
+      "labels": { "en": "Contact Number [Landline/Mobile No.]", "zh-CN": "联系电话（座机/手机）", "zh-Hant": "聯絡電話（座機/手機）", "ko": "연락처 (유선/휴대폰)", "ja": "連絡先電話番号（固定/携帯）", "vi": "Số điện thoại liên hệ (Cố định/Di động)" },
+      "forFields": ["contactNumberLandlineMobile"]
+    },
+    {
+      "id": "countryOfCitizenship",
+      "type": "text",
+      "dataKey": "countryOfCitizenship",
+      "labels": { "en": "Country of Citizenship / Nationality", "zh-CN": "国籍", "zh-Hant": "國籍", "ko": "국적", "ja": "国籍", "vi": "Quốc tịch" },
+      "forFields": ["countryOfCitizenship"]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": { "en": "Date of Birth - DD", "zh-CN": "出生日期 - 日", "zh-Hant": "出生日期 - 日", "ko": "생년월일 - 일", "ja": "生年月日 - 日", "vi": "Ngày sinh - Ngày" },
+      "forFields": ["dobDay"]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": { "en": "Date of Birth - MMM", "zh-CN": "出生日期 - 月", "zh-Hant": "出生日期 - 月", "ko": "생년월일 - 월", "ja": "生年月日 - 月", "vi": "Ngày sinh - Tháng" },
+      "forFields": ["dobMonth"]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": { "en": "Date of Birth - YYYY", "zh-CN": "出生日期 - 年", "zh-Hant": "出生日期 - 年", "ko": "생년월일 - 년", "ja": "生年月日 - 年", "vi": "Ngày sinh - Năm" },
+      "forFields": ["dobYear"]
+    },
+    {
+      "id": "gender",
+      "type": "select",
+      "dataKey": "gender",
+      "labels": { "en": "Gender", "zh-CN": "性别", "zh-Hant": "性別", "ko": "성별", "ja": "性別", "vi": "Giới tính" },
+      "options": ["Male", "Female"],
+      "forFields": ["genderMale", "genderFemale"]
+    },
+    {
+      "id": "countryOfBirth",
+      "type": "text",
+      "dataKey": "countryOfBirth",
+      "labels": { "en": "Country of Birth", "zh-CN": "出生国家", "zh-Hant": "出生國家", "ko": "출생 국가", "ja": "出生国", "vi": "Quốc gia sinh" },
+      "forFields": ["countryOfBirth"]
+    },
+    {
+      "id": "contactNo",
+      "type": "text",
+      "dataKey": "contactNo",
+      "labels": { "en": "Contact No. (Mobile number)", "zh-CN": "联系电话（手机号码）", "zh-Hant": "聯絡電話（手機號碼）", "ko": "연락처 (휴대폰 번호)", "ja": "連絡先（携帯電話番号）", "vi": "Số liên hệ (Số di động)" },
+      "forFields": ["contactNo"]
+    },
+    {
+      "id": "emailAddress",
+      "type": "text",
+      "dataKey": "emailAddress",
+      "labels": { "en": "E-mail Address", "zh-CN": "电子邮箱", "zh-Hant": "電子郵箱", "ko": "이메일 주소", "ja": "メールアドレス", "vi": "Địa chỉ email" },
+      "forFields": ["emailAddress"]
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      { "dataKey": "gender", "options": { "Male": "genderMale", "Female": "genderFemale" } }
+    ]
+  }
+}
