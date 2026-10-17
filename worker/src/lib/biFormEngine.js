@@ -24,6 +24,8 @@ import coordinateMapNTSP from "../../../bi-forms-library/configs/CCS-A-NTSP-2016
 import questionnaireNTSP from "../../../bi-forms-library/configs/CCS-A-NTSP-2016/questionnaire.json" with { type: "json" };
 import coordinateMapACR from "../../../bi-forms-library/configs/2014-08-015/coordinate-map.json" with { type: "json" };
 import questionnaireACR from "../../../bi-forms-library/configs/2014-08-015/questionnaire.json" with { type: "json" };
+import coordinateMapTravelPass from "../../../bi-forms-library/configs/2021-03-001/coordinate-map.json" with { type: "json" };
+import questionnaireTravelPass from "../../../bi-forms-library/configs/2021-03-001/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
 import { fieldsForAudience, staffOwnedFields } from "../../../bi-forms-library/engine/lib/field-permissions.js";
@@ -55,6 +57,7 @@ const REGISTRY = {
   "2014-13-006": { coordinateMap: coordinateMap006, questionnaire: questionnaire006 },
   "CCS-A-NTSP-2016": { coordinateMap: coordinateMapNTSP, questionnaire: questionnaireNTSP },
   "2014-08-015": { coordinateMap: coordinateMapACR, questionnaire: questionnaireACR },
+  "2021-03-001": { coordinateMap: coordinateMapTravelPass, questionnaire: questionnaireTravelPass },
 };
 
 // Fail-closed at module load, not per-request: if any registered form's

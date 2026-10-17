@@ -1,0 +1,234 @@
+{
+  "formId": "2021-03-001",
+  "languages": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"],
+  "staffFieldRequirements": {},
+  "questions": [
+    {
+      "id": "visaType",
+      "type": "select",
+      "dataKey": "visaType",
+      "labels": { "en": "Application basis (select one)", "zh-CN": "申请依据（选择一项）", "zh-Hant": "申請依據（選擇一項）", "ko": "신청 근거 (하나 선택)", "ja": "申請の根拠（1つ選択）", "vi": "Căn cứ đơn xin (chọn một)" },
+      "options": ["SVEG", "RA8756", "PD1034", "RA7837"],
+      "forFields": ["visaTypeSVEG", "visaTypeRA8756", "visaTypePD1034", "visaTypeRA7837"]
+    },
+    {
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": { "en": "Last Name", "zh-CN": "姓", "zh-Hant": "姓", "ko": "성", "ja": "姓", "vi": "Họ" },
+      "forFields": ["lastName"]
+    },
+    {
+      "id": "firstName",
+      "type": "text",
+      "dataKey": "firstName",
+      "labels": { "en": "First/Given Name", "zh-CN": "名", "zh-Hant": "名", "ko": "이름", "ja": "名", "vi": "Tên" },
+      "forFields": ["firstName"]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "labels": { "en": "Middle Name", "zh-CN": "中间名", "zh-Hant": "中間名", "ko": "중간 이름", "ja": "ミドルネーム", "vi": "Tên đệm" },
+      "forFields": ["middleName"]
+    },
+    {
+      "id": "address1",
+      "type": "text",
+      "dataKey": "address1",
+      "labels": { "en": "House/Unit No., Street, Subdivision", "zh-CN": "门牌号/单元号、街道、小区", "zh-Hant": "門牌號/單位號、街道、社區", "ko": "호수/동 번호, 거리, 단지", "ja": "号室/部屋番号、通り、住宅区", "vi": "Số nhà/Số căn, Đường, Khu dân cư" },
+      "forFields": ["address1"]
+    },
+    {
+      "id": "barangay",
+      "type": "text",
+      "dataKey": "barangay",
+      "labels": { "en": "Barangay, Municipality/City", "zh-CN": "巴朗盖（Barangay）、市/镇", "zh-Hant": "巴朗蓋（Barangay）、市/鎮", "ko": "바랑가이(Barangay), 시/읍", "ja": "バランガイ（Barangay）、市/町", "vi": "Barangay, Thành phố/Thị trấn" },
+      "forFields": ["barangay"]
+    },
+    {
+      "id": "provinceZip",
+      "type": "text",
+      "dataKey": "provinceZip",
+      "labels": { "en": "Province, Zip Code", "zh-CN": "省、邮政编码", "zh-Hant": "省、郵遞區號", "ko": "주(도), 우편번호", "ja": "州（プロビンス）、郵便番号", "vi": "Tỉnh, Mã bưu điện" },
+      "forFields": ["provinceZip"]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": { "en": "Date of Birth - DD", "zh-CN": "出生日期 - 日", "zh-Hant": "出生日期 - 日", "ko": "생년월일 - 일", "ja": "生年月日 - 日", "vi": "Ngày sinh - Ngày" },
+      "forFields": ["dobDay"]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": { "en": "Date of Birth - MMM", "zh-CN": "出生日期 - 月", "zh-Hant": "出生日期 - 月", "ko": "생년월일 - 월", "ja": "生年月日 - 月", "vi": "Ngày sinh - Tháng" },
+      "forFields": ["dobMonth"]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": { "en": "Date of Birth - YYYY", "zh-CN": "出生日期 - 年", "zh-Hant": "出生日期 - 年", "ko": "생년월일 - 년", "ja": "生年月日 - 年", "vi": "Ngày sinh - Năm" },
+      "forFields": ["dobYear"]
+    },
+    {
+      "id": "gender",
+      "type": "select",
+      "dataKey": "gender",
+      "labels": { "en": "Gender", "zh-CN": "性别", "zh-Hant": "性別", "ko": "성별", "ja": "性別", "vi": "Giới tính" },
+      "options": ["M", "F"],
+      "forFields": ["genderM", "genderF"]
+    },
+    {
+      "id": "citizenship",
+      "type": "text",
+      "dataKey": "citizenship",
+      "labels": { "en": "Citizenship/Nationality", "zh-CN": "国籍", "zh-Hant": "國籍", "ko": "국적", "ja": "国籍", "vi": "Quốc tịch" },
+      "forFields": ["citizenship"]
+    },
+    {
+      "id": "countryOfBirth",
+      "type": "text",
+      "dataKey": "countryOfBirth",
+      "labels": { "en": "Country of Birth", "zh-CN": "出生国家", "zh-Hant": "出生國家", "ko": "출생 국가", "ja": "出生国", "vi": "Quốc gia sinh" },
+      "forFields": ["countryOfBirth"]
+    },
+    {
+      "id": "maritalStatus",
+      "type": "select",
+      "dataKey": "maritalStatus",
+      "labels": { "en": "Marital Status", "zh-CN": "婚姻状况", "zh-Hant": "婚姻狀況", "ko": "혼인 상태", "ja": "婚姻状況", "vi": "Tình trạng hôn nhân" },
+      "options": ["Single", "Annulled", "Widowed", "Married", "Separated", "Divorced"],
+      "forFields": ["maritalSingle", "maritalAnnulled", "maritalWidowed", "maritalMarried", "maritalSeparated", "maritalDivorced"]
+    },
+    {
+      "id": "spouseName",
+      "type": "text",
+      "dataKey": "spouseName",
+      "labels": { "en": "Name of Spouse (if married, widowed, annulled, separated, or divorced)", "zh-CN": "配偶姓名（如已婚、丧偶、婚姻无效、分居或离异）", "zh-Hant": "配偶姓名（如已婚、喪偶、婚姻無效、分居或離異）", "ko": "배우자 이름 (기혼, 사별, 혼인무효, 별거 또는 이혼인 경우)", "ja": "配偶者氏名（既婚、死別、婚姻無効、別居、離婚の場合）", "vi": "Tên vợ/chồng (nếu đã kết hôn, góa, hủy hôn, ly thân hoặc ly hôn)" },
+      "forFields": ["spouseName"]
+    },
+    {
+      "id": "spouseAddress",
+      "type": "text",
+      "dataKey": "spouseAddress",
+      "labels": { "en": "Address of Spouse", "zh-CN": "配偶地址", "zh-Hant": "配偶地址", "ko": "배우자 주소", "ja": "配偶者住所", "vi": "Địa chỉ vợ/chồng" },
+      "forFields": ["spouseAddress"]
+    },
+    {
+      "id": "statusOfLatestAdmission",
+      "type": "text",
+      "dataKey": "statusOfLatestAdmission",
+      "labels": { "en": "Applicant's Status of Latest Admission in the Philippines", "zh-CN": "申请人最近一次入境菲律宾的身份状态", "zh-Hant": "申請人最近一次入境菲律賓的身份狀態", "ko": "신청인의 최근 필리핀 입국 자격 상태", "ja": "申請者の最新のフィリピン入国時の身分", "vi": "Tình trạng nhập cảnh gần nhất của người nộp đơn tại Philippines" },
+      "forFields": ["statusOfLatestAdmission"]
+    },
+    {
+      "id": "dateOfLatestAdmission",
+      "type": "text",
+      "dataKey": "dateOfLatestAdmission",
+      "labels": { "en": "Date of Latest Admission in the Philippines", "zh-CN": "最近一次入境菲律宾的日期", "zh-Hant": "最近一次入境菲律賓的日期", "ko": "최근 필리핀 입국 날짜", "ja": "最新のフィリピン入国日", "vi": "Ngày nhập cảnh gần nhất tại Philippines" },
+      "forFields": ["dateOfLatestAdmission"]
+    },
+    {
+      "id": "dateOfIntendedDeparture",
+      "type": "text",
+      "dataKey": "dateOfIntendedDeparture",
+      "labels": { "en": "Date of Intended Departure", "zh-CN": "预定离境日期", "zh-Hant": "預定離境日期", "ko": "예정 출국 날짜", "ja": "出国予定日", "vi": "Ngày dự định khởi hành" },
+      "forFields": ["dateOfIntendedDeparture"]
+    },
+    {
+      "id": "destination",
+      "type": "text",
+      "dataKey": "destination",
+      "labels": { "en": "Destination", "zh-CN": "目的地", "zh-Hant": "目的地", "ko": "목적지", "ja": "目的地", "vi": "Điểm đến" },
+      "forFields": ["destination"]
+    },
+    {
+      "id": "flightNumber",
+      "type": "text",
+      "dataKey": "flightNumber",
+      "labels": { "en": "Flight Number", "zh-CN": "航班号", "zh-Hant": "航班號", "ko": "항공편 번호", "ja": "フライト番号", "vi": "Số chuyến bay" },
+      "forFields": ["flightNumber"]
+    },
+    {
+      "id": "passportNo",
+      "type": "text",
+      "dataKey": "passportNo",
+      "labels": { "en": "Passport No.", "zh-CN": "护照号码", "zh-Hant": "護照號碼", "ko": "여권 번호", "ja": "パスポート番号", "vi": "Số hộ chiếu" },
+      "forFields": ["passportNo"]
+    },
+    {
+      "id": "reasonForLeaving",
+      "type": "text",
+      "dataKey": "reasonForLeaving",
+      "labels": { "en": "Reason for Leaving", "zh-CN": "离境原因", "zh-Hant": "離境原因", "ko": "출국 사유", "ja": "出国理由", "vi": "Lý do rời đi" },
+      "forFields": ["reasonForLeaving"]
+    },
+    {
+      "id": "dateOfIntendedReturn",
+      "type": "text",
+      "dataKey": "dateOfIntendedReturn",
+      "labels": { "en": "Date of Intended Return", "zh-CN": "预定返回日期", "zh-Hant": "預定返回日期", "ko": "예정 귀국 날짜", "ja": "帰国予定日", "vi": "Ngày dự định trở về" },
+      "forFields": ["dateOfIntendedReturn"]
+    },
+    {
+      "id": "estimatedLengthOfStay",
+      "type": "text",
+      "dataKey": "estimatedLengthOfStay",
+      "labels": { "en": "Estimated Length of Stay Abroad", "zh-CN": "预计境外停留时长", "zh-Hant": "預計境外停留時長", "ko": "해외 체류 예상 기간", "ja": "海外滞在予定期間", "vi": "Thời gian lưu trú nước ngoài dự kiến" },
+      "forFields": ["estimatedLengthOfStay"]
+    },
+    {
+      "id": "acrNo",
+      "type": "text",
+      "dataKey": "acrNo",
+      "labels": { "en": "ACR No. (if applicable)", "zh-CN": "ACR编号（如适用）", "zh-Hant": "ACR編號（如適用）", "ko": "ACR 번호 (해당하는 경우)", "ja": "ACR番号（該当する場合）", "vi": "Số ACR (nếu có)" },
+      "forFields": ["acrNo"]
+    },
+    {
+      "id": "acrPlaceOfIssuance",
+      "type": "text",
+      "dataKey": "acrPlaceOfIssuance",
+      "labels": { "en": "ACR Place of Issuance", "zh-CN": "ACR签发地", "zh-Hant": "ACR簽發地", "ko": "ACR 발급 장소", "ja": "ACR発行場所", "vi": "Nơi cấp ACR" },
+      "forFields": ["acrPlaceOfIssuance"]
+    },
+    {
+      "id": "acrDateOfIssuance",
+      "type": "text",
+      "dataKey": "acrDateOfIssuance",
+      "labels": { "en": "ACR Date of Issuance", "zh-CN": "ACR签发日期", "zh-Hant": "ACR簽發日期", "ko": "ACR 발급일", "ja": "ACR発行日", "vi": "Ngày cấp ACR" },
+      "forFields": ["acrDateOfIssuance"]
+    },
+    {
+      "id": "icrNo",
+      "type": "text",
+      "dataKey": "icrNo",
+      "labels": { "en": "ICR No. (if applicable)", "zh-CN": "ICR编号（如适用）", "zh-Hant": "ICR編號（如適用）", "ko": "ICR 번호 (해당하는 경우)", "ja": "ICR番号（該当する場合）", "vi": "Số ICR (nếu có)" },
+      "forFields": ["icrNo"]
+    },
+    {
+      "id": "icrPlaceOfIssuance",
+      "type": "text",
+      "dataKey": "icrPlaceOfIssuance",
+      "labels": { "en": "ICR Place of Issuance", "zh-CN": "ICR签发地", "zh-Hant": "ICR簽發地", "ko": "ICR 발급 장소", "ja": "ICR発行場所", "vi": "Nơi cấp ICR" },
+      "forFields": ["icrPlaceOfIssuance"]
+    },
+    {
+      "id": "icrDateOfIssuance",
+      "type": "text",
+      "dataKey": "icrDateOfIssuance",
+      "labels": { "en": "ICR Date of Issuance", "zh-CN": "ICR签发日期", "zh-Hant": "ICR簽發日期", "ko": "ICR 발급일", "ja": "ICR発行日", "vi": "Ngày cấp ICR" },
+      "forFields": ["icrDateOfIssuance"]
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      { "dataKey": "visaType", "options": { "SVEG": "visaTypeSVEG", "RA8756": "visaTypeRA8756", "PD1034": "visaTypePD1034", "RA7837": "visaTypeRA7837" } },
+      { "dataKey": "gender", "options": { "M": "genderM", "F": "genderF" } },
+      { "dataKey": "maritalStatus", "options": { "Single": "maritalSingle", "Annulled": "maritalAnnulled", "Widowed": "maritalWidowed", "Married": "maritalMarried", "Separated": "maritalSeparated", "Divorced": "maritalDivorced" } }
+    ]
+  }
+}
