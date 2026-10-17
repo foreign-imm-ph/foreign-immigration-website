@@ -3,7 +3,7 @@ import { KNOWN_BI_FORM_IDS, getFormConfig, fieldsForAudience, resolveFieldValues
 
 describe("shared engine bridge (biFormEngine.js) loads inside the Workers runtime", () => {
   it("registers all three validated forms", () => {
-    expect(KNOWN_BI_FORM_IDS.sort()).toEqual(["2014-13-002", "2014-13-006", "CCS-A-CDR-2016"].sort());
+    expect(KNOWN_BI_FORM_IDS.sort()).toEqual(["2014-13-002", "2014-13-006", "CCS-A-CDR-2016", "CCS-A-NTSP-2016"].sort());
   });
 
   it("getFormConfig returns a real, schema-validated coordinate map and questionnaire", () => {

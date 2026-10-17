@@ -1,0 +1,123 @@
+{
+  "formId": "CCS-A-NTSP-2016",
+  "languages": ["en", "ja", "ko", "vi", "zh-CN", "zh-Hant"],
+  "staffFieldRequirements": {
+    "purposeLine2": { "required": false }
+  },
+  "questions": [
+    {
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": { "en": "Last Name", "zh-CN": "姓", "zh-Hant": "姓", "ko": "성", "ja": "姓", "vi": "Họ" },
+      "forFields": ["lastName"]
+    },
+    {
+      "id": "firstName",
+      "type": "text",
+      "dataKey": "firstName",
+      "labels": { "en": "First/Given Name", "zh-CN": "名", "zh-Hant": "名", "ko": "이름", "ja": "名", "vi": "Tên" },
+      "forFields": ["firstName"]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "labels": { "en": "Middle Name", "zh-CN": "中间名", "zh-Hant": "中間名", "ko": "중간 이름", "ja": "ミドルネーム", "vi": "Tên đệm" },
+      "forFields": ["middleName"]
+    },
+    {
+      "id": "otherName1",
+      "type": "text",
+      "dataKey": "otherName1",
+      "labels": { "en": "Other Name(s)/Alias(es) 1", "zh-CN": "其他姓名/别名 1", "zh-Hant": "其他姓名/別名 1", "ko": "기타 이름/별칭 1", "ja": "その他の氏名/通称 1", "vi": "Tên khác/Biệt danh 1" },
+      "forFields": ["otherName1"]
+    },
+    {
+      "id": "otherName2",
+      "type": "text",
+      "dataKey": "otherName2",
+      "labels": { "en": "Other Name(s)/Alias(es) 2", "zh-CN": "其他姓名/别名 2", "zh-Hant": "其他姓名/別名 2", "ko": "기타 이름/별칭 2", "ja": "その他の氏名/通称 2", "vi": "Tên khác/Biệt danh 2" },
+      "forFields": ["otherName2"]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": { "en": "Date of Birth - DD", "zh-CN": "出生日期 - 日", "zh-Hant": "出生日期 - 日", "ko": "생년월일 - 일", "ja": "生年月日 - 日", "vi": "Ngày sinh - Ngày" },
+      "forFields": ["dobDay"]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": { "en": "Date of Birth - MMM", "zh-CN": "出生日期 - 月", "zh-Hant": "出生日期 - 月", "ko": "생년월일 - 월", "ja": "生年月日 - 月", "vi": "Ngày sinh - Tháng" },
+      "forFields": ["dobMonth"]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": { "en": "Date of Birth - YYYY", "zh-CN": "出生日期 - 年", "zh-Hant": "出生日期 - 年", "ko": "생년월일 - 년", "ja": "生年月日 - 年", "vi": "Ngày sinh - Năm" },
+      "forFields": ["dobYear"]
+    },
+    {
+      "id": "gender",
+      "type": "select",
+      "dataKey": "gender",
+      "labels": { "en": "Gender", "zh-CN": "性别", "zh-Hant": "性別", "ko": "성별", "ja": "性別", "vi": "Giới tính" },
+      "options": ["M", "F"],
+      "forFields": ["genderM", "genderF"]
+    },
+    {
+      "id": "placeOfBirth",
+      "type": "text",
+      "dataKey": "placeOfBirth",
+      "labels": { "en": "Place of Birth", "zh-CN": "出生地", "zh-Hant": "出生地", "ko": "출생지", "ja": "出生地", "vi": "Nơi sinh" },
+      "forFields": ["placeOfBirth"]
+    },
+    {
+      "id": "citizenship",
+      "type": "text",
+      "dataKey": "citizenship",
+      "labels": { "en": "Citizenship/Nationality", "zh-CN": "国籍", "zh-Hant": "國籍", "ko": "국적", "ja": "国籍", "vi": "Quốc tịch" },
+      "forFields": ["citizenship"]
+    },
+    {
+      "id": "address1",
+      "type": "text",
+      "dataKey": "address1",
+      "labels": { "en": "House/Unit No., Street, Subdivision/Village", "zh-CN": "门牌号/单元号、街道、小区/村", "zh-Hant": "門牌號/單位號、街道、社區/村", "ko": "호수/동 번호, 거리, 단지/마을", "ja": "号室/部屋番号、通り、住宅区/村", "vi": "Số nhà/Số căn, Đường, Khu dân cư/Thôn" },
+      "forFields": ["address1"]
+    },
+    {
+      "id": "barangay",
+      "type": "text",
+      "dataKey": "barangay",
+      "labels": { "en": "Barangay, Municipality/City", "zh-CN": "巴朗盖（Barangay）、市/镇", "zh-Hant": "巴朗蓋（Barangay）、市/鎮", "ko": "바랑가이(Barangay), 시/읍", "ja": "バランガイ（Barangay）、市/町", "vi": "Barangay, Thành phố/Thị trấn" },
+      "forFields": ["barangay"]
+    },
+    {
+      "id": "provinceZip",
+      "type": "text",
+      "dataKey": "provinceZip",
+      "labels": { "en": "Province, Zip Code", "zh-CN": "省、邮政编码", "zh-Hant": "省、郵遞區號", "ko": "주(도), 우편번호", "ja": "州（プロビンス）、郵便番号", "vi": "Tỉnh, Mã bưu điện" },
+      "forFields": ["provinceZip"]
+    },
+    {
+      "id": "passportNumber",
+      "type": "text",
+      "dataKey": "passportNumber",
+      "labels": { "en": "Passport Number", "zh-CN": "护照号码", "zh-Hant": "護照號碼", "ko": "여권 번호", "ja": "パスポート番号", "vi": "Số hộ chiếu" },
+      "forFields": ["passportNumber"]
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      { "dataKey": "gender", "options": { "M": "genderM", "F": "genderF" } }
+    ],
+    "wrappedPairs": [
+      { "dataKey": "purpose", "line1": "purposeLine1", "line2": "purposeLine2" }
+    ]
+  }
+}

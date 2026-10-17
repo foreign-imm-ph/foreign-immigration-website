@@ -20,6 +20,8 @@ import coordinateMap002 from "../../../bi-forms-library/configs/2014-13-002/coor
 import questionnaire002 from "../../../bi-forms-library/configs/2014-13-002/questionnaire.json" with { type: "json" };
 import coordinateMap006 from "../../../bi-forms-library/configs/2014-13-006/coordinate-map.json" with { type: "json" };
 import questionnaire006 from "../../../bi-forms-library/configs/2014-13-006/questionnaire.json" with { type: "json" };
+import coordinateMapNTSP from "../../../bi-forms-library/configs/CCS-A-NTSP-2016/coordinate-map.json" with { type: "json" };
+import questionnaireNTSP from "../../../bi-forms-library/configs/CCS-A-NTSP-2016/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
 import { fieldsForAudience, staffOwnedFields } from "../../../bi-forms-library/engine/lib/field-permissions.js";
@@ -49,6 +51,7 @@ const REGISTRY = {
   "CCS-A-CDR-2016": { coordinateMap: coordinateMapCDR, questionnaire: questionnaireCDR },
   "2014-13-002": { coordinateMap: coordinateMap002, questionnaire: questionnaire002 },
   "2014-13-006": { coordinateMap: coordinateMap006, questionnaire: questionnaire006 },
+  "CCS-A-NTSP-2016": { coordinateMap: coordinateMapNTSP, questionnaire: questionnaireNTSP },
 };
 
 // Fail-closed at module load, not per-request: if any registered form's

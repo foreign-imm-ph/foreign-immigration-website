@@ -18,7 +18,7 @@ during this pass.
 | "~23 PDFs originally submitted for review" | An early, pre-upload submission count from the initial Forms Library planning conversation, before duplicates/non-PDF items were sorted out. Not independently verifiable now and superseded by the figures below. |
 | "~18 distinct documents after duplicate removal" | An intermediate manual count, from before the final upload. Close to, but not identical to, the number of genuine duplicate PDFs actually found (see below) — likely counted one additional near-duplicate pair that the verified inventory treats as two distinct (if related) documents. |
 | "~20 stored PDFs" (implementation report) | **Confirmed current and accurate.** A direct, read-only Cloudflare R2 API listing of the `fis-bi-forms-library` bucket's `originals/` prefix returned exactly 20 PDF objects (21 objects total, including one 0-byte folder placeholder). This is the authoritative figure. |
-| "3 initially automated templates" | **Confirmed current and accurate.** Exactly 3 of the 20 PDFs (`CCS-A-CDR-2016`, `2014-13-002`, `2014-13-006`) have a `bi-forms-library/configs/<id>/` directory (questionnaire + coordinate map) and are registered in `worker/src/lib/biFormEngine.js`'s `REGISTRY` — the only 3 the shared PDF-generation engine can actually produce a filled document for. |
+| "3 initially automated templates" | **Superseded.** As of the "FINAL BI FORMS AUTOMATION" directive, a 4th form, `CCS-A-NTSP-2016`, has been coordinate-mapped from the real original PDF (downloaded directly from this bucket) and registered in `worker/src/lib/biFormEngine.js`'s `REGISTRY`, bringing the total to 4 of 20. See the reconciliation table below. |
 
 **Conclusion: no PDF is missing.** The 20-PDF figure is independently
 verified by direct inspection, not an estimate. The 23/18 figures reflect
@@ -52,7 +52,7 @@ defined categories, not a new classification scheme.
 | Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | Application form | `visa-applications` (svc-cgaf-immigrant-visa) | Partially mapped — title match, not engine-mapped | Missing | Manual |
 | Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | Application form | *(none of the 19 — possible duplicate of `CGAF-002-Rev3` below, same title, different file size)* | **Unmapped, flagged for owner confirmation** — which of this pair, if either, is the current version | Missing | Not currently fulfillable until resolved |
 | Request for Certified True Copy of Derogatory Records *(duplicate check only — see row 1)* | — | — | — | — | — | — |
-| Application for Certificate of Not the Same Person (NTSP) | `CCS-A-NTSP-2016` | Application form | `motions-blacklist` (svc-ntsp) | Partially mapped — title match, not engine-mapped | Missing | Manual |
+| Application for Certificate of Not the Same Person (NTSP) | `CCS-A-NTSP-2016` | Application form | `motions-blacklist` (svc-ntsp) | **Fully mapped** — engine-registered, coordinate-mapped from the real original PDF (same template family as `CCS-A-CDR-2016`: identical page size and grid pitch, independently confirmed by measurement, not assumed), output-tested via a real generated PDF visually inspected against the original, and proven end-to-end (guest order → real multi-step wizard → payment → staff review/approval → downloaded, validated generated PDF) in `e2e/tests/09-ntsp-form-automation.spec.js` | Available (already was, via `PREVIEWABLE_FORM_IDS`) | Automated |
 | Request for Certification of Pending Application | `CCS-C-CPA-2016` | Application form | `visa-applications` (svc-cpa-request) | Partially mapped — title match, not engine-mapped | Missing | Manual |
 | Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | Application form | *(none of the 19 — possible duplicate of `BOC04.QF.002` above)* | **Unmapped, flagged for owner confirmation** (same pair as above) | Missing | Not currently fulfillable until resolved |
 | Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | Application form | `visa-applications` (svc-cgaf-student-visa) | Partially mapped — title match, not engine-mapped | Missing | Manual |
@@ -69,17 +69,15 @@ not BI-form-based products), and the three `svc-airport-vip-*` rows
 
 ## C. What this means for the rest of the directive
 
-- **16 of the 20 PDFs are "partially mapped"**: a real, correctly-slugged
+- **15 of the 20 PDFs remain "partially mapped"** (16 before this pass,
+  minus `CCS-A-NTSP-2016`, now fully mapped): a real, correctly-slugged
   (or owner-confirmation-flagged) catalogue association already exists,
   but no `bi-forms-library/configs/<id>/` entry exists yet, so the
   shared generation engine cannot produce a filled document for them.
-  Building that mapping for even one additional form is substantial,
-  form-specific work — per-field coordinate verification against the
-  real original PDF, exactly as `bi-forms-library/configs/CCS-A-CDR-2016/`
-  required — and this directive's own instruction not to "invent field
-  names, declarations, or official form requirements" means this cannot
-  be done generically or quickly. None of the 16 were mapped in this
-  pass; see the final report's Outstanding Dependencies.
+  Building that mapping is substantial, form-specific work — per-field
+  coordinate verification against the real original PDF — requiring
+  read access to the private `fis-bi-forms-library` R2 bucket for each
+  additional form in turn.
 - **2 PDFs are a flagged, unresolved duplicate pair**
   (`BOC04.QF.002`/`CGAF-002-Rev3`) with no catalogue row of their own —
   correctly left unresolved rather than guessed, per the directive's own

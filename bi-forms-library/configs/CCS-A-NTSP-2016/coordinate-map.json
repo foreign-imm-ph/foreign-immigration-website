@@ -1,0 +1,237 @@
+{
+  "formId": "CCS-A-NTSP-2016",
+  "formTitle": "Application for Certificate of Not the Same Person (NTSP)",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as CCS-A-CDR-2016 (see BI_FORMS_LIBRARY_SPECIFICATION.md, open decision #3). This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE' (same statement, same wording, as CCS-A-CDR-2016). Also independently confirmed by the existing R2 inventory (bi-forms-library/inventory/forms-library-inventory.json): reproduction=\"may_be_reproduced\".",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured programmatically from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/CCS-A-NTSP-2016.pdf), by detecting actual horizontal/vertical grid-line pixel darkness in the raster and cross-checking every label position against pdftotext -bbox's exact vector text coordinates -- not estimated by eye, not copied from CCS-A-CDR-2016's own numbers despite the two forms sharing an evidently common template (confirmed independently: this form's own measured grid pitch, box widths, and even its Gender checkbox positions came out matching CDR's to within rounding, which is corroborating evidence, not the basis, for these numbers). Two groups of fields (otherName2's column grid; landline/mobile's column grid; genderF's checkbox right edge) have a sharply-rendered outer boundary but an unusually faint inner grid in this specific PDF's raster -- for those, the measured OUTER box edges (always directly detected) were divided into evenly-spaced cells using this exact form's own independently-confirmed 13.92pt/13.86pt grid pitch (verified across 9 other fully-and-cleanly-measured rows in this same document), rather than guessed. See measurementNotes below for exactly which fields this applies to.",
+  "measurementNotes": {
+    "cleanlyMeasuredFields": ["lastName", "firstName", "middleName", "otherName1", "dobDay", "dobMonth", "dobYear", "genderM", "placeOfBirth", "citizenship", "address1", "barangay", "provinceZip", "passportNumber"],
+    "otherName1AndOtherName2": "A first automated pass mis-measured BOTH rows by a full row: it anchored otherName1's box to a line at 712.2pt that turned out, on direct visual re-inspection at high zoom against the original blank form, to be a spurious internal artifact sitting INSIDE otherName2's own box (not a row boundary at all), which shifted the whole otherName1/otherName2 pair down by one row. Caught by actually generating test PDFs with distinguishable fictional values for each field and visually inspecting the output against the original, exactly as this directive requires: the first test render showed otherName1's value landing in what is visually otherName2's printed box, and otherName2's value landing in blank whitespace below any printed box at all. Re-measured from scratch with every candidate border line overlaid directly on the original page image for direct visual confirmation (not just numeric thresholds). Corrected, confirmed values: otherName1 747.0/730.2, otherName2 730.2/699.72 (otherName2's own bottom border is real but considerably fainter than most other rows' in this raster, confirmed at high zoom). Both rows' colsPt reuse the same directly-measured column set (the detected box edges for both rows match within rounding, confirming one shared column grid, not assumed by visual similarity alone). A second and third generated test PDF, after each correction, were re-inspected until both values landed exactly inside their own printed boxes.",
+    "landlineAndMobile": "Box top and left/right OUTER edges directly measured (the row's solid top-border line's own horizontal extent: landline 91.2-257.52pt, mobile 340.56-506.88pt). Re-examined at high zoom against the original blank form after the otherName2 finding prompted a second look: this row's comb box has NO drawn bottom border at all in the original PDF (a real, intentional feature of this specific form, not a measurement gap) -- the vertical divider lines simply end, unclosed, with blank page below down to the Purpose line. yBottomPt is therefore not a directly-measured line; it is set to yTopPt minus this exact document's own independently-confirmed 13.92pt cell-row pitch (seen in every other cleanly-measured row), which only affects the vertical centering of staff-typed characters within the open-bottomed cell, not any visible boundary. The 12 inner cell dividers are real (visible on the page) but render too faintly in this raster for reliable per-divider detection; populated as 13 evenly-spaced points across the measured width using the same confirmed pitch."
+  },
+  "genderFBoxWidthNote": "genderF's left edge is directly measured (166-value dip at 382.08-382.32pt). Its right edge does not render a detectable distinct line in this raster at any threshold tested; set to xLeftPt + 13.92pt, i.e. genderM's own independently-measured checkbox width (326.76 to 340.68 = exactly 13.92pt, this document's confirmed grid pitch), applied to genderF's measured left edge. Both checkboxes share the row's directly-measured yTopPt/yBottomPt (690.6/674.76, identical to the dobRow fields on the same line).",
+  "rolesSchemaNote": "Same roles object shape as CCS-A-CDR-2016 (suppliedBy/editableBy/approvedBy/visibleTo).",
+  "charBoxFields": {
+    "lastName": {
+      "label": "Last Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 829.56,
+      "yBottomPt": 813.72,
+      "colsPt": [183.84, 197.76, 211.68, 225.12, 239.04, 252.96, 266.88, 280.8, 294.72, 308.64, 322.08, 336.0, 349.92, 363.84, 377.76, 391.68, 405.6, 419.04, 432.96, 446.88, 460.8, 474.72, 488.64, 502.08, 516.0, 529.92, 543.84, 557.76, 571.68]
+    },
+    "firstName": {
+      "label": "First/Given Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 802.2,
+      "yBottomPt": 786.12,
+      "colsPt": [183.84, 197.76, 211.68, 225.12, 239.04, 252.96, 266.88, 280.8, 294.72, 308.64, 322.08, 336.0, 349.92, 363.84, 377.76, 391.68, 405.6, 419.04, 432.96, 446.88, 460.8, 474.72, 488.64, 502.08, 516.0, 529.92, 543.84, 557.76, 571.68]
+    },
+    "middleName": {
+      "label": "Middle Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 774.6,
+      "yBottomPt": 758.76,
+      "colsPt": [183.84, 197.76, 211.68, 225.12, 239.04, 252.96, 266.88, 280.8, 294.72, 308.64, 322.08, 336.0, 349.92, 363.84, 377.76, 391.68, 405.6, 419.04, 432.96, 446.88, 460.8, 474.72, 488.64, 502.08, 516.0, 529.92, 543.84, 557.76, 571.68]
+    },
+    "otherName1": {
+      "label": "Other Name(s)/Alias(es) 1",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 747.0,
+      "yBottomPt": 730.2,
+      "colsPt": [197.76, 211.68, 225.12, 239.04, 252.96, 266.88, 280.8, 294.72, 308.64, 322.08, 336.0, 349.92, 363.84, 377.76, 391.68, 405.6, 419.04, 432.96, 446.88, 460.8, 474.72, 488.64, 502.08, 516.0, 529.92, 543.84, 557.76, 571.68]
+    },
+    "otherName2": {
+      "label": "Other Name(s)/Alias(es) 2",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 730.2,
+      "yBottomPt": 699.72,
+      "colsPt": [197.76, 211.68, 225.12, 239.04, 252.96, 266.88, 280.8, 294.72, 308.64, 322.08, 336.0, 349.92, 363.84, 377.76, 391.68, 405.6, 419.04, 432.96, 446.88, 460.8, 474.72, 488.64, 502.08, 516.0, 529.92, 543.84, 557.76, 571.68]
+    },
+    "placeOfBirth": {
+      "label": "Place of Birth",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 660.36,
+      "yBottomPt": 644.52,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "citizenship": {
+      "label": "Citizenship/Nationality",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 630.12,
+      "yBottomPt": 614.04,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "address1": {
+      "label": "House/Unit No., Street, Subdivision/Village",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 588.6,
+      "yBottomPt": 572.76,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "barangay": {
+      "label": "Barangay, Municipality/City",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 561.0,
+      "yBottomPt": 545.16,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "provinceZip": {
+      "label": "Province, Zip Code",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 533.4,
+      "yBottomPt": 517.56,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "passportNumber": {
+      "label": "Passport Number",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 503.16,
+      "yBottomPt": 487.32,
+      "colsPt": [36.0, 49.92, 63.84, 77.28, 91.2, 105.12, 119.04, 132.96, 146.88, 160.8, 174.24, 188.16, 202.08, 216.0, 229.92, 243.84, 257.28, 271.2, 285.12, 299.04, 312.96, 326.88, 340.8, 354.24, 368.16, 382.08, 396.0, 409.92, 423.84, 437.76, 451.2, 465.12, 479.04, 492.96, 506.88, 520.8, 534.48, 548.16, 562.08]
+    },
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 690.6,
+      "yBottomPt": 674.76,
+      "colsPt": [36.0, 49.92, 63.84]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 690.6,
+      "yBottomPt": 674.76,
+      "colsPt": [77.28, 91.2, 105.12, 119.04]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 690.6,
+      "yBottomPt": 674.76,
+      "colsPt": [132.96, 146.88, 160.8, 174.24, 188.16]
+    },
+    "landline": {
+      "label": "Landline",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "yTopPt": 456.84,
+      "yBottomPt": 442.92,
+      "colsPt": [91.2, 105.06, 118.92, 132.78, 146.64, 160.5, 174.36, 188.22, 202.08, 215.94, 229.8, 243.66, 257.52]
+    },
+    "mobile": {
+      "label": "Mobile",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "yTopPt": 456.84,
+      "yBottomPt": 442.92,
+      "colsPt": [340.56, 354.42, 368.28, 382.14, 396.0, 409.86, 423.72, 437.58, 451.44, 465.3, 479.16, 493.02, 506.88]
+    }
+  },
+  "checkboxFields": {
+    "genderM": {
+      "label": "Gender - M",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "xLeftPt": 326.76,
+      "xRightPt": 340.68,
+      "yTopPt": 690.6,
+      "yBottomPt": 674.76
+    },
+    "genderF": {
+      "label": "Gender - F",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "xLeftPt": 368.28,
+      "xRightPt": 382.2,
+      "yTopPt": 690.6,
+      "yBottomPt": 674.76
+    }
+  },
+  "freeTextFields": {
+    "purposeLine1": {
+      "label": "Purpose (line 1)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 72,
+      "xEndPt": 575.63,
+      "baselinePt": 435.62,
+      "maxLines": 1
+    },
+    "purposeLine2": {
+      "label": "Purpose (line 2, continuation)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 36,
+      "xEndPt": 575.51,
+      "baselinePt": 407.31,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature required by the official form, same as CCS-A-CDR-2016. Deliberately left blank -- not populated by this automation.",
+    "roles": { "suppliedBy": "customer_wet_ink", "editableBy": ["none_system_generated"], "approvedBy": "n/a", "visibleTo": ["staff"] },
+    "dateLine": { "xStartPt": 36, "xEndPt": 198.94, "baselinePt": 356.35 },
+    "signatureLine": { "xStartPt": 324.13, "xEndPt": 548.0, "baselinePt": 356.35 }
+  },
+  "customerPreviewCropBox": {
+    "note": "Mirrors CCS-A-CDR-2016's own policy exactly: visible area ends immediately after Passport Number and before the 'Contact Number(s) in the Philippines' heading. Heading occupies pdf_y 474.38-482.19 (measured via pdftotext -bbox); Passport Number's own box bottom is at 487.32. yBottomPt sits in the confirmed-safe gap between the two.",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 482.5,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Single region, same structure as CCS-A-CDR-2016's own customerVisibleRegions -- numbers copied verbatim from customerPreviewCropBox above.",
+    "regions": [
+      { "id": "applicant_fields", "label": "Applicant personal information", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 482.5, "yTopPt": 936 }
+    ]
+  },
+  "biOnlySections": [
+    {
+      "label": "Certification and Clearance Section (CCS) Window (RECEIVED / RELEASED)",
+      "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] }
+    },
+    {
+      "label": "Certificate of Not the Same Person Claim Stub (entire lower half, explicitly labelled 'To be filled out by Authorized BI Personnel Only')",
+      "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] }
+    }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "Same wording as CCS-A-CDR-2016's own instruction -- DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature in person when you collect it from FIS. You do not need to sign anything online."
+    },
+    {
+      "id": "photo_requirement",
+      "note": "NTSP is the one of the two currently-mapped forms with a physical 2x2 photo requirement (the comb-box area itself is never filled by this automation -- a photo is a physical print, not form-fillable text). Directive section 10: reuses the EXISTING document-upload infrastructure (an applicant can upload a digital copy of their photo as a supporting document) rather than any new upload mechanism; the physical photo itself is still provided in person per the form's own instructions.",
+      "en": "Please bring a recent 2x2 colored photo with a white background (no eyeglasses, no colored contact lenses, taken within the last 3 months) to affix to this form when you collect it from FIS."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every customer-visible field's coordinates fall within customerVisibleRegions (yBottomPt 482.5 to 936); Landline/Mobile/Purpose confirmed staff-only (yBottomPt 441.36/407.31, both well below 482.5) and outside the approved region, same pattern as CCS-A-CDR-2016."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as CCS-A-CDR-2016, enforced by the same shared buildWatermarkedFormPreview/customer-preview pipeline code -- not form-specific."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "The CCS Window and Claim Stub sections have no entries anywhere in charBoxFields/checkboxFields/freeTextFields -- the shared render-pipeline.js only ever draws fields explicitly listed in this config, so these sections structurally cannot be populated."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}
