@@ -199,11 +199,17 @@ for (const formId of FORM_IDS) {
 
   test(`${formId}: validateAnswers rejects a submission missing a required field`, () => {
     const { questionnaire, sampleData } = loadFormConfig(formId);
+    // Picks the form's own first required question's dataKey rather than
+    // assuming every form has a "lastName" field -- not every form does
+    // (e.g. 2014-01-011 is a letter-format document that asks for a single
+    // combined "fullName" instead of separate name fields).
+    const requiredQuestion = questionnaire.questions.find((q) => q.required !== false && q.dataKey);
+    assert.ok(requiredQuestion, "expected this form to have at least one required question to test against");
     const broken = { ...sampleData };
-    delete broken.lastName;
+    delete broken[requiredQuestion.dataKey];
     const result = validateAnswers(questionnaire, broken);
     assert.ok(!result.ok, "expected a missing required field to be rejected");
-    assert.ok(result.errors.some((e) => e.includes("lastName")));
+    assert.ok(result.errors.some((e) => e.includes(requiredQuestion.id)));
   });
 }
 

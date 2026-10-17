@@ -1,0 +1,604 @@
+{
+  "formId": "2014-01-011",
+  "formTitle": "Request for Reconsideration on the Updating and Extension of Authorized Stay",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE'. Also independently confirmed by the existing R2 inventory (bi-forms-library/inventory/forms-library-inventory.json): reproduction=\"may_be_reproduced\".",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured programmatically from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/2014-01-011.pdf). Unlike every comb-box-style form mapped so far, this is a narrative/affidavit letter-format document with inline underscore blanks embedded in running paragraph text, not a grid of per-character cells -- confirmed by reading pdftotext -layout's complete output before attempting any measurement. Every blank's x-range was found by a full-page scan for near-black (ink, not grey comb-box-border) horizontal pixel runs longer than 20px, clustered into rows, then matched to its surrounding sentence by cross-referencing the same row's position against pdftotext -layout's reading order -- not assumed from guesswork. A pixel-ruled visual crop of the two multi-line 'reason' paragraphs was used to directly confirm which blank-line cluster belongs to which paragraph and in which order, since several inline trigger-blanks (e.g. 'for the reason that ____' at the end of a wrapped line) could otherwise be confused with the unrelated 'with contact number(s) ____' blank directly above it -- an initial raw reading of the row list did exactly that (misread the contact-number blank's row as belonging to the reason paragraph) before the visual crop resolved it.",
+  "measurementNotes": {
+    "entirelyCustomerSupplied": "Like 2021-03-001 (Travel Pass) and unlike the comb-box forms, this form's complete text was read start to finish and contains no BI-staff-only data-entry section -- it is a sworn, self-written letter ending in the applicant's own (and, conditionally, a representative's) signature. customerPreviewCropBox therefore covers the full page.",
+    "inlineBlankMisattributionCaught": "See derivedFrom above for the contact-number/reason-paragraph row confusion caught and corrected by direct visual inspection before any coordinate was finalized.",
+    "civilStatusCheckboxes": "These are small inline-text checkbox glyphs (part of the paragraph's own font, roughly 6x6pt) rather than large drawn boxes like 2021-03-001's Section I checkboxes -- directly measured via the same near-black pixel-run scan (their glyph ink registers the same way an underscore run does), not estimated from label proportions.",
+    "conditionalRepresentativeSection": "representativeAccreditationNo and representativeRelationship (and the representative's own unpopulated wet-ink signature line) are only relevant if the application is filed by an authorized representative rather than the applicant in person -- included as ordinary optional customer-supplied fields, same treatment as 2021-03-001's conditional spouse fields.",
+    "fiveLineReasonFieldsDesignNote": "This form's two multi-line narrative answers (reason failed to extend / reason wanting to stay longer) are exposed in questionnaire.json as 5 separate line-by-line questions each, rather than one free-text textarea auto-wrapped across lines -- the shared engine's wrappedPairs binding only supports exactly 2 lines (see bi-forms-library/engine/lib/field-bindings.js), and extending it to N lines was judged out of scope for a single form's mapping. Each line is a plain direct 1:1 field (no binding needed) so the customer (or assisting staff) composes their statement across up to 5 short lines instead of one paragraph.",
+    "nationalityFieldCorrection": "A first automated pass placed nationality's blank at pdf_y 683.76 (x 72-494.88), derived from a misread row in the initial full-page underline scan. The first generated test PDF showed the sample nationality text rendering directly on top of the 'single/married/...' civil-status checkbox row, overlapping its glyphs. Direct pixel inspection of the real original (cross-checked against pdftotext -bbox, which shows exactly one underscore token in this area: xMin 72.024-210.875, yMin 258.51 top-space) found the real, and only, blank immediately below the checkboxes at pdf_y 668.76 (x 72-210.72) -- captioned '(Civil Status)' directly beneath it, with a second caption '(Nationality)' positioned further right (x 474-527) but with NO corresponding blank of its own anywhere on the page at any darkness threshold tested. Concluded this single blank serves double duty as the write-in answer following the Civil Status checkboxes AND the 'a citizen of ___' nationality prompt (the two captions apply to the same blank, however the original form's own layout intends it) -- there is nowhere else on the form a nationality answer could go. Corrected and confirmed clear of the checkbox row in a regenerated test PDF."
+  },
+  "charBoxFields": {},
+  "checkboxFields": {
+    "civilStatusSingle": {
+      "label": "Civil Status - Single",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 72.96,
+      "xRightPt": 79.2,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    },
+    "civilStatusMarried": {
+      "label": "Civil Status - Married",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 144.72,
+      "xRightPt": 150.96,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    },
+    "civilStatusAnnulled": {
+      "label": "Civil Status - Annulled",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 217.44,
+      "xRightPt": 223.68,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    },
+    "civilStatusWidow": {
+      "label": "Civil Status - Widow",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 293.76,
+      "xRightPt": 300.0,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    },
+    "civilStatusSeparated": {
+      "label": "Civil Status - Separated",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 360.0,
+      "xRightPt": 366.24,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    },
+    "civilStatusDivorced": {
+      "label": "Civil Status - Divorced",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xLeftPt": 449.28,
+      "xRightPt": 455.52,
+      "yTopPt": 691.44,
+      "yBottomPt": 685.44
+    }
+  },
+  "freeTextFields": {
+    "dateTop": {
+      "label": "Date",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 429.84,
+      "xEndPt": 574.08,
+      "baselinePt": 840.08,
+      "maxLines": 1
+    },
+    "fullName": {
+      "label": "Full Name [Last Name, First Name, Middle Name]",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 77.76,
+      "xEndPt": 372.0,
+      "baselinePt": 715.52,
+      "maxLines": 1
+    },
+    "dob": {
+      "label": "Date of Birth",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 414.48,
+      "xEndPt": 570.0,
+      "baselinePt": 715.52,
+      "maxLines": 1
+    },
+    "nationality": {
+      "label": "Nationality",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 72.0,
+      "xEndPt": 210.72,
+      "baselinePt": 670.76,
+      "maxLines": 1
+    },
+    "contactNumber": {
+      "label": "Contact Number(s)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 148.32,
+      "xEndPt": 331.68,
+      "baselinePt": 646.16,
+      "maxLines": 1
+    },
+    "reasonFailedLine1": {
+      "label": "Reason failed to extend (line 1)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 370.56,
+      "xEndPt": 570.48,
+      "baselinePt": 601.76,
+      "maxLines": 1
+    },
+    "reasonFailedLine2": {
+      "label": "Reason failed to extend (line 2)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 588.56,
+      "maxLines": 1
+    },
+    "reasonFailedLine3": {
+      "label": "Reason failed to extend (line 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 575.36,
+      "maxLines": 1
+    },
+    "reasonFailedLine4": {
+      "label": "Reason failed to extend (line 4)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.28,
+      "baselinePt": 562.16,
+      "maxLines": 1
+    },
+    "reasonFailedLine5": {
+      "label": "Reason failed to extend (line 5)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 548.96,
+      "maxLines": 1
+    },
+    "reasonStayLine1": {
+      "label": "Reason would like to stay longer (line 1)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 291.84,
+      "xEndPt": 570.0,
+      "baselinePt": 527.84,
+      "maxLines": 1
+    },
+    "reasonStayLine2": {
+      "label": "Reason would like to stay longer (line 2)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 514.4,
+      "maxLines": 1
+    },
+    "reasonStayLine3": {
+      "label": "Reason would like to stay longer (line 3)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 501.2,
+      "maxLines": 1
+    },
+    "reasonStayLine4": {
+      "label": "Reason would like to stay longer (line 4)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.28,
+      "baselinePt": 488.0,
+      "maxLines": 1
+    },
+    "reasonStayLine5": {
+      "label": "Reason would like to stay longer (line 5)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 36.0,
+      "xEndPt": 569.04,
+      "baselinePt": 474.8,
+      "maxLines": 1
+    },
+    "authorizedStayExpired": {
+      "label": "Authorized stay expired on",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 214.32,
+      "xEndPt": 403.44,
+      "baselinePt": 453.68,
+      "maxLines": 1
+    },
+    "departureDate": {
+      "label": "Date of Departure (if leaving within a month or two)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 224.4,
+      "xEndPt": 363.12,
+      "baselinePt": 383.36,
+      "maxLines": 1
+    },
+    "finalDestination": {
+      "label": "Final Destination (if leaving within a month or two)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 407.76,
+      "xEndPt": 568.8,
+      "baselinePt": 383.36,
+      "maxLines": 1
+    },
+    "representativeAccreditationNo": {
+      "label": "Representative Accreditation No. (if filed by a representative)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 216.0,
+      "xEndPt": 366.0,
+      "baselinePt": 145.76,
+      "maxLines": 1
+    },
+    "representativeRelationship": {
+      "label": "Relationship to the Subject (if filed by a representative)",
+      "roles": {
+        "suppliedBy": "customer",
+        "editableBy": [
+          "customer_before_submission",
+          "staff_with_audit_after"
+        ],
+        "approvedBy": "staff",
+        "visibleTo": [
+          "customer",
+          "staff"
+        ]
+      },
+      "xStartPt": 216.0,
+      "xEndPt": 366.0,
+      "baselinePt": 132.56,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature required (the applicant's own, and conditionally a representative's). Deliberately left blank -- not populated by this automation.",
+    "roles": {
+      "suppliedBy": "customer_wet_ink",
+      "editableBy": [
+        "none_system_generated"
+      ],
+      "approvedBy": "n/a",
+      "visibleTo": [
+        "staff"
+      ]
+    },
+    "signatureLine": {
+      "xStartPt": 364.8,
+      "xEndPt": 575.76,
+      "baselinePt": 289.2
+    },
+    "dateLine": {
+      "note": "This form has no separate signature-block date line -- the single Date field at the top of the letter (dateTop, a freeTextField) already covers it. Reusing dateTop's own coordinates here only to satisfy the shared schema's required dateLine property; never drawn twice.",
+      "xStartPt": 429.84,
+      "xEndPt": 574.08,
+      "baselinePt": 840.08
+    },
+    "representativeSignatureLine": {
+      "note": "Extra, form-specific: the conditional representative's own wet-ink signature line, distinct from the schema's required signatureLine (which is the applicant's own).",
+      "xStartPt": 36.0,
+      "xEndPt": 191.52,
+      "baselinePt": 196.8
+    }
+  },
+  "customerPreviewCropBox": {
+    "note": "Full page -- this form has no staff-only data-entry section to crop out (see measurementNotes.entirelyCustomerSupplied above).",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 0,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Single region covering the full page, numbers copied verbatim from customerPreviewCropBox above.",
+    "regions": [
+      {
+        "id": "applicant_fields",
+        "label": "Applicant's letter and personal information",
+        "xLeftPt": 0,
+        "xRightPt": 612,
+        "yBottomPt": 0,
+        "yTopPt": 936
+      }
+    ]
+  },
+  "biOnlySections": [],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your own signature in person when you collect it from FIS, or your own sworn signature if you print and sign it yourself before submission to the Bureau of Immigration. If a representative is filing on your behalf, they must also sign and attach a photocopy of valid government-issued identification and a Special Power of Attorney (SPA)."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every field is customer-visible and the customerVisibleRegions covers the full page -- trivially satisfied, and correct given this form has no staff-only data section."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms, enforced by the same shared buildWatermarkedFormPreview/customer-preview pipeline code -- not form-specific."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "biOnlySections is empty -- this form genuinely has no BI-staff-only section (confirmed by reading its complete text), so there is nothing to keep unpopulated beyond the wet-ink signature lines, which are never drawn by this automation regardless of audience."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}
