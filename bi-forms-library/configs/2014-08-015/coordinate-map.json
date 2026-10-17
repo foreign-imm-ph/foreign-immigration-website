@@ -1,0 +1,288 @@
+{
+  "formId": "2014-08-015",
+  "formTitle": "Application Form for Alien Certificate of Registration Identity Card (ACR I-Card) Certification",
+  "documentType": "application_request",
+  "availability": "active",
+  "checkoutEligible": null,
+  "checkoutEligibleNote": "Not yet decided -- same open business-classification question as the other mapped forms. This mapping covers field-level automation only; checkout eligibility is a separate business decision.",
+  "reproductionRightsVerified": true,
+  "reproductionRightsNote": "Confirmed directly on the form itself: 'This document may be reproduced and is NOT FOR SALE' (identical wording to CCS-A-CDR-2016 and CCS-A-NTSP-2016). Also independently confirmed by the existing R2 inventory (bi-forms-library/inventory/forms-library-inventory.json): reproduction=\"may_be_reproduced\".",
+  "pageWidthPt": 612,
+  "pageHeightPt": 936,
+  "sourcePdf": "original.pdf",
+  "derivedFrom": "Measured programmatically from a 300 DPI raster of the real original PDF (downloaded from the private fis-bi-forms-library R2 bucket, originals/2014-08-015.pdf), by detecting actual horizontal/vertical grid-line pixel darkness (uniform meanDark~166.0, a clean, unambiguous signature distinct from text ink which reads near 0 or from blank background which reads 245-255) and cross-checked against pdftotext -bbox label positions. Unlike CCS-A-CDR-2016/CCS-A-NTSP-2016 (where each field's label sits BESIDE its comb box on the same row), this form places each label ON ITS OWN LINE directly ABOVE its comb box -- confirmed by direct visual inspection of cropped, pixel-ruled renders before any field was finalized (see measurementNotes). The page shares the exact same 612x936pt page size and a closely related ~13.99pt column pitch as CCS-A-CDR-2016/CCS-A-NTSP-2016, consistent with a shared template family, but every coordinate below was independently measured from this form's own raster, not copied from either.",
+  "measurementNotes": {
+    "layoutDiscovery": "A first-pass reading of pdftotext -layout suggested fields might share a row with their labels (as in CDR/NTSP). Before measuring a single coordinate, a cropped, pixel-ruled render of the Last Name/First Name fields was visually inspected (per this directive's explicit requirement to verify by inspection, not assumption) and showed the real layout: label text on its own line, comb box on the line below. All subsequent measurements used this confirmed layout.",
+    "cleanlyMeasuredFields": "All charBoxFields and checkboxFields below have BOTH their top and bottom row borders and all column dividers directly detected via consistent meanDark~166.0 clusters -- no inferred/extrapolated edges were needed anywhere in this form (unlike CCS-A-NTSP-2016's otherName2/landline/genderF, which needed inference). This was independently confirmed by visual inspection of pixel-ruled crops for the Last Name row, the OtherName(1)/(2) row (confirming the box starts one column later than the full-width fields, immediately after the printed '1'/'2' index label), the Date of Birth / Gender row (confirming 2+3+4 cell groupings for DD/MMM/YYYY plus two fully-bordered checkboxes), and the Landline/Mobile row (confirming, unlike NTSP's same-named fields, that this form's comb boxes DO have a fully drawn bottom border -- a genuine per-form difference, not a re-use of NTSP's open-bottom inference).",
+    "sharedColumnGrid": "lastName, firstName, middleName, placeOfBirth, citizenship, address1, barangay, provinceZip, passportNumber, and email all directly measured to the identical 40-point column grid (spot-checked across 5 of the 9 fields by independent column scans that returned identical divider pixel positions; the remaining 4 share the same box width/position in the raster and were not re-scanned individually, consistent with this form's single-column full-width template). otherName1/otherName2 use the same grid starting one column later (confirmed visually: their box begins immediately right of the printed '1'/'2' index digit, at this grid's second divider, not its first).",
+    "purposeAndSignatureLines": "The four 'Purpose' lines and the Signature/Printed Name/Date lines are derived directly from pdftotext -bbox's exact vector text positions (the underscore-character fill lines), the same method already used and proven for CCS-A-CDR-2016/CCS-A-NTSP-2016's own purpose lines. Confirmed correct by generating a real test PDF with distinguishable fictional staff-entered purpose text and visually inspecting it against the original before this mapping was finalized.",
+    "documentsAndCopiesBoxThirdLineCorrection": "A first automated pass read THREE underscore-glyph text runs inside each of the 'DOCUMENT(s) TO BE CERTIFIED TRUE COPY' and 'COPIES TO BE CERTIFIED TRUE COPY' boxes from pdftotext -bbox and treated all three as fillable blank lines. Generating a real test PDF with distinguishable fictional values for all three and visually inspecting it against the original (exactly as this directive requires) showed the third line's text rendering BELOW the box's own printed border, spilling outside it. A pixel-ruled crop of the real box, directly inspected, confirmed it contains the header text plus only TWO real blank lines -- the 'third underscore run' pdftotext reported is this box's own printed bottom border, which happens to be drawn with underscore glyphs and was consequently misread as a third content line. Corrected by removing documentsLine3/copiesLine3 entirely; documentsLine1/documentsLine2 and copiesLine1/copiesLine2 (the two genuinely real lines) were unaffected and re-verified correct in the corrected re-render."
+  },
+  "charBoxFields": {
+    "lastName": {
+      "label": "Last Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 762.36,
+      "yBottomPt": 743.88,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "firstName": {
+      "label": "First/Given Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 730.68,
+      "yBottomPt": 712.2,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "middleName": {
+      "label": "Middle Name",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 699.24,
+      "yBottomPt": 680.52,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "otherName1": {
+      "label": "Other Name(s)/Alias(es) 1",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 667.56,
+      "yBottomPt": 649.08,
+      "colsPt": [49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "otherName2": {
+      "label": "Other Name(s)/Alias(es) 2",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 647.16,
+      "yBottomPt": 628.68,
+      "colsPt": [49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "dobDay": {
+      "label": "Date of Birth - DD",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 614.28,
+      "yBottomPt": 595.56,
+      "colsPt": [35.88, 49.8, 63.96]
+    },
+    "dobMonth": {
+      "label": "Date of Birth - MMM",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 614.28,
+      "yBottomPt": 595.56,
+      "colsPt": [77.88, 91.8, 105.72, 119.64]
+    },
+    "dobYear": {
+      "label": "Date of Birth - YYYY",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 614.28,
+      "yBottomPt": 595.56,
+      "colsPt": [133.56, 147.48, 161.64, 175.56, 189.48]
+    },
+    "placeOfBirth": {
+      "label": "Place of Birth",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 582.6,
+      "yBottomPt": 564.12,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "citizenship": {
+      "label": "Citizenship/Nationality",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 550.92,
+      "yBottomPt": 532.44,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "address1": {
+      "label": "House/Unit No., Street, Subdivision/Village",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 509.64,
+      "yBottomPt": 491.04,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "barangay": {
+      "label": "Barangay, Municipality/City",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 480.72,
+      "yBottomPt": 462.12,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "provinceZip": {
+      "label": "Province, Zip Code",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 451.92,
+      "yBottomPt": 433.44,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "passportNumber": {
+      "label": "Passport Number",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 420.36,
+      "yBottomPt": 401.88,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    },
+    "landline": {
+      "label": "Landline",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "yTopPt": 388.68,
+      "yBottomPt": 370.2,
+      "colsPt": [91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32]
+    },
+    "mobile": {
+      "label": "Mobile",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "yTopPt": 388.68,
+      "yBottomPt": 370.2,
+      "colsPt": [357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48]
+    },
+    "email": {
+      "label": "Email Address",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "yTopPt": 357.24,
+      "yBottomPt": 338.52,
+      "colsPt": [35.88, 49.8, 63.96, 77.88, 91.8, 105.72, 119.64, 133.56, 147.48, 161.64, 175.56, 189.48, 203.4, 217.32, 231.24, 245.4, 259.32, 273.24, 287.64, 301.44, 315.48, 329.64, 343.56, 357.48, 371.64, 385.56, 399.48, 413.64, 427.56, 441.48, 455.64, 469.56, 483.48, 497.64, 511.56, 525.48, 539.64, 553.56, 567.48, 581.64]
+    }
+  },
+  "checkboxFields": {
+    "genderM": {
+      "label": "Gender - M",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "xLeftPt": 287.64,
+      "xRightPt": 301.44,
+      "yTopPt": 614.28,
+      "yBottomPt": 595.56
+    },
+    "genderF": {
+      "label": "Gender - F",
+      "roles": { "suppliedBy": "customer", "editableBy": ["customer_before_submission", "staff_with_audit_after"], "approvedBy": "staff", "visibleTo": ["customer", "staff"] },
+      "xLeftPt": 329.64,
+      "xRightPt": 343.56,
+      "yTopPt": 614.28,
+      "yBottomPt": 595.56
+    }
+  },
+  "freeTextFields": {
+    "documentsLine1": {
+      "label": "Document(s) to be certified true copy (line 1)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 45.6,
+      "xEndPt": 295.3,
+      "baselinePt": 819,
+      "maxLines": 1
+    },
+    "documentsLine2": {
+      "label": "Document(s) to be certified true copy (line 2)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 45.6,
+      "xEndPt": 295.3,
+      "baselinePt": 807,
+      "maxLines": 1
+    },
+    "copiesLine1": {
+      "label": "Copies to be certified true copy (line 1)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 321.5,
+      "xEndPt": 571.5,
+      "baselinePt": 819,
+      "maxLines": 1
+    },
+    "copiesLine2": {
+      "label": "Copies to be certified true copy (line 2)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 321.5,
+      "xEndPt": 571.5,
+      "baselinePt": 807,
+      "maxLines": 1
+    },
+    "purposeLine1": {
+      "label": "Purpose (line 1)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 79,
+      "xEndPt": 572,
+      "baselinePt": 328,
+      "maxLines": 1
+    },
+    "purposeLine2": {
+      "label": "Purpose (line 2, continuation)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 81,
+      "xEndPt": 573,
+      "baselinePt": 316,
+      "maxLines": 1
+    },
+    "purposeLine3": {
+      "label": "Purpose (line 3, continuation)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 81,
+      "xEndPt": 573,
+      "baselinePt": 303,
+      "maxLines": 1
+    },
+    "purposeLine4": {
+      "label": "Purpose (line 4, continuation)",
+      "roles": { "suppliedBy": "staff", "editableBy": ["staff"], "approvedBy": "staff", "visibleTo": ["staff"] },
+      "xStartPt": 81,
+      "xEndPt": 573,
+      "baselinePt": 291,
+      "maxLines": 1
+    }
+  },
+  "signatureBlock": {
+    "note": "Wet-ink signature and in-person printed name required by the official form, same policy as CCS-A-CDR-2016/CCS-A-NTSP-2016. Deliberately left blank -- not populated by this automation.",
+    "roles": { "suppliedBy": "customer_wet_ink", "editableBy": ["none_system_generated"], "approvedBy": "n/a", "visibleTo": ["staff"] },
+    "signatureLine": { "xStartPt": 36.024, "xEndPt": 190.9148, "baselinePt": 288.36 },
+    "printedNameLine": { "xStartPt": 219.22, "xEndPt": 391.1533, "baselinePt": 288.36 },
+    "dateLine": { "xStartPt": 432.17, "xEndPt": 575.5386, "baselinePt": 288.36 }
+  },
+  "customerPreviewCropBox": {
+    "note": "Same policy as CCS-A-CDR-2016/CCS-A-NTSP-2016: visible area ends immediately before the 'Contact Number(s) in the Philippines' heading (which introduces the staff-only Landline/Mobile fields). Heading's own bbox top is pdf_y~401.91, essentially touching Passport Number's own measured box bottom at 401.88 (negligible gap in this specific form's layout, confirmed by direct measurement, not an error).",
+    "xLeftPt": 0,
+    "xRightPt": 612,
+    "yBottomPt": 401.9,
+    "yTopPt": 936
+  },
+  "customerVisibleRegions": {
+    "note": "Single region, numbers copied verbatim from customerPreviewCropBox above.",
+    "regions": [
+      { "id": "applicant_fields", "label": "Applicant personal information", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 401.9, "yTopPt": 936 }
+    ]
+  },
+  "biOnlySections": [
+    {
+      "label": "ARD Window (Date & Time RECEIVED / RELEASED)",
+      "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] }
+    },
+    {
+      "label": "ACR I-Card Certification Claim Stub (entire lower section, explicitly a tear-off BI-staff-completed stub)",
+      "roles": { "suppliedBy": "bi_staff", "editableBy": ["none"], "approvedBy": "n/a", "visibleTo": ["staff"] }
+    }
+  ],
+  "offFormInstructions": [
+    {
+      "id": "wet_ink_signature",
+      "note": "Same wording as the other mapped forms' own instruction -- DRAFT, English only, needs translation and FIS review before use.",
+      "en": "This form requires your signature and printed name in person when you collect it from FIS. You do not need to sign anything online."
+    }
+  ],
+  "visibilityVerification": {
+    "status": "passed",
+    "checkedAt": "2026-10-17",
+    "checks": [
+      {
+        "name": "field_role_region_agreement",
+        "result": "pass",
+        "note": "Every customer-visible field's coordinates fall within customerVisibleRegions (yBottomPt 401.9 to 936); Landline/Mobile/Purpose/Signature confirmed staff-only or wet-ink (yBottomPt at or below 388.68), all outside the approved region."
+      },
+      {
+        "name": "all_box_types_constrained",
+        "result": "pass",
+        "note": "Same MediaBox/CropBox/BleedBox/TrimBox/ArtBox constraint approach as the other mapped forms, enforced by the same shared buildWatermarkedFormPreview/customer-preview pipeline code -- not form-specific."
+      },
+      {
+        "name": "bi_only_sections_unpopulated",
+        "result": "pass",
+        "note": "The ARD Window and Claim Stub sections have no entries anywhere in charBoxFields/checkboxFields/freeTextFields -- the shared render-pipeline.js only ever draws fields explicitly listed in this config, so these sections structurally cannot be populated."
+      }
+    ]
+  },
+  "watermark": {
+    "text": "PREVIEW ONLY | FOR BI APPLICATION PREPARATION THROUGH FIS",
+    "opacity": 0.22
+  }
+}
