@@ -230,17 +230,11 @@
     "printedNameLine": { "xStartPt": 219.22, "xEndPt": 391.1533, "baselinePt": 288.36 },
     "dateLine": { "xStartPt": 432.17, "xEndPt": 575.5386, "baselinePt": 288.36 }
   },
-  "customerPreviewCropBox": {
-    "note": "Same policy as CCS-A-CDR-2016/CCS-A-NTSP-2016: visible area ends immediately before the 'Contact Number(s) in the Philippines' heading (which introduces the staff-only Landline/Mobile fields). Heading's own bbox top is pdf_y~401.91, essentially touching Passport Number's own measured box bottom at 401.88 (negligible gap in this specific form's layout, confirmed by direct measurement, not an error).",
-    "xLeftPt": 0,
-    "xRightPt": 612,
-    "yBottomPt": 401.9,
-    "yTopPt": 936
-  },
   "customerVisibleRegions": {
-    "note": "Single region, numbers copied verbatim from customerPreviewCropBox above.",
+    "note": "Two disjoint regions, same pattern as 2014-13-006. A prior pass set a single region ending at yBottomPt 401.9 (immediately before the 'Contact Number(s) in the Philippines' heading, which introduces the staff-only Landline/Mobile fields) and never noticed that this also silently excluded the Email Address field -- which is customer-supplied but sits BELOW the staff-only Landline/Mobile block in the form's print layout (Landline/Mobile yBottomPt 370.2, Email yTopPt 357.24/yBottomPt 338.52). That bug was caught by svg-compose.js refusing to draw the out-of-region field (not by the engine test suite's own 'ink is visible' assertion, which never got far enough to check) and fixed here: region A covers everything from the top down to the Landline/Mobile box's own bottom edge (401.9 is Passport Number's edge, used unchanged); region B is a narrow slice covering only the Email Address label+field (370.2 to 338.52), confirmed via direct pdftotext -bbox measurement to sit flush against Landline/Mobile's bottom edge above and the staff-only 'Purpose:' free-text block below (338.55), with no staff field anywhere inside either region.",
     "regions": [
-      { "id": "applicant_fields", "label": "Applicant personal information", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 401.9, "yTopPt": 936 }
+      { "id": "applicant_fields", "label": "Applicant personal information through Passport Number", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 401.9, "yTopPt": 936 },
+      { "id": "email_address", "label": "Email Address (below the staff-only Contact Number block)", "xLeftPt": 0, "xRightPt": 612, "yBottomPt": 338.52, "yTopPt": 370.2 }
     ]
   },
   "biOnlySections": [
@@ -267,7 +261,7 @@
       {
         "name": "field_role_region_agreement",
         "result": "pass",
-        "note": "Every customer-visible field's coordinates fall within customerVisibleRegions (yBottomPt 401.9 to 936); Landline/Mobile/Purpose/Signature confirmed staff-only or wet-ink (yBottomPt at or below 388.68), all outside the approved region."
+        "note": "Every customer-visible field's coordinates fall within one of the two customerVisibleRegions (applicant_fields: yBottomPt 401.9 to 936; email_address: yBottomPt 338.52 to 370.2) -- re-verified directly by generating a real resvg-wasm customer preview and confirming every customer field, including email, draws visible ink at its expected position (see bi-forms-library/tests/run-all.js). Landline/Mobile (yTopPt 388.68/yBottomPt 370.2) and Purpose/Signature (at or below 338.52) are confirmed staff-only or wet-ink and fall in the gap between the two regions, structurally excluded from the customer artifact."
       },
       {
         "name": "all_box_types_constrained",

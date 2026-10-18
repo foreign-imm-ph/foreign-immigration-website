@@ -200,7 +200,22 @@ async function createAndActivateOffering(page, {
   await page.fill("#serviceSlug", slug);
   if (biFormId) await page.fill("#biFormId", biFormId);
   if (serviceGroup) await page.fill("#serviceGroup", serviceGroup);
-  await page.fill("#serviceFeeAmount", serviceFeeAmount);
+  // document_automated/document_manual use the Processing Tiers pricing
+  // model (worker/src/lib/checkout.js usesProcessingTiers), not the flat
+  // "Other Pricing Settings" fee components -- a price set only on
+  // #serviceFeeAmount for one of these types is never actually stored
+  // anywhere the activation check (hasApprovedPrice) looks, so activation
+  // below would otherwise be silently refused. Every other offering type
+  // (bookable_service, fixed_price_service) genuinely does use the flat
+  // fee field.
+  if (offeringType === "document_automated" || offeringType === "document_manual") {
+    await page.check("#regularEnabled");
+    await page.fill("#regularPrice", serviceFeeAmount);
+    await page.fill("#regularMinDays", "2");
+    await page.fill("#regularMaxDays", "5");
+  } else {
+    await page.fill("#serviceFeeAmount", serviceFeeAmount);
+  }
   await page.fill("#title-en", title);
   await page.fill("#desc-en", desc);
   await page.fill("#elig-en", elig);
@@ -296,6 +311,23 @@ async function fillDeliveryAddressIfPresent(page) {
   await page.fill("#city", "Manila");
   await page.fill("#addressLine1", "123 Test Street");
   await page.click('#instant-services-delivery-form button[type="submit"]');
+  return true;
+}
+
+// A tiered offering (document_automated/document_manual -- see
+// lib/checkout.js usesProcessingTiers) shows a "Choose a Processing
+// Option" step before delivery address/questionnaire; a non-tiered
+// offering (bookable_service/fixed_price_service) never does. No-op if
+// the step isn't present, same convention as fillDeliveryAddressIfPresent.
+async function selectProcessingTierIfPresent(page, tier = "regular") {
+  const form = page.locator("#instant-services-tier-form");
+  try {
+    await form.waitFor({ state: "visible", timeout: 15_000 });
+  } catch {
+    return false;
+  }
+  await page.check(`input[name="processingTier"][value="${tier}"]`);
+  await page.click('#instant-services-tier-form button[type="submit"]');
   return true;
 }
 
@@ -447,6 +479,7 @@ module.exports = {
   createAndActivateOffering,
   fillGenericQuestionnaireAndSubmit,
   fillDeliveryAddressIfPresent,
+  selectProcessingTierIfPresent,
   fillAirportVipBookingForm,
   acceptAirportVipPolicyIfPresent,
   uploadSyntheticPaymentProof,

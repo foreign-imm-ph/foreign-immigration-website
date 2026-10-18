@@ -29,7 +29,7 @@ test.describe("Journey 7: catalogue administration", () => {
     const serviceId = page.url().match(/catalogue\/([^/]+)\/?$/)[1];
 
     await expect(page.locator(".status").first()).toHaveText("draft");
-    await expect(page.locator("text=Not yet approved")).toBeVisible();
+    await expect(page.locator("text=Not yet approved").first()).toBeVisible();
 
     // --- Confirm it cannot be purchased while unapproved: the public
     // catalogue API only ever lists active offerings, and this one isn't
@@ -90,7 +90,10 @@ test.describe("Journey 7: catalogue administration", () => {
     await page.waitForURL(`${WORKER_BASE}/staff/instant-services/catalogue/${serviceId}`);
 
     // --- Price history now shows two entries ---
-    const historyRows = page.locator(".card:has-text('Price history') table tr");
+    // "G. Price History" is a <details> section collapsed by default --
+    // open it first, same as a real staff member would.
+    await page.locator("#section-price-history summary").click();
+    const historyRows = page.locator("#section-price-history table tr");
     await expect(historyRows).toHaveCount(3); // header row + 2 price changes
 
     // --- The already-placed order's stored price snapshot is untouched ---

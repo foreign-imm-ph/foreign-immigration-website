@@ -1,8 +1,8 @@
 // Journey 2: a staff-processed ("manual") document order -- no automated
 // questionnaire exists for this offering type, so once the guest's
-// request exists it goes straight to delivery address, then review and a
-// simulated payment-proof upload, exactly like Journey 1 past its
-// questionnaire step.
+// request exists it goes straight to the processing-option step (this
+// offering type also uses processing tiers, like Journey 1's), then
+// delivery address, review, and a simulated payment-proof upload.
 const { test, expect } = require("@playwright/test");
 const {
   ensureTestStaffAdmin,
@@ -10,6 +10,7 @@ const {
   signInStaff,
   createAndActivateOffering,
   beginGuestOrderAndSignIn,
+  selectProcessingTierIfPresent,
   uploadSyntheticPaymentProof,
   d1Json,
 } = require("../fixtures/testHelpers");
@@ -38,7 +39,8 @@ test.describe("Journey 2: manual document order", () => {
       emailPrefix: "e2e-j2",
     });
 
-    // No questionnaire -- straight to delivery address.
+    // No questionnaire -- straight to the processing-option step, then delivery address.
+    await selectProcessingTierIfPresent(page);
     await page.waitForSelector("#instant-services-delivery-form", { timeout: 15_000 });
     await page.fill("#recipientName", "E2E Test Recipient Two");
     await page.fill("#phone", "+63 900 000 0001");

@@ -858,13 +858,23 @@ function approvalSectionBody(service, staff, serviceId) {
 // requirement. `form` (optional, the just-submitted FormData) is threaded
 // through to every field renderer so the whole form echoes back exactly
 // what was typed, not the last-saved values.
-function catalogueFormSections({ offeringType, configCurrent, tierService, components, i18nByLang, serviceId, form = null, forceOpenSection = null }) {
+function catalogueFormSections({ offeringType, configCurrent, tierService, components, i18nByLang, serviceId, form = null, forceOpenSection = null, isNewOffering = false }) {
   const tiered = usesProcessingTiers(offeringType);
+  // On the "Add an Offering" page, the open/closed state below is computed
+  // once at page load from a hardcoded default offeringType
+  // (NEW_SERVICE_TIER_STUB) -- there is no client-side script that
+  // re-opens the matching pricing section when a staff member later
+  // changes the "Offering type" dropdown (this form is plain server-
+  // rendered HTML, not reactive). Gating tiers/components/config on
+  // `tiered` alone would silently hide whichever pricing section actually
+  // matches the type the staff member picks. Since nothing is saved yet
+  // for a brand-new offering, there is no cost to showing every relevant
+  // section up front instead.
   const open = {
-    tiers: forceOpenSection === "tiers" ? true : tiered,
-    components: forceOpenSection === "components" ? true : !tiered,
+    tiers: forceOpenSection === "tiers" ? true : isNewOffering ? true : tiered,
+    components: forceOpenSection === "components" ? true : isNewOffering ? true : !tiered,
     translations: forceOpenSection === "translations" ? true : false,
-    config: forceOpenSection === "config" ? true : false,
+    config: forceOpenSection === "config" ? true : isNewOffering,
   };
   const NOT_APPLICABLE_TIERS = '<span class="muted">not applicable — see "Other Pricing Settings" below</span>';
   const NOT_APPLICABLE_COMPONENTS = '<span class="muted">not applicable — see "Processing Options &amp; Pricing" above</span>';
@@ -916,7 +926,7 @@ export async function newServiceForm(env, staff) {
     "Add a Document Order or Bookable Service",
     `<h1>Add an Offering</h1>
      <form method="POST" action="/staff/instant-services/catalogue">
-       ${catalogueFormSections({ offeringType, configCurrent, tierService: NEW_SERVICE_TIER_STUB, components: [], i18nByLang: {}, serviceId: null })}
+       ${catalogueFormSections({ offeringType, configCurrent, tierService: NEW_SERVICE_TIER_STUB, components: [], i18nByLang: {}, serviceId: null, isNewOffering: true })}
        <p class="muted">New offerings are created in "draft" status. Move to "ready for review", then "active", only once the price, content, and (for an automated document) the BI Form mapping have been reviewed and approved. Activation is refused automatically if no approved price has been set.</p>
        <button type="submit">Create (draft)</button>
      </form>`,

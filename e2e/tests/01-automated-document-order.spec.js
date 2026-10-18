@@ -12,6 +12,7 @@ const {
   createAndActivateOffering,
   beginGuestOrderAndSignIn,
   fillGenericQuestionnaireAndSubmit,
+  selectProcessingTierIfPresent,
   uploadSyntheticPaymentProof,
   d1Json,
 } = require("../fixtures/testHelpers");
@@ -43,6 +44,9 @@ test.describe("Journey 1: automated document order", () => {
     // Questionnaire step (document_automated only)
     await expect(page.locator("text=Please complete the following questionnaire")).toBeVisible({ timeout: 15_000 });
     await fillGenericQuestionnaireAndSubmit(page);
+
+    // Processing option step (document_automated uses processing tiers)
+    await selectProcessingTierIfPresent(page);
 
     // Delivery address step (this offering supports delivery)
     await page.waitForSelector("#instant-services-delivery-form", { timeout: 15_000 });
