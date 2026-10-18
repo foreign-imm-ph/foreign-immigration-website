@@ -342,10 +342,10 @@ export async function createDeliveryQuotation(request, env, staff, orderId) {
   await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "issued_delivery_quotation", targetTable: "checkout_delivery_quotations", targetId: orderId });
 
   try {
-    const client = await env.DB.prepare("SELECT email FROM clients WHERE id = ?").bind(order.client_id).first();
+    const client = await env.DB.prepare("SELECT email, preferred_communication_language FROM clients WHERE id = ?").bind(order.client_id).first();
     const application = await env.DB.prepare("SELECT reference FROM applications WHERE id = ?").bind(order.application_id).first();
     if (client && application) {
-      await sendPaymentRequestNotification(env, { to: client.email, applicationReference: application.reference, amountPhp: amountCentavos / 100 });
+      await sendPaymentRequestNotification(env, { to: client.email, applicationReference: application.reference, amountPhp: amountCentavos / 100, lang: client.preferred_communication_language });
     }
   } catch (err) {
     console.error("Delivery quotation notification email failed:", err.message);

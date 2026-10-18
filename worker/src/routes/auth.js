@@ -32,7 +32,7 @@ export async function handleRequestMagicLink(request, env) {
 
       const url = `${env.PUBLIC_SITE_URL}/portal/verify/?token=${rawToken}`;
       try {
-        await sendMagicLink(env, { to: email, url });
+        await sendMagicLink(env, { to: email, url, lang: client.preferred_communication_language });
       } catch (err) {
         console.error("Magic link email failed:", err.message);
       }

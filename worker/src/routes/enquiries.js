@@ -175,7 +175,7 @@ export async function handleCreateEnquiry(request, env) {
   // safely stored, and staff can still see it even if a notification email
   // bounces.
   try {
-    await sendEnquiryAcknowledgement(env, { to: body.email, fullName: body.fullName, reference });
+    await sendEnquiryAcknowledgement(env, { to: body.email, fullName: body.fullName, reference, lang: preferredLanguage });
   } catch (err) {
     console.error("Acknowledgement email failed:", err.message);
   }

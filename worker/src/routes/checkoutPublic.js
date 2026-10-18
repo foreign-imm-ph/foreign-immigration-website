@@ -135,9 +135,18 @@ export async function handleBeginCheckout(request, env) {
   const service = await getServiceById(env.DB, serviceId);
   if (!service || !service.active) throw new HttpError(404, "This service is not currently available");
 
+  // The catalogue page's own ?lang= (resolveLang's convention above) is
+  // the only language signal available for a brand-new guest -- there is
+  // no saved preference yet. Only used to SEED a new client's
+  // preference; an EXISTING client's own already-saved preference is
+  // never overwritten by whatever language they happen to be browsing
+  // in today (same "never overwrite a durable preference" principle
+  // routes/staff.js's enquiry-conversion flow already follows).
+  const pageLang = CANONICAL_LANGUAGES.includes(body.lang) ? body.lang : null;
+
   let client = await getClientByEmail(env.DB, email);
   if (!client) {
-    client = await createClient(env.DB, { fullName, email });
+    client = await createClient(env.DB, { fullName, email, preferredCommunicationLanguage: pageLang });
   }
 
   const order = await findOrCreateDraftOrder(env.DB, { clientId: client.id, serviceId });
@@ -155,7 +164,7 @@ export async function handleBeginCheckout(request, env) {
 
   const verifyUrl = `${env.PUBLIC_SITE_URL}/instant-services/verify/?token=${rawToken}&order=${order.id}`;
   try {
-    await sendInstantServicesVerification(env, { to: email, url: verifyUrl });
+    await sendInstantServicesVerification(env, { to: email, url: verifyUrl, lang: client.preferred_communication_language || pageLang });
   } catch (err) {
     // Best-effort, matching every other transactional email in this
     // codebase (lib/email.js) -- a delivery failure must never block the

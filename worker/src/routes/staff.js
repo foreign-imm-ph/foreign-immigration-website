@@ -686,6 +686,7 @@ async function sendReply(request, env, staff, enquiryId, messageId) {
       reference: enquiry.reference,
       replyText,
       englishOriginal: message.source_text,
+      lang: enquiry.language,
     });
     await updateMessageDeliveryStatus(env.DB, { id: messageId, deliveryStatus: "sent" });
     await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "sent_enquiry_reply", targetTable: "communication_messages", targetId: messageId });
@@ -813,7 +814,7 @@ async function translatePortalReply(request, env, staff, applicationId) {
 // route's normal 500, the same as any other unexpected failure in this file.
 async function sendPortalReply(request, env, staff, applicationId, messageId) {
   const application = await env.DB.prepare(
-    `SELECT a.*, c.email, c.full_name FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
+    `SELECT a.*, c.email, c.full_name, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?`
   )
     .bind(applicationId)
     .first();
@@ -835,7 +836,7 @@ async function sendPortalReply(request, env, staff, applicationId, messageId) {
   // fired exactly once per actual send (the old plain-message route this
   // replaces is removed, so there is no second path that could double it).
   try {
-    await sendClientMessageNotification(env, { to: application.email, applicationReference: application.reference });
+    await sendClientMessageNotification(env, { to: application.email, applicationReference: application.reference, lang: application.preferred_communication_language });
   } catch (err) {
     console.error("Portal message notification email failed:", err.message);
   }
@@ -1070,7 +1071,7 @@ async function convertEnquiry(request, env, staff, id) {
       .bind(newId(), client.id, tokenHash, expiresAt)
       .run();
     try {
-      await sendMagicLink(env, { to: client.email, url: `${env.PUBLIC_SITE_URL}/portal/verify/?token=${rawToken}` });
+      await sendMagicLink(env, { to: client.email, url: `${env.PUBLIC_SITE_URL}/portal/verify/?token=${rawToken}`, lang: client.preferred_communication_language });
     } catch (err) {
       console.error("Welcome email failed:", err.message);
     }
@@ -1563,7 +1564,7 @@ async function updateStatus(request, env, staff, id) {
 
 async function notifyStatusUpdate(env, applicationId, status) {
   const application = await env.DB.prepare(
-    "SELECT a.reference, c.full_name, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT a.reference, c.full_name, c.email, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
@@ -1574,6 +1575,7 @@ async function notifyStatusUpdate(env, applicationId, status) {
       fullName: application.full_name,
       applicationReference: application.reference,
       status,
+      lang: application.preferred_communication_language,
     });
   } catch (err) {
     console.error("Status update email failed:", err.message);
@@ -1680,13 +1682,13 @@ async function requestDocument(request, env, staff, applicationId) {
 
 async function notifyDocumentRequest(env, applicationId) {
   const application = await env.DB.prepare(
-    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT a.reference, c.email, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
   if (!application) return;
   try {
-    await sendDocumentRequestNotification(env, { to: application.email, applicationReference: application.reference });
+    await sendDocumentRequestNotification(env, { to: application.email, applicationReference: application.reference, lang: application.preferred_communication_language });
   } catch (err) {
     console.error("Document request email failed:", err.message);
   }
@@ -1806,13 +1808,13 @@ async function createPaymentRequest(request, env, staff, applicationId) {
 
 async function notifyPaymentRequest(env, applicationId, amount) {
   const application = await env.DB.prepare(
-    "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+    "SELECT a.reference, c.email, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
   )
     .bind(applicationId)
     .first();
   if (!application) return;
   try {
-    await sendPaymentRequestNotification(env, { to: application.email, applicationReference: application.reference, amountPhp: amount });
+    await sendPaymentRequestNotification(env, { to: application.email, applicationReference: application.reference, amountPhp: amount, lang: application.preferred_communication_language });
   } catch (err) {
     console.error("Payment request email failed:", err.message);
   }
@@ -1878,7 +1880,7 @@ async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
       await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "marked_payment_paid", targetTable: "payment_requests", targetId: paymentId });
 
       const application = await env.DB.prepare(
-        "SELECT a.reference, c.email FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
+        "SELECT a.reference, c.email, c.preferred_communication_language FROM applications a JOIN clients c ON c.id = a.client_id WHERE a.id = ?"
       )
         .bind(applicationId)
         .first();
@@ -1888,6 +1890,7 @@ async function markPaymentPaid(request, env, staff, applicationId, paymentId) {
             to: application.email,
             applicationReference: application.reference,
             amountPhp: existing.amount_php,
+            lang: application.preferred_communication_language,
           });
         } catch (err) {
           console.error("Payment confirmation email failed:", err.message);
