@@ -40,8 +40,17 @@ module.exports = defineConfig({
     {
       // See worker/scripts/make-e2e-wrangler-toml.js for why the Staff
       // Portal needs this: --local alone is not enough.
+      //
+      // `wrangler dev --local` starts from an empty local D1 database if
+      // one doesn't already exist on disk under .wrangler/state -- it
+      // never applies migrations/ itself. A machine that already ran
+      // this suite (or worker/TESTING.md's manual setup) before has that
+      // state sitting around already, which is why this was never
+      // noticed locally; a fresh checkout (including CI) doesn't, and
+      // every request fails with "no such table". Applying migrations
+      // before every dev start is a no-op once they're already applied.
       command:
-        "node scripts/make-e2e-wrangler-toml.js && npx wrangler dev --port " +
+        "node scripts/make-e2e-wrangler-toml.js && npx wrangler d1 migrations apply fis-backend --local && npx wrangler dev --port " +
         WORKER_PORT +
         " --local --config .wrangler-e2e.toml",
       cwd: __dirname + "/worker",
