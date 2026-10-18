@@ -441,6 +441,31 @@ export async function approveBiForm(request, env, staff, submissionId) {
   const { buildStaffDocument } = await getDocumentBuilders();
   const staffDoc = await buildStaffDocument(originalBytes, coordinateMap, bindings, data);
 
+  // "FIS Smart Application System" directive, non-negotiable requirement:
+  // "Never silently truncate... customer information. If a field cannot
+  // accommodate valid input, provide a clear, recoverable exception for
+  // staff resolution rather than generating an apparently complete but
+  // inaccurate document." The shared engine (pdf-fields.js's
+  // populateCharField) already detects and reports every character-box
+  // overflow via staffDoc.overflowReport -- it was simply never checked
+  // here, so a too-long value was silently truncated on the real,
+  // released document with no signal to staff. fieldsForAudience(...,
+  // "staff") (used by buildStaffDocument) returns every drawable field on
+  // the form regardless of audience, so this one check covers the
+  // customer preview's identical char-box geometry too -- nothing is
+  // written to R2/D1, and no customer preview is composed, until every
+  // overflow is resolved. Recoverable: staff shortens/corrects the
+  // offending answer via the existing "customer field completions/
+  // corrections" form below and retries Approve.
+  if (staffDoc.overflowReport.length > 0) {
+    throw new HttpError(
+      422,
+      `The following field(s) are too long to fit on the official form and must be corrected before this document can be generated: ${staffDoc.overflowReport
+        .map((o) => `"${o.field}" (${o.issue})`)
+        .join("; ")}`
+    );
+  }
+
   const staffKey = `clients/${submission.client_id}/bi-forms/${submissionId}/${newId()}-staff.pdf`;
   await env.CLIENT_FILES.put(staffKey, staffDoc.bytes, { httpMetadata: { contentType: "application/pdf" } });
   await env.DB.prepare(
