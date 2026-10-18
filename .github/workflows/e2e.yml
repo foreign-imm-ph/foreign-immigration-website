@@ -39,6 +39,17 @@ jobs:
         run: npm ci
         working-directory: worker
 
+      - name: Install BI Forms engine dependencies
+        # worker/src/lib/biFormEngine.js imports engine library files by
+        # relative path (not via worker/node_modules), so esbuild's Node
+        # resolution needs this directory's OWN node_modules (pdf-lib,
+        # @resvg/resvg-wasm, ajv) present to bundle the Worker. It's
+        # gitignored like any node_modules, so a fresh checkout needs it
+        # installed explicitly -- this step was missing, which is why
+        # every prior run on this workflow failed the same way.
+        run: npm ci
+        working-directory: bi-forms-library/engine
+
       - name: Install Playwright's Chromium
         run: npx playwright install --with-deps chromium
 
