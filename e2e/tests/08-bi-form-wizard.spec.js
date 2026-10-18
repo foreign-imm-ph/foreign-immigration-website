@@ -35,6 +35,16 @@ test.describe("Journey 8: BI-form wizard + assisted-completion intake", () => {
     const { orderId } = await beginGuestOrderAndSignIn(page, { serviceId, fullName: "E2E Wizard Tester", emailPrefix: "e2e-j8a" });
 
     await expect(page.locator(".portal-bi-form-choice-panel")).toBeVisible({ timeout: 15_000 });
+
+    // Directive section 5: the verbatim guided-application intro, shown
+    // once above the choice panel. The live-preview sentence is only
+    // revealed once the real availability probe confirms it (this form
+    // has a background uploaded above, so it should become visible).
+    await expect(page.locator(".portal-guided-intro")).toContainText("We'll take care of the complicated paperwork.");
+    await expect(page.locator(".portal-guided-intro")).toContainText("You provide what you know. We'll take care of the rest.");
+    await expect(page.locator(".portal-guided-intro")).toContainText("proceed with processing your request");
+    await expect(page.locator(".portal-guided-intro-live-preview")).toBeVisible({ timeout: 10_000 });
+
     await page.click(".portal-bi-form-choice-self");
 
     // Step 1: a real progress indicator, not just a heading.

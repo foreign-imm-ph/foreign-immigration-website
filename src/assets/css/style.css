@@ -2126,6 +2126,18 @@ summary:focus-visible {
 
 .portal-bi-form-choice-panel h3 { margin-top: 0; }
 
+/* Directive section 5: the guided-application introduction, shown once
+   above the self-service/assisted choice panel. Plain readable prose,
+   no card styling of its own -- the choice panel right below it already
+   carries the visual weight. */
+.portal-guided-intro p { margin: 0 0 0.75rem; }
+.portal-guided-intro p:first-child {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--color-green);
+}
+.portal-guided-intro p:last-child { margin-bottom: 1rem; }
+
 /* "I'm not sure -- let FIS help me" -- a small, clearly secondary toggle
    under each question's own field, never competing visually with the
    actual input above it. */

@@ -74,6 +74,13 @@
       instructions: "Please complete this form. Only you can see your answers until you submit them.",
       technicalReferenceLabel: "Bureau of Immigration Form No.",
       imNotSureLabel: "I'm not sure — let FIS help me",
+      guidedIntroPara1: "We'll take care of the complicated paperwork.",
+      guidedIntroPara2: "The questions below come from the official Bureau of Immigration form used for your selected service. We're asking for this information so we can prepare your documents accurately and process your transaction.",
+      guidedIntroLivePreview: "Watch your answers appear on the official form. As you answer each question, we'll automatically enter your information into the corresponding section of the Bureau of Immigration form, which you can see in the live preview.",
+      guidedIntroPara3: "Don't worry if you don't know every answer. We understand that immigration paperwork can be complicated, and we don't expect you to know everything. Simply answer what you can and select “I'm not sure — let FIS help me” whenever you're uncertain.",
+      guidedIntroPara4: "Please upload a clear copy of your passport's information page and any other documents requested for your service. We'll handle your personal information securely and in accordance with our Privacy Notice.",
+      guidedIntroPara5: "For most eligible transactions, we can proceed with processing your request even if some questions remain unanswered, as long as we have the documents and information required for that service. If we need anything further from you, we'll contact you directly through your Client Portal.",
+      guidedIntroClosing: "You provide what you know. We'll take care of the rest.",
       optionChooseHeading: "Before you begin",
       optionSelfLabel: "I'll provide the details myself",
       optionAssistLabel: "I'm not sure — let FIS help me (quick start)",
@@ -120,6 +127,13 @@
       instructions: "请填写此表格。在您提交之前，只有您本人可以查看您的答案。",
       technicalReferenceLabel: "菲律宾移民局表格编号",
       imNotSureLabel: "不确定——请FIS协助我",
+      guidedIntroPara1: "我们会为您处理繁琐的文书工作。",
+      guidedIntroPara2: "以下问题来自您所选服务所使用的菲律宾移民局官方表格。我们询问这些信息，是为了准确地为您准备文件并处理您的申请。",
+      guidedIntroLivePreview: "实时查看您的答案显示在官方表格上。您每回答一个问题，我们都会自动将您的信息填入菲律宾移民局表格的相应部分，您可以在实时预览中看到。",
+      guidedIntroPara3: "如果您不清楚某些答案，请不用担心。我们理解移民文书可能相当复杂，并不要求您了解所有内容。请尽量填写您知道的信息，如遇不确定的情况，请勾选“不确定——请FIS协助我”。",
+      guidedIntroPara4: "请上传一份清晰的护照资料页副本，以及您所选服务所需的其他文件。我们将按照我们的《隐私声明》安全处理您的个人信息。",
+      guidedIntroPara5: "对于大多数符合条件的申请，即使部分问题尚未回答，只要我们已获得该服务所需的文件和信息，我们仍可以继续处理您的申请。如果我们还需要您提供其他资料，我们会通过您的客户门户直接与您联系。",
+      guidedIntroClosing: "您只需提供您所知道的信息，其余的交给我们。",
       optionChooseHeading: "开始之前",
       optionSelfLabel: "我自己填写详细信息",
       optionAssistLabel: "不确定——请FIS协助我（快速开始）",
@@ -166,6 +180,13 @@
       instructions: "請填寫此表格。在您提交之前，只有您本人可以查看您的答案。",
       technicalReferenceLabel: "菲律賓移民局表格編號",
       imNotSureLabel: "不確定——請FIS協助我",
+      guidedIntroPara1: "我們會為您處理繁瑣的文書工作。",
+      guidedIntroPara2: "以下問題來自您所選服務所使用的菲律賓移民局官方表格。我們詢問這些資訊，是為了準確地為您準備文件並處理您的申請。",
+      guidedIntroLivePreview: "即時查看您的答案顯示在官方表格上。您每回答一個問題，我們都會自動將您的資訊填入菲律賓移民局表格的相應部分，您可以在即時預覽中看到。",
+      guidedIntroPara3: "如果您不清楚某些答案，請不用擔心。我們理解移民文書可能相當複雜，並不要求您了解所有內容。請盡量填寫您知道的資訊，如遇不確定的情況，請勾選「不確定——請FIS協助我」。",
+      guidedIntroPara4: "請上傳一份清晰的護照資料頁副本，以及您所選服務所需的其他文件。我們將按照我們的《隱私聲明》安全處理您的個人資訊。",
+      guidedIntroPara5: "對於大多數符合資格的申請，即使部分問題尚未回答，只要我們已取得該服務所需的文件和資訊，我們仍可以繼續處理您的申請。如果我們還需要您提供其他資料，我們會透過您的客戶入口網站直接與您聯繫。",
+      guidedIntroClosing: "您只需提供您所知道的資訊，其餘的交給我們。",
       optionChooseHeading: "開始之前",
       optionSelfLabel: "我自己填寫詳細資料",
       optionAssistLabel: "不確定——請FIS協助我（快速開始）",
@@ -212,6 +233,13 @@
       instructions: "이 양식을 작성해 주십시오. 제출하기 전까지는 본인만 답변을 볼 수 있습니다.",
       technicalReferenceLabel: "필리핀 출입국관리청 서식 번호",
       imNotSureLabel: "잘 모르겠어요 — FIS의 도움을 받고 싶어요",
+      guidedIntroPara1: "복잡한 서류 작업은 저희가 처리해 드리겠습니다.",
+      guidedIntroPara2: "아래 질문들은 귀하가 선택하신 서비스에 사용되는 필리핀 출입국관리청 공식 양식에서 가져온 것입니다. 저희가 이 정보를 요청드리는 이유는 서류를 정확하게 준비하고 귀하의 신청을 처리하기 위해서입니다.",
+      guidedIntroLivePreview: "귀하의 답변이 공식 양식에 실시간으로 반영되는 것을 확인하세요. 질문에 답변하실 때마다, 저희는 해당 정보를 필리핀 출입국관리청 양식의 해당 항목에 자동으로 입력하며, 이는 실시간 미리보기에서 확인하실 수 있습니다.",
+      guidedIntroPara3: "모든 답을 알지 못하셔도 걱정하지 마십시오. 이민 서류 절차가 복잡할 수 있다는 점을 이해하고 있으며, 모든 것을 알고 계실 것이라 기대하지 않습니다. 아시는 내용만 답변해 주시고, 확실하지 않을 때는 \"잘 모르겠어요 — FIS의 도움을 받고 싶어요\"를 선택해 주십시오.",
+      guidedIntroPara4: "여권 정보 페이지의 선명한 사본과 해당 서비스에 필요한 기타 서류를 업로드해 주십시오. 저희는 귀하의 개인정보를 당사 개인정보 보호방침에 따라 안전하게 처리합니다.",
+      guidedIntroPara5: "대부분의 적격 거래의 경우, 일부 질문에 답변하지 않으셨더라도 해당 서비스에 필요한 서류와 정보를 저희가 확보하고 있다면 신청 처리를 계속 진행할 수 있습니다. 추가로 필요한 사항이 있을 경우, 고객 포털을 통해 직접 연락드리겠습니다.",
+      guidedIntroClosing: "아시는 내용만 제공해 주시면, 나머지는 저희가 처리하겠습니다.",
       optionChooseHeading: "시작하기 전에",
       optionSelfLabel: "제가 직접 작성하겠습니다",
       optionAssistLabel: "잘 모르겠어요 — FIS의 도움을 받고 싶어요 (빠른 시작)",
@@ -258,6 +286,13 @@
       instructions: "このフォームにご記入ください。提出するまで、回答はご本人のみが閲覧できます。",
       technicalReferenceLabel: "フィリピン入国管理局 様式番号",
       imNotSureLabel: "わからない — FISに手伝ってほしい",
+      guidedIntroPara1: "複雑な書類手続きは私たちにお任せください。",
+      guidedIntroPara2: "以下の質問は、お客様が選択されたサービスで使用される、フィリピン入国管理局の公式様式からのものです。正確に書類を準備し、お手続きを進めるために、これらの情報をお伺いしております。",
+      guidedIntroLivePreview: "ご回答が公式様式に反映される様子をご確認いただけます。各質問にご回答いただくたびに、フィリピン入国管理局様式の該当箇所に情報が自動的に入力され、ライブプレビューでご確認いただけます。",
+      guidedIntroPara3: "すべての回答がわからなくてもご安心ください。入国管理の書類手続きが複雑であることは私たちも理解しており、すべてをご存知である必要はありません。わかる範囲でご回答いただき、わからない場合は「わからない — FISに手伝ってほしい」を選択してください。",
+      guidedIntroPara4: "パスポートの身分事項ページの鮮明なコピーと、ご利用のサービスに必要なその他の書類をアップロードしてください。お客様の個人情報は、当社のプライバシー通知に従い安全に取り扱います。",
+      guidedIntroPara5: "ほとんどの対象となるお手続きでは、一部の質問に未回答であっても、そのサービスに必要な書類と情報が揃っていれば、お手続きを進めることができます。さらに情報が必要な場合は、クライアントポータルを通じて直接ご連絡いたします。",
+      guidedIntroClosing: "ご存知の情報をご提供いただければ、残りは私たちにお任せください。",
       optionChooseHeading: "ご記入の前に",
       optionSelfLabel: "自分で情報を入力します",
       optionAssistLabel: "わからない — FISに手伝ってほしい（クイックスタート）",
@@ -304,6 +339,13 @@
       instructions: "Vui lòng hoàn thành mẫu này. Chỉ bạn mới có thể xem câu trả lời của mình cho đến khi bạn nộp.",
       technicalReferenceLabel: "Mẫu đơn Cục Di trú Philippines số",
       imNotSureLabel: "Tôi không chắc — hãy để FIS hỗ trợ tôi",
+      guidedIntroPara1: "Chúng tôi sẽ lo liệu các thủ tục giấy tờ phức tạp.",
+      guidedIntroPara2: "Các câu hỏi dưới đây được lấy từ mẫu đơn chính thức của Cục Di trú được sử dụng cho dịch vụ quý khách đã chọn. Chúng tôi yêu cầu thông tin này để có thể chuẩn bị hồ sơ của quý khách một cách chính xác và xử lý giao dịch của quý khách.",
+      guidedIntroLivePreview: "Theo dõi câu trả lời của quý khách xuất hiện trên mẫu đơn chính thức. Khi quý khách trả lời từng câu hỏi, chúng tôi sẽ tự động nhập thông tin của quý khách vào phần tương ứng trên mẫu đơn của Cục Di trú, mà quý khách có thể xem trong bản xem trước trực tiếp.",
+      guidedIntroPara3: "Đừng lo nếu quý khách không biết mọi câu trả lời. Chúng tôi hiểu rằng thủ tục giấy tờ di trú có thể phức tạp, và chúng tôi không mong đợi quý khách biết tất cả mọi thứ. Chỉ cần trả lời những gì quý khách biết và chọn \"Tôi không chắc — hãy để FIS hỗ trợ tôi\" bất cứ khi nào quý khách không chắc chắn.",
+      guidedIntroPara4: "Vui lòng tải lên một bản sao rõ ràng trang thông tin hộ chiếu của quý khách và bất kỳ tài liệu nào khác được yêu cầu cho dịch vụ của quý khách. Chúng tôi sẽ xử lý thông tin cá nhân của quý khách một cách an toàn và theo Thông báo Quyền riêng tư của chúng tôi.",
+      guidedIntroPara5: "Đối với hầu hết các giao dịch đủ điều kiện, chúng tôi có thể tiến hành xử lý yêu cầu của quý khách ngay cả khi một số câu hỏi vẫn chưa được trả lời, miễn là chúng tôi có đủ tài liệu và thông tin cần thiết cho dịch vụ đó. Nếu chúng tôi cần thêm bất kỳ thông tin nào từ quý khách, chúng tôi sẽ liên hệ trực tiếp với quý khách qua Cổng thông tin Khách hàng.",
+      guidedIntroClosing: "Quý khách chỉ cần cung cấp những gì mình biết. Phần còn lại, chúng tôi sẽ lo liệu.",
       optionChooseHeading: "Trước khi bắt đầu",
       optionSelfLabel: "Tôi sẽ tự cung cấp thông tin",
       optionAssistLabel: "Tôi không chắc — hãy để FIS hỗ trợ tôi (bắt đầu nhanh)",
@@ -677,7 +719,26 @@
         : '<p class="muted">' + escapeHtml(t(lang, "readOnlyNotice")) + '</p>';
       bodyHtml = revisionNote + '<form class="portal-bi-form-form">' + questionsHtml + '</form>' + actionsHtml + uploadsBlockHtml + previewHtml;
     } else if (ui.mode === "choice") {
-      bodyHtml = revisionNote +
+      // Directive section 5: the verbatim guided-application introduction,
+      // shown once on this same one-time "before you begin" screen a
+      // fresh draft sees (never shown again once any answer exists --
+      // same gate openBiFormDetail already uses for the choice panel
+      // itself). The live-preview sentence starts hidden and is only
+      // revealed if a real probe confirms this specific form's preview is
+      // actually available (directive: "Only display the live-preview
+      // claim where the live preview is actually available and
+      // functioning") -- see wireLivePreviewIntroProbe below.
+      var guidedIntroHtml =
+        '<div class="portal-guided-intro">' +
+        '<p>' + escapeHtml(t(lang, "guidedIntroPara1")) + '</p>' +
+        '<p>' + escapeHtml(t(lang, "guidedIntroPara2")) + '</p>' +
+        '<p class="portal-guided-intro-live-preview" hidden>' + escapeHtml(t(lang, "guidedIntroLivePreview")) + '</p>' +
+        '<p>' + escapeHtml(t(lang, "guidedIntroPara3")) + '</p>' +
+        '<p>' + escapeHtml(t(lang, "guidedIntroPara4")) + '</p>' +
+        '<p>' + escapeHtml(t(lang, "guidedIntroPara5")) + '</p>' +
+        '<p><strong>' + escapeHtml(t(lang, "guidedIntroClosing")) + '</strong></p>' +
+        '</div>';
+      bodyHtml = revisionNote + guidedIntroHtml +
         '<div class="portal-bi-form-choice-panel"><h3>' + escapeHtml(t(lang, "optionChooseHeading")) + '</h3>' +
         '<p class="enquiry-form-actions">' +
         '<button type="button" class="btn btn-secondary portal-bi-form-choice-self">' + escapeHtml(t(lang, "optionSelfLabel")) + '</button>' +
@@ -1029,6 +1090,24 @@
       if (choiceSelfBtn) choiceSelfBtn.addEventListener("click", function () { goTo({ mode: "wizard", step: 0 }); });
       var choiceAssistBtn = root.querySelector(".portal-bi-form-choice-assist");
       if (choiceAssistBtn) choiceAssistBtn.addEventListener("click", function () { goTo({ mode: "assist-intake" }); });
+
+      // Directive section 5: a one-time, real probe (empty answers, no
+      // activeFieldKey) against this exact submission's own form -- never
+      // assumed true from whether the form is merely registered in the
+      // engine, since the live preview additionally needs a pre-rendered
+      // background actually present in R2 (see biFormRaster.js). Reveals
+      // the live-preview sentence only when the probe itself reports
+      // available: true.
+      if (ui.mode === "choice") {
+        var livePreviewSentenceEl = root.querySelector(".portal-guided-intro-live-preview");
+        if (livePreviewSentenceEl) {
+          window
+            .portalFetch("/api/bi-forms/" + submissionId + "/preview-image", { method: "POST", body: JSON.stringify({ answers: {} }) })
+            .then(function (r) { return r.json(); })
+            .then(function (result) { if (result.available) livePreviewSentenceEl.hidden = false; })
+            .catch(function () {});
+        }
+      }
 
       // ---- Assisted shortened intake ----
       if (ui.mode === "assist-intake") {
