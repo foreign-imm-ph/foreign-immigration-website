@@ -1,13 +1,15 @@
 import { getSessionClient } from "../lib/session.js";
 import { requireOwnedApplication } from "./applications.js";
 import { json, requireFields } from "../lib/http.js";
-import { HttpError } from "../lib/storage.js";
+import { HttpError, readAndValidateUpload, documentKey, streamObject } from "../lib/storage.js";
+import { newId } from "../lib/crypto.js";
 import {
   getConversationByApplicationId,
   getOrCreateConversationForApplication,
   getMergedTimeline,
   insertCommunicationMessage,
   updateMessageTranslation,
+  getMessageById,
 } from "../lib/conversations.js";
 import { detectLanguage, translateToEnglish } from "../lib/translation.js";
 import { sendStaffPortalMessageNotification } from "../lib/email.js";
@@ -58,6 +60,7 @@ export async function handleListMessages(request, env, applicationId) {
           english_translation: !isEnglish && item.translationStatus === "ready" ? item.translationText : null,
           translation_unavailable: !isEnglish && item.translationStatus === "failed",
           created_at: item.createdAt,
+          attachment: item.attachment,
         };
       }
       // Staff reply: the client's own selected language is the primary
@@ -73,6 +76,7 @@ export async function handleListMessages(request, env, applicationId) {
         body_language: item.translationLanguage,
         english_original: translated !== item.originalText ? item.originalText : null,
         created_at: item.createdAt,
+        attachment: item.attachment,
       };
     });
 
@@ -136,4 +140,53 @@ export async function handleSendMessage(request, env, applicationId) {
   }
 
   return json({ id }, { status: 201 });
+}
+
+// Directive section 9: secure document attachments. Attaches a file to a
+// message the CLIENT themselves authored, in THIS application's
+// conversation -- never to a staff message (a client cannot attach
+// something to FIS's own reply), and never to a message belonging to a
+// conversation other than this application's own (the ownership check
+// below is on the application, but the message-belongs-to-this-
+// conversation check is what actually stops a client guessing another
+// customer's messageId from reaching across applications, since
+// messageId alone carries no ownership information of its own).
+export async function handleUploadMessageAttachment(request, env, applicationId, messageId) {
+  const client = await requireClient(request, env);
+  const application = await requireOwnedApplication(env, client, applicationId);
+
+  const message = await getMessageById(env.DB, messageId);
+  if (!message) throw new HttpError(404, "Not found");
+  if (message.sender_type !== "client") throw new HttpError(403, "Cannot attach a file to a staff message");
+  const conversation = await getConversationByApplicationId(env.DB, applicationId);
+  if (!conversation || message.conversation_id !== conversation.id) throw new HttpError(404, "Not found");
+
+  const { bytes, contentType, filename } = await readAndValidateUpload(request);
+  const key = documentKey(client.id, applicationId);
+  await env.CLIENT_FILES.put(key, bytes, { httpMetadata: { contentType } });
+  const id = newId();
+  await env.DB.prepare(
+    `INSERT INTO documents (id, application_id, client_id, r2_key, original_filename, content_type, size_bytes, uploaded_by, kind, communication_message_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'client', 'message_attachment', ?)`
+  )
+    .bind(id, application.id, client.id, key, filename, contentType, bytes.byteLength, messageId)
+    .run();
+
+  return json({ id, filename }, { status: 201 });
+}
+
+export async function handleDownloadMessageAttachment(request, env, applicationId, messageId) {
+  const client = await requireClient(request, env);
+  await requireOwnedApplication(env, client, applicationId);
+
+  const conversation = await getConversationByApplicationId(env.DB, applicationId);
+  const message = conversation ? await getMessageById(env.DB, messageId) : null;
+  if (!message || message.conversation_id !== conversation.id) throw new HttpError(404, "Not found");
+
+  const doc = await env.DB.prepare("SELECT * FROM documents WHERE communication_message_id = ? AND kind = 'message_attachment'").bind(messageId).first();
+  if (!doc) return new Response("Not found", { status: 404 });
+
+  const response = await streamObject(env.CLIENT_FILES, doc.r2_key, doc.original_filename, doc.content_type);
+  if (!response) return new Response("Not found", { status: 404 });
+  return response;
 }

@@ -154,6 +154,10 @@ export function normalizeGeneralizedMessage(m) {
     translationStatus: m.translation_status,
     deliveryStatus: m.delivery_status,
     createdAt: m.created_at,
+    // Filled in by getMergedTimeline (a batch query, not per-row) when a
+    // directive-section-9 attachment exists for this message -- never
+    // fetched here per-row, which would be N+1 for a long conversation.
+    attachment: null,
   };
 }
 
@@ -170,6 +174,9 @@ function normalizeLegacyMessage(m) {
     translationStatus: null,
     deliveryStatus: null,
     createdAt: m.created_at,
+    // The legacy `messages` table predates the attachment feature and is
+    // never written to going forward -- always null, never looked up.
+    attachment: null,
   };
 }
 
@@ -191,5 +198,25 @@ export async function getMergedTimeline(db, { applicationId, conversationId }) {
   ]);
 
   const items = [...legacyRows.map(normalizeLegacyMessage), ...generalizedRows.map(normalizeGeneralizedMessage)];
+
+  // Directive section 9: one batch query for every generalized message's
+  // attachment (if any), not a per-message lookup -- avoids N+1 queries on
+  // a long conversation. Legacy rows never have one (see
+  // normalizeLegacyMessage's own comment).
+  if (generalizedRows.length) {
+    const ids = generalizedRows.map((r) => r.id);
+    const placeholders = ids.map(() => "?").join(",");
+    const { results: attachmentRows } = await db
+      .prepare(`SELECT id, communication_message_id, original_filename FROM documents WHERE communication_message_id IN (${placeholders})`)
+      .bind(...ids)
+      .all();
+    const attachmentByMessageId = new Map(attachmentRows.map((a) => [a.communication_message_id, { id: a.id, filename: a.original_filename }]));
+    for (const item of items) {
+      if (item.source === "generalized" && attachmentByMessageId.has(item.id)) {
+        item.attachment = attachmentByMessageId.get(item.id);
+      }
+    }
+  }
+
   return items.sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
 }

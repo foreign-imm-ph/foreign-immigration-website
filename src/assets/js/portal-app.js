@@ -61,6 +61,7 @@
       messagesHeading: "Messages",
       noMessagesYet: "No messages yet.",
       messagePlaceholder: "Write a message...",
+      attachFileLabel: "Attach a file (optional)",
       sendButton: "Send",
       paymentsHeading: "Payments",
       noPaymentsYet: "No payments requested yet.",
@@ -156,6 +157,7 @@
       messagesHeading: "消息",
       noMessagesYet: "暂无消息。",
       messagePlaceholder: "请输入消息...",
+      attachFileLabel: "附加文件（可选）",
       sendButton: "发送",
       paymentsHeading: "付款",
       noPaymentsYet: "暂无需要付款的项目。",
@@ -251,6 +253,7 @@
       messagesHeading: "訊息",
       noMessagesYet: "尚無訊息。",
       messagePlaceholder: "請輸入訊息...",
+      attachFileLabel: "附加檔案（可選）",
       sendButton: "傳送",
       paymentsHeading: "付款",
       noPaymentsYet: "目前尚無需要付款的項目。",
@@ -346,6 +349,7 @@
       messagesHeading: "메시지",
       noMessagesYet: "아직 메시지가 없습니다.",
       messagePlaceholder: "메시지를 입력하세요...",
+      attachFileLabel: "파일 첨부 (선택 사항)",
       sendButton: "보내기",
       paymentsHeading: "결제",
       noPaymentsYet: "아직 요청된 결제가 없습니다.",
@@ -441,6 +445,7 @@
       messagesHeading: "メッセージ",
       noMessagesYet: "まだメッセージはありません。",
       messagePlaceholder: "メッセージを入力してください...",
+      attachFileLabel: "ファイルを添付（任意）",
       sendButton: "送信",
       paymentsHeading: "お支払い",
       noPaymentsYet: "まだお支払いのご依頼はありません。",
@@ -536,6 +541,7 @@
       messagesHeading: "Tin Nhắn",
       noMessagesYet: "Chưa có tin nhắn nào.",
       messagePlaceholder: "Nhập tin nhắn...",
+      attachFileLabel: "Đính kèm tệp (không bắt buộc)",
       sendButton: "Gửi",
       paymentsHeading: "Thanh Toán",
       noPaymentsYet: "Chưa có yêu cầu thanh toán nào.",
@@ -932,7 +938,14 @@
             bodyHtml += '<p class="muted">' + escapeHtml(t("translationUnavailable")) + '</p>';
           }
         }
-        return '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span>' + bodyHtml + '</div>';
+        // Directive section 9: secure document attachments -- the download
+        // route re-checks this client owns the application before
+        // streaming anything back, same as every other document link in
+        // this portal.
+        var attachmentHtml = m.attachment
+          ? '<p><a href="' + window.PORTAL_API_BASE + '/api/applications/' + applicationId + '/messages/' + m.id + '/attachment" target="_blank" rel="noopener">📎 ' + escapeHtml(m.attachment.filename) + '</a></p>'
+          : "";
+        return '<div class="portal-message portal-message--' + m.sender_type + '"><strong>' + escapeHtml(m.sender_label) + '</strong> <span class="muted">' + formatDate(m.created_at) + '</span>' + bodyHtml + attachmentHtml + '</div>';
       })
       .join("") || '<p class="muted">' + escapeHtml(t("noMessagesYet")) + '</p>';
 
@@ -996,7 +1009,9 @@
       (bookingStatus ? '<div id="portal-airport-vip-section"></div>' : "") +
       '<h3>' + escapeHtml(t("documentsHeading")) + '</h3><ul class="portal-doc-requests">' + docRequestsHtml + "</ul>" +
       '<h3>' + escapeHtml(t("messagesHeading")) + '</h3><div class="portal-messages">' + messagesHtml + '</div>' +
-      '<form class="portal-message-form"><textarea placeholder="' + escapeHtml(t("messagePlaceholder")) + '" required></textarea><button type="submit" class="btn btn-secondary">' + escapeHtml(t("sendButton")) + '</button></form>' +
+      '<form class="portal-message-form"><textarea placeholder="' + escapeHtml(t("messagePlaceholder")) + '" required></textarea>' +
+      '<label class="portal-upload-label portal-message-attach-label">' + escapeHtml(t("attachFileLabel")) + '<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" class="portal-message-attach"></label>' +
+      '<button type="submit" class="btn btn-secondary">' + escapeHtml(t("sendButton")) + '</button></form>' +
       '<h3>' + escapeHtml(t("paymentsHeading")) + '</h3><ul class="portal-payments">' + paymentsHtml + "</ul>" +
       "</div>";
 
@@ -1212,10 +1227,22 @@
         var textarea = msgForm.querySelector("textarea");
         var body = textarea.value.trim();
         if (!body) return;
+        var attachInput = msgForm.querySelector(".portal-message-attach");
+        var attachFile = attachInput && attachInput.files && attachInput.files[0];
         window
           .portalFetch("/api/applications/" + applicationId + "/messages", {
             method: "POST",
             body: JSON.stringify({ body: body }),
+          })
+          .then(function (resp) { return resp.json(); })
+          .then(function (created) {
+            // Directive section 9: the attachment is uploaded as a second
+            // step, against the message id the first step just returned --
+            // never required for the message itself to succeed (a failed
+            // attachment upload must not look like the message was lost).
+            if (attachFile) {
+              return uploadFile("/api/applications/" + applicationId + "/messages/" + created.id + "/attachment", attachFile);
+            }
           })
           .then(function () { loadApplicationDetail(applicationId); });
       });

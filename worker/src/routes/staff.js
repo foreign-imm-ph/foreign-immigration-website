@@ -3,7 +3,7 @@ import { getClientByEmail, createClient, insertUniqueReference, logAudit } from 
 import { requireStaff } from "../lib/staffAuth.js";
 import { isSameSiteOrigin } from "../lib/session.js";
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
-import { streamObject, HttpError } from "../lib/storage.js";
+import { streamObject, HttpError, documentKey, sniffContentType, sanitiseFilename } from "../lib/storage.js";
 import {
   sendMagicLink,
   sendDocumentRequestNotification,
@@ -200,6 +200,8 @@ async function dispatch(request, env, url) {
   if (portalSendMatch && method === "POST") return sendPortalReply(request, env, staff, portalSendMatch[1], portalSendMatch[2]);
   const portalRetryMatch = path.match(/^\/applications\/([^/]+)\/messages\/([^/]+)\/retry-translation$/);
   if (portalRetryMatch && method === "POST") return retryPortalMessageTranslation(request, env, staff, portalRetryMatch[1], portalRetryMatch[2]);
+  const msgAttachmentMatch = path.match(/^\/applications\/([^/]+)\/messages\/([^/]+)\/attachment$/);
+  if (msgAttachmentMatch && method === "POST") return uploadStaffMessageAttachment(request, env, staff, msgAttachmentMatch[1], msgAttachmentMatch[2]);
 
   const commsUpdateMatch = path.match(/^\/applications\/([^/]+)\/communication$/);
   if (commsUpdateMatch && method === "POST") return updateClientCommunicationPreferences(request, env, staff, commsUpdateMatch[1]);
@@ -481,6 +483,12 @@ async function viewEnquiry(env, staff, id) {
 function renderMessage(basePath, message) {
   const nl2br = (text) => escapeHtml(text).replace(/\n/g, "<br>");
   const retryForm = `<form method="POST" action="${basePath}/messages/${message.id}/retry-translation" style="display:inline"><button class="secondary" type="submit">Retry translation</button></form>`;
+  // Directive section 9: reuses the EXISTING downloadDocument route
+  // unchanged (an attachment is just another `documents` row) -- no new
+  // staff download route needed.
+  const attachmentBlock = message.attachment
+    ? `<p><a href="${basePath}/documents/${message.attachment.id}/download">📎 ${escapeHtml(message.attachment.filename)}</a></p>`
+    : "";
 
   if (message.senderType === "client") {
     const sourceLabel = LANGUAGE_LABELS[message.originalLanguage] || escapeHtml(message.originalLanguage);
@@ -498,6 +506,7 @@ function renderMessage(basePath, message) {
       <p class="muted">Client message · ${escapeHtml(sourceLabel)} · ${escapeHtml(message.createdAt)}</p>
       <p><strong>Client original</strong></p>
       <p>${nl2br(message.originalText)}</p>
+      ${attachmentBlock}
       ${translationBlock}
     </div>`;
   }
@@ -529,11 +538,19 @@ function renderMessage(basePath, message) {
   const sendForm = canSend
     ? `<form method="POST" action="${basePath}/reply/${message.id}/send"><button type="submit">Send Reply</button></form>`
     : "";
+  const attachmentUploadForm = message.attachment
+    ? ""
+    : `<form method="POST" action="${basePath}/messages/${message.id}/attachment" enctype="multipart/form-data" style="display:inline">
+        <label class="muted">Attach a file: <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required></label>
+        <button class="secondary" type="submit">Attach</button>
+      </form>`;
 
   return `<div class="card">
     <p class="muted">Staff reply · ${escapeHtml(message.createdAt)}</p>
     <p><strong>English original</strong></p>
     <p>${nl2br(message.originalText)}</p>
+    ${attachmentBlock}
+    ${attachmentUploadForm}
     ${clientFacingBlock}
     ${deliveryBlock}
     ${sendForm}
@@ -822,6 +839,54 @@ async function sendPortalReply(request, env, staff, applicationId, messageId) {
   } catch (err) {
     console.error("Portal message notification email failed:", err.message);
   }
+
+  return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
+}
+
+const MESSAGE_ATTACHMENT_MAX_BYTES = 15 * 1024 * 1024; // 15MB, same limit as every other upload in this schema
+
+// Directive section 9: secure document attachments, staff side. Attaches a
+// file to staff's own draft/sent reply in this application's conversation.
+// Plain server-rendered <form enctype="multipart/form-data">, the SAME
+// convention staffCheckout.js's QR-image upload already uses (request.
+// formData() -> a File with its own .arrayBuffer()/.size/.type) -- not the
+// Client Portal's separate raw-bytes-plus-X-Filename-header convention
+// (messages.js's handleUploadMessageAttachment), which only makes sense for
+// a JS-driven fetch() upload, not a plain HTML form post. Downloading it
+// back reuses the EXISTING downloadDocument route unchanged (the
+// attachment is just another `documents` row, same as a client upload or a
+// generated PDF), so no new staff download route is needed for this half.
+async function uploadStaffMessageAttachment(request, env, staff, applicationId, messageId) {
+  const application = await env.DB.prepare("SELECT * FROM applications WHERE id = ?").bind(applicationId).first();
+  if (!application) return notFound();
+
+  const message = await getMessageById(env.DB, messageId);
+  if (!message) return notFound();
+  if (message.sender_type !== "staff") return new Response("Cannot attach a file to a client message", { status: 403 });
+  const conversation = await getConversationByApplicationId(env.DB, applicationId);
+  if (!conversation || message.conversation_id !== conversation.id) return notFound();
+
+  const form = await request.formData();
+  const file = form.get("file");
+  if (!file || typeof file.arrayBuffer !== "function" || file.size === 0) {
+    return new Response("A file is required", { status: 400 });
+  }
+  if (file.size > MESSAGE_ATTACHMENT_MAX_BYTES) return new Response("File too large (15MB limit)", { status: 413 });
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const contentType = sniffContentType(bytes);
+  if (!contentType) return new Response("Unsupported file type — PDF, JPEG, PNG or WebP only", { status: 415 });
+  const filename = sanitiseFilename(file.name || "attachment");
+
+  const key = documentKey(application.client_id, applicationId);
+  await env.CLIENT_FILES.put(key, bytes, { httpMetadata: { contentType } });
+  const id = newId();
+  await env.DB.prepare(
+    `INSERT INTO documents (id, application_id, client_id, r2_key, original_filename, content_type, size_bytes, uploaded_by, kind, communication_message_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'staff', 'message_attachment', ?)`
+  )
+    .bind(id, applicationId, application.client_id, key, filename, contentType, bytes.byteLength, messageId)
+    .run();
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "attached_file_to_portal_reply", targetTable: "documents", targetId: id });
 
   return Response.redirect(`${new URL(request.url).origin}/staff/applications/${applicationId}`, 303);
 }

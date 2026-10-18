@@ -5,7 +5,7 @@ import { handleCreateEnquiry } from "./routes/enquiries.js";
 import { handleRequestMagicLink, handleVerifyMagicLink, handleLogout, handleMe } from "./routes/auth.js";
 import { handleListApplications, handleGetApplication } from "./routes/applications.js";
 import { handleListDocumentRequests, handleUploadDocument, handleDownloadDocument } from "./routes/documents.js";
-import { handleListMessages, handleSendMessage } from "./routes/messages.js";
+import { handleListMessages, handleSendMessage, handleUploadMessageAttachment, handleDownloadMessageAttachment } from "./routes/messages.js";
 import { handleListPayments, handleGetQrPhImage, handleUploadPaymentProof } from "./routes/payments.js";
 import { handleGetProfile, handleUpdateProfile, handleSetOwnConsent } from "./routes/profile.js";
 import { handleStaffRequest } from "./routes/staff.js";
@@ -112,6 +112,9 @@ async function route(request, env, path, method, url) {
   const msgMatch = path.match(/^\/api\/applications\/([^/]+)\/messages$/);
   if (msgMatch && method === "GET") return handleListMessages(request, env, msgMatch[1]);
   if (msgMatch && method === "POST") return handleSendMessage(request, env, msgMatch[1]);
+  const msgAttachmentMatch = path.match(/^\/api\/applications\/([^/]+)\/messages\/([^/]+)\/attachment$/);
+  if (msgAttachmentMatch && method === "POST") return handleUploadMessageAttachment(request, env, msgAttachmentMatch[1], msgAttachmentMatch[2]);
+  if (msgAttachmentMatch && method === "GET") return handleDownloadMessageAttachment(request, env, msgAttachmentMatch[1], msgAttachmentMatch[2]);
 
   const payMatch = path.match(/^\/api\/applications\/([^/]+)\/payments$/);
   if (payMatch && method === "GET") return handleListPayments(request, env, payMatch[1]);
