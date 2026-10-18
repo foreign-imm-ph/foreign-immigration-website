@@ -25,14 +25,17 @@ const {
 } = require("../fixtures/testHelpers");
 
 const WORKER_DIR = path.join(__dirname, "..", "..", "worker");
-// Downloaded directly from the private fis-bi-forms-library R2 bucket
-// this session for real coordinate measurement -- reused here, read-only,
-// to seed the LOCAL (Miniflare-simulated) R2 bucket this e2e run needs.
-// Never written back to the real bucket.
-const ORIGINAL_PDF_PATH = "/tmp/claude-0/r2-originals/2021-03-001.pdf";
-// Generated locally this session via bi-forms-library/engine/scripts/
-// generate-blank-backgrounds.js (Poppler, offline, local-only).
-const BACKGROUND_PNG_PATH = "/tmp/claude-0/travel-backgrounds/2021-03-001.png";
+const FORM_ID = "2021-03-001";
+// Same policy and env var as bi-forms-library/tests/run-all.js: real BI
+// originals are confidential and are never committed to this repository,
+// so this journey needs FIS_BI_ORIGINALS_DIR pointed at a local directory
+// containing <FORM_ID>.pdf (and skips, rather than fails, otherwise).
+const ORIGINAL_PDF_PATH = process.env.FIS_BI_ORIGINALS_DIR && path.join(process.env.FIS_BI_ORIGINALS_DIR, `${FORM_ID}.pdf`);
+const hasOriginal = !!(ORIGINAL_PDF_PATH && fs.existsSync(ORIGINAL_PDF_PATH));
+// Optional: a blank background PNG generated from the same original via
+// bi-forms-library/engine/scripts/generate-blank-backgrounds.js (Poppler,
+// offline, local-only).
+const BACKGROUND_PNG_PATH = process.env.FIS_BI_BACKGROUNDS_DIR && path.join(process.env.FIS_BI_BACKGROUNDS_DIR, `${FORM_ID}.png`);
 
 function uploadFixturesToLocalR2() {
   execFileSync(
@@ -40,7 +43,7 @@ function uploadFixturesToLocalR2() {
     ["wrangler", "r2", "object", "put", "fis-bi-forms-library/originals/2021-03-001.pdf", "--local", "--file", ORIGINAL_PDF_PATH, "--content-type", "application/pdf"],
     { cwd: WORKER_DIR, encoding: "utf8" }
   );
-  if (fs.existsSync(BACKGROUND_PNG_PATH)) {
+  if (BACKGROUND_PNG_PATH && fs.existsSync(BACKGROUND_PNG_PATH)) {
     execFileSync(
       "npx",
       ["wrangler", "r2", "object", "put", "fis-bi-forms-library/backgrounds/2021-03-001.png", "--local", "--file", BACKGROUND_PNG_PATH, "--content-type", "image/png"],
@@ -50,6 +53,8 @@ function uploadFixturesToLocalR2() {
 }
 
 test.describe("Journey 10: 2021-03-001 Travel Pass (newly automated this session, complex-form proof) -- full lifecycle", () => {
+  test.skip(!hasOriginal, `FIS_BI_ORIGINALS_DIR not set or missing ${FORM_ID}.pdf -- original BI templates are confidential and are not committed to this repository`);
+
   test.beforeAll(() => {
     ensureTestStaffAdmin();
     uploadFixturesToLocalR2();
