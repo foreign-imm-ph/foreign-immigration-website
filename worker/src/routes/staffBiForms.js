@@ -115,7 +115,31 @@ export async function renderBiFormsCard(env, applicationId) {
       })
     )
   ).join("");
-  const formOptions = KNOWN_BI_FORM_IDS.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join("");
+  // "FIS -- Final Automation Integration" directive item 2: rather than
+  // creating a second, CGAF-002-Rev3-specific offering, this EXISTING
+  // per-submission assignment choice is the "internal, explicitly
+  // selected form-version configuration" the directive asks about --
+  // staff already picks exactly which registered form a submission
+  // uses, per case, independent of which catalogue service sold it.
+  // What was missing was making that an INFORMED choice: the dropdown
+  // showed only raw form IDs, which tells a staff member nothing about
+  // what they're choosing between. Each option now shows the form's own
+  // title; the two forms covering the same work-visa subject matter
+  // (BOC04.QF.002 and CGAF-002-Rev3 -- see
+  // docs/BI_FORMS_LIBRARY_RECONCILIATION.md section D.1, which both
+  // confirmed are genuinely still in independent use at different BI
+  // counters and must never be substituted for one another) each carry
+  // a short, source-cited disambiguating hint so staff can tell them
+  // apart without having to go look up that document first.
+  const FORM_OPTION_HINTS = {
+    "BOC04.QF.002": " -- standard/more complete version (5 duration options, fuller certification section)",
+    "CGAF-002-Rev3": " -- alternate version, independently filed at a different BI counter (NOT a duplicate of BOC04.QF.002 -- confirm which counter applies before assigning)",
+  };
+  const formOptions = KNOWN_BI_FORM_IDS.map((id) => {
+    const title = getFormConfig(id).coordinateMap.formTitle || id;
+    const hint = FORM_OPTION_HINTS[id] || "";
+    return `<option value="${escapeHtml(id)}">${escapeHtml(title)} (${escapeHtml(id)})${escapeHtml(hint)}</option>`;
+  }).join("");
   return `<div class="card">
     <h2>BI Forms</h2>
     <table>
