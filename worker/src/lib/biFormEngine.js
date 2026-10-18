@@ -40,6 +40,8 @@ import coordinateMapCGAF003 from "../../../bi-forms-library/configs/CGAF-003-Rev
 import questionnaireCGAF003 from "../../../bi-forms-library/configs/CGAF-003-Rev 2/questionnaire.json" with { type: "json" };
 import coordinateMapCGAF002 from "../../../bi-forms-library/configs/CGAF-002-Rev3/coordinate-map.json" with { type: "json" };
 import questionnaireCGAF002 from "../../../bi-forms-library/configs/CGAF-002-Rev3/questionnaire.json" with { type: "json" };
+import coordinateMapBOC02 from "../../../bi-forms-library/configs/BOC04.QF.002/coordinate-map.json" with { type: "json" };
+import questionnaireBOC02 from "../../../bi-forms-library/configs/BOC04.QF.002/questionnaire.json" with { type: "json" };
 
 import { validateForm } from "../../../bi-forms-library/engine/lib/validate-form.js";
 import { fieldsForAudience, staffOwnedFields } from "../../../bi-forms-library/engine/lib/field-permissions.js";
@@ -79,6 +81,7 @@ const REGISTRY = {
   "BOC04.QF.001": { coordinateMap: coordinateMapBOC01, questionnaire: questionnaireBOC01 },
   "CGAF-003-Rev 2": { coordinateMap: coordinateMapCGAF003, questionnaire: questionnaireCGAF003 },
   "CGAF-002-Rev3": { coordinateMap: coordinateMapCGAF002, questionnaire: questionnaireCGAF002 },
+  "BOC04.QF.002": { coordinateMap: coordinateMapBOC02, questionnaire: questionnaireBOC02 },
 };
 
 // Fail-closed at module load, not per-request: if any registered form's

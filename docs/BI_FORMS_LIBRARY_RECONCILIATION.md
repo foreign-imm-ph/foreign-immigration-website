@@ -1,17 +1,32 @@
 # BI Forms Library Reconciliation
 
-Compiled across two directives: "Complete BI Forms Library, Service-Based
+Compiled across three directives: "Complete BI Forms Library, Service-Based
 Naming, Official PDF Previews & Assisted Applications" (original Section 2
-reconciliation) and the subsequent "FOREIGN IMMIGRATION SERVICES (FIS)
-MASTER IMPLEMENTATION DIRECTIVE — COMPLETE REMAINING BI FORMS AUTOMATION"
-(which required a 5-way A–E classification of the full 20-PDF inventory
-and continued per-form mapping). Source data: the existing, previously
-read-only-verified inventory
+reconciliation), the subsequent "FOREIGN IMMIGRATION SERVICES (FIS) MASTER
+IMPLEMENTATION DIRECTIVE — COMPLETE REMAINING BI FORMS AUTOMATION" (which
+required a 5-way A–E classification of the full 20-PDF inventory and
+continued per-form mapping), and the final "FIS FINAL FOUR BI FORMS —
+IMPLEMENTATION & END-TO-END VERIFICATION DIRECTIVE" (which completed
+coordinate-mapping for the last four eligible forms: `BOC04.QF.001`,
+`CGAF-003-Rev 2`, `CGAF-002-Rev3`, and `BOC04.QF.002`). Source data: the
+existing, previously read-only-verified inventory
 (`bi-forms-library/inventory/forms-library-inventory.json`, obtained via a
-direct Cloudflare R2 API listing dated 2026-10-13, re-confirmed against a
-second direct listing during this pass — unchanged), the catalogue seed
-(`worker/migrations/0012_phase4_catalogue_expansion.sql`), and direct
-inspection of every original PDF named below.
+direct Cloudflare R2 API listing dated 2026-10-13), the catalogue seed and
+mapping migrations (`worker/migrations/0012_phase4_catalogue_expansion.sql`
+through `0019_boc04_qf_002_mapping.sql`), and direct inspection of every
+original PDF named below.
+
+**This document's prior passes (through section D.1 below) recommended
+mapping only `BOC04.QF.002` and treating `CGAF-002-Rev3` as a superseded
+duplicate not worth separately automating. That recommendation was
+subsequently overridden by explicit instruction: both forms are genuinely
+still in independent use at different BI counters, so both are now
+mapped, registered, and kept permanently distinct — neither is ever
+substituted for the other at render time. Section D.1's original
+evidence/analysis is preserved below for the historical record (it
+remains accurate as a description of the two PDFs' differences), but its
+"map only one" conclusion no longer reflects what was built. See the
+corrected status in sections C, D, and the new section H.**
 
 ## A. The verified inventory count
 
@@ -54,10 +69,10 @@ Per the master directive's required scheme:
 | Request for Certified True Copy (CTC) of Records | `ADM05.QF.001` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Distinct two-column "OFFICIAL USE ONLY" layout, taller page (612×1008pt), row-shared-bottom-line field style (a genuinely different template family). 8th form mapped. |
 | Emigration Clearance Certificate (ECC) Application Form | `ARD04.QF.003` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 5-option application-type checkbox group, Sex, 6-option Marital Status, Spouse fields, 22-cell SSRN comb, and a staff-only derogatory-record subsection. First form found with a non-zero MediaBox origin (a Canva export artifact); documented in the config's own `mediaBoxOriginNote`. 9th form mapped. |
 | CGAF for Extension of Stay of Temporary Visitor's Visa | `IRD04.QF.004` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** Photo-requirement sidebar (handled via the existing document-upload feature, not embedded), Method/Mode/Months checkbox groups, a 7-line reason-for-extension field, and five independent 3-box (not comb-grid) date groups — a genuinely different date-field template family. 10th form mapped. |
-| Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Investigated this pass, not completed — see section G.** A distinct third template family: every field (not just dates) is a comb-grid of individual character cells, confirmed via direct pixel measurement (a uniform ~12.96pt cell pitch across the whole form). ~45-50 such fields across 2 pages. |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — eligible, superseded duplicate | `may_be_reproduced` (inventory) | 2-page form. **Duplicate-pair finding reversed this pass** (see section D.1): `BOC04.QF.002` is the better-evidenced current/canonical version, not this one. Not separately mapped. Same comb-grid-per-field template family as `BOC04.QF.001`/`BOC04.QF.002` (see section G). |
-| Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. Not yet coordinate-measured; same comb-grid-per-field template family as `BOC04.QF.001` (see section G). |
-| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — eligible, not yet mapped | `may_be_reproduced` (inventory) | 2-page form. **Determined canonical over `CGAF-002-Rev3` this pass** (see section D.1) — carries the Bureau's formal dated document-control footer, a complete 5-option month/year duration set (Rev3 is missing "6 Months"), and the full prosecution-clause/Data-Privacy-Act consent paragraph (Rev3's is a shorter, less complete paragraph). Not yet coordinate-measured; same comb-grid-per-field template family as `BOC04.QF.001` (see section G). |
+| Consolidated General Application Form for Immigrant Visa | `BOC04.QF.001` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** The engine's first genuinely multi-page form (2 real PDF pages): 73 charBoxFields, 13 checkboxFields, 0 freeTextFields across both pages, 76 questions. A distinct comb-grid-per-field template family: every field (not just dates) is a comb-grid of individual character cells, confirmed via direct pixel measurement (a uniform ~12.96pt cell pitch across the whole form). Required extending the shared engine itself for multi-page support (optional `page` property on every field type, `rasterizeAllPages()`, page-aware customer-preview compositing) — see section H. |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit (Rev 3) | `CGAF-002-Rev3` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 72 charBoxFields, 14 checkboxFields, 94 questions. Kept permanently distinct from `BOC04.QF.002` — see the corrected note at the top of this document and section H.3. |
+| Consolidated General Application Form for Student Visa / Special Study Permit | `CGAF-003-Rev 2` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 2-page form; formId contains a literal space, specifically exercised by its own targeted tests. Same comb-grid-per-field template family as `BOC04.QF.001`. |
+| Consolidated General Application Form, Non-Immigrant/Special Work/Provisional Work Permit | `BOC04.QF.002` | A — mapped | `may_be_reproduced` (inventory) | **Mapped & automated.** 78 charBoxFields, 22 checkboxFields, 10 freeTextFields, 93 questions, across 2 pages. Kept permanently distinct from `CGAF-002-Rev3` — see the corrected note at the top of this document and section H.3. |
 | Request for Certification of Pending Application | `CCS-C-CPA-2016` | C — reference, not a fillable application | `may_be_reproduced` (inventory) | **Not an application form at all.** It is a checklist plus a staff-only certification block, and its own text explicitly references a separate application form, `CCS-A-CPA-2016`, by name — which does **not exist anywhere in this 20-PDF library**. There is no source document to measure coordinates against. This is a precise, evidenced blocker (a named, missing source document), not a vague "complex form" excuse. |
 | Travel Pass — General Instructions / Documentary Requirements | `BIFORM2021-03-002` | C — reference/checklist | Confirmed on form | Confirmed by direct text inspection: "GENERAL INSTRUCTIONS... CHECKLIST OF DOCUMENTARY REQUIREMENTS FOR TRAVEL PASS." Never a fillable template. |
 | Emigration Clearance Certificate (ECC) — the issued certificate itself | `ARD04.QF.001` | B — government-issued output | `not_found_on_form`; flagged `reproduction_status_unconfirmed` in the inventory | Confirmed by direct text inspection: begins "This is to certify that..." — the certificate BI itself issues after approving an ECC application, never a template FIS fills in and hands back. |
@@ -68,19 +83,17 @@ Per the master directive's required scheme:
 ## D. Exact reconciled count
 
 - **20 PDFs total** (independently verified, section A).
-- **Class A, mapped and automated: 10** — `CCS-A-CDR-2016`, `2014-13-002`,
+- **Class A, mapped and automated: 14** — `CCS-A-CDR-2016`, `2014-13-002`,
   `2014-13-006`, `CCS-A-NTSP-2016`, `2014-08-015`, `2021-03-001`,
-  `2014-01-011`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`. The last
-  three were mapped this pass (see each one's own row above for what
-  made it structurally distinct).
-- **Class A, eligible but not yet coordinate-mapped: 4** —
-  `BOC04.QF.001`, `CGAF-003-Rev 2`, `BOC04.QF.002`, `CGAF-002-Rev3` (the
-  last two as a resolved duplicate pair — `BOC04.QF.002` is the
-  canonical mapping target, `CGAF-002-Rev3` a superseded duplicate not
-  separately mapped; see D.1). All 4 are structurally confirmed fillable
-  and reproducible, each a genuinely large 2-page, 50+ field form (on
-  the order of 2-3x a typical single-page form's field count); the
-  per-field pixel-measurement work itself has not yet been performed.
+  `2014-01-011`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`,
+  `BOC04.QF.001`, `CGAF-003-Rev 2`, `CGAF-002-Rev3`, `BOC04.QF.002`. The
+  last four were mapped in the final pass of this engagement (see each
+  one's own row above, and section H below, for what made the family
+  structurally distinct and what it took to complete it).
+- **Class A, eligible but not yet coordinate-mapped: 0.** Every Class A
+  form in the library now has a complete, schema-validated,
+  visually-inspected coordinate-map/questionnaire/sample-data mapping
+  and is registered in the shared engine.
 - **Class B, government-issued outputs: 2** — `ARD04.QF.001`,
   `ARD04.QF.002`.
 - **Class C, reference/checklist, not fillable applications: 2** —
@@ -88,7 +101,7 @@ Per the master directive's required scheme:
 - **Class D, restricted: 1** — `2015-08-006`.
 - **Class E, unresolved with a documented reason: 1** — `IRD04.QF.008`.
 
-10 + 4 + 2 + 2 + 1 + 1 = **20.** Every PDF in the library is accounted
+14 + 0 + 2 + 2 + 1 + 1 = **20.** Every PDF in the library is accounted
 for in exactly one class, with the evidence for that class stated above —
 nothing is "probably fine" or asserted without a cited fact.
 
@@ -134,93 +147,165 @@ conclusion, with concrete, cited evidence:
   which `CGAF-002-Rev3` is more complete. This does not outweigh the
   dated-footer and consent/duration-completeness evidence above.
 
-**Classification: (B) — different revisions of the same form.**
-`BOC04.QF.002` is the better-evidenced current/canonical version.
-`CGAF-002-Rev3` is preserved in the library as a superseded prior
-revision, not deleted or hidden, per the standing instruction to
-preserve both originals regardless of which is canonical. `BOC04.QF.002`
-is the mapping target if/when this form family is coordinate-measured;
-`CGAF-002-Rev3` would only need separate mapping if a future owner
-confirms both versions remain independently in active use.
+**Classification at the time of this analysis: (B) — different revisions
+of the same form, `BOC04.QF.002` the better-evidenced current/canonical
+one.** This was the correct read of the two PDFs in isolation, and the
+evidence above still stands. It was subsequently superseded, however, by
+an explicit instruction that both versions remain independently in
+active use at different BI counters/offices and must therefore both be
+automated, kept permanently distinct, and never substituted for one
+another. Both are now mapped (see section H.3 for how the engine
+guarantees they can never be confused with each other at render time):
+`BOC04.QF.002` as the more complete, better-documented version, and
+`CGAF-002-Rev3` as a genuinely separate, independently-filed form
+despite its structural similarity and shared subject matter.
 
 ## E. Preview availability (decoupled from engine-mapping)
 
 Per the prior directive's section 8.2, the official-PDF preview feature
-(`worker/src/lib/biFormEngine.js`'s `PREVIEWABLE_FORM_IDS`) is tracked
-independently of engine-mapping completeness. It already covers all 16
-Class A forms (both mapped and eligible-not-yet-mapped) plus the two
-Class C reference forms' own originals are not included (previews are for
-fillable application forms a prospective customer would benefit from
-seeing blank, which a checklist is not) — correctly excluding the 1
-Class D restricted form and the 2 Class B government-issued-output forms,
-and correctly including `IRD04.QF.008` (Class E) on the reasoning that a
-blank-form preview is a strictly lower-risk capability than
-field-filling automation and the directive's own section 8.2 treats them
-as separate questions; this was not revisited this pass, since no new
-fact changes that determination.
+(`worker/src/lib/biFormEngine.js`'s `PREVIEWABLE_FORM_IDS`, 16 entries)
+is tracked independently of engine-mapping completeness. It covers all
+14 Class A forms (now all 14 mapped — section D), plus
+`CCS-C-CPA-2016` (Class C) and `IRD04.QF.008` (Class E) — correctly
+excluding `BIFORM2021-03-002` (the other Class C reference form;
+previews are for fillable application forms a prospective customer
+would benefit from seeing blank, which a pure checklist is not), the 1
+Class D restricted form, and the 2 Class B government-issued-output
+forms. `IRD04.QF.008` and `CCS-C-CPA-2016` remain included on the
+reasoning that a blank-form preview is a strictly lower-risk capability
+than field-filling automation, which the directive's own section 8.2
+treats as a separate question from engine-mapping.
 
 ## F. What remains
 
-The 4 eligible-not-yet-mapped Class A forms (`BOC04.QF.001`,
-`CGAF-003-Rev 2`, `BOC04.QF.002`, and `CGAF-002-Rev3` as `BOC04.QF.002`'s
-superseded duplicate) are the complete, exact scope of further
-coordinate-mapping work this library needs before every eligible
-application form is automated. All four are large, 2-page, 50+ field
-forms. No other PDF in the library requires or would benefit from
-further engineering work: Class B/C documents are correctly never
-templated, Class D remains correctly excluded, and Class E remains
-blocked on an external confirmation, not on more engineering time.
+**Nothing.** Every Class A form in the 20-PDF library — all 16 of them —
+is now mapped, registered in the shared engine, schema-validated, and
+has generated a visually-inspected test PDF from its real original. No
+further coordinate-mapping work remains. Class B/C documents are
+correctly never templated, Class D remains correctly excluded, and
+Class E (`IRD04.QF.008`) remains blocked on an external confirmation
+(notarization + unconfirmed reproduction rights), not on engineering
+time.
 
-## G. The `BOC04.QF.001` / `BOC04.QF.002` / `CGAF-003-Rev 2` template family — investigated, not completed this pass
+## G. Historical note: the multi-page comb-grid family, before completion
 
-This pass directly measured `BOC04.QF.001`'s real original PDF (both
-pages, 300 DPI raster, `pdftotext -bbox` label positions, direct pixel
-darkness scans) before starting any coordinate-map file, per the same
-process used for the 10 already-mapped forms. That measurement work
-established a precise, evidenced characterization of this form family,
-not a vague complexity claim:
+An earlier pass of this engagement investigated `BOC04.QF.001`'s real
+original PDF (both pages, 300 DPI raster, `pdftotext -bbox` label
+positions, direct pixel darkness scans) and established that it belongs
+to a third distinct field-rendering template, different from every
+single-page form already mapped at that point: every field — names,
+addresses, numbers, dates, everything — renders as a comb-grid of
+individual uniform-width character cells, with a uniform ~12.96pt cell
+pitch confirmed across multiple unrelated fields. That pass measured
+roughly 30 of `BOC04.QF.001`'s ~75 fields and stopped there, with no
+`coordinate-map.json` committed for any of the three remaining forms in
+this family (`BOC04.QF.001`, `BOC04.QF.002`, `CGAF-003-Rev 2`) — a
+deliberate choice per the standing instruction never to claim an
+unfinished mapping complete. Section H below records how that work was
+subsequently finished, for all four forms in this family (the three
+above, plus `CGAF-002-Rev3`).
 
-- **A third distinct field-rendering template**, different from both
-  families already mapped this pass. CDR/NTSP/ACR used solid rectangles
-  or combs only for dates; `ARD04.QF.003` and `IRD04.QF.004` mix solid
-  rectangles with comb dates or plain 3-box dates. `BOC04.QF.001`
-  renders **every single field — names, addresses, numbers, dates,
-  everything — as a comb-grid of individual uniform-width character
-  cells**, confirmed by direct pixel measurement of multiple fields
-  (`Present Immigration Status`, `Last Name`, `Other Name(s)/Alias(es)
-  1` and `2`) independently converging on the same ~12.96pt cell pitch.
-- **Confirmed tractable, not abandoned as "too complex."** The cell-pitch
-  constant was verified across unrelated fields, the DD-MMM-YYYY
-  date-group structure (2+3+4 cells, confirmed by a pixel-ruled visual
-  overlay, exactly the same convention as `ARD04.QF.003`'s date combs)
-  was reproduced correctly for all 4 of `BOC04.QF.001`'s date fields,
-  and roughly 30 of the form's ~45-50 fields were successfully measured
-  (borders, cell counts, and x/y bounds all recorded) before this pass
-  stopped.
-- **Why this pass stopped before completing a coordinate-map.json.**
-  Even with the cell-pitch shortcut, this form has roughly 3-4x the
-  number of individually-measured boxes of any single form already
-  mapped (every row is its own comb needing its own top/bottom/left/
-  right measurement, where e.g. `IRD04.QF.004` needed only one box per
-  field) across 2 pages, plus `BOC04.QF.002` and `CGAF-003-Rev 2` share
-  this same family and would each need the same volume of per-field
-  measurement again. Completing even one of the three to this
-  engagement's established bar — full field-level measurement,
-  schema validation, an actually-generated and visually-inspected test
-  PDF, engine registration, and targeted tests — was not achievable
-  within this pass without risking an incomplete, uncommitted,
-  half-measured config being left behind. Per the directive's own
-  instruction not to claim an unfinished mapping complete, **no
-  `coordinate-map.json`/`questionnaire.json` was started or committed
-  for any of the three** — the working tree is clean, and the 10
-  forms mapped this engagement (including this pass's 3:
-  `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`) are the complete,
-  verified, shippable result.
-- **Concrete continuation point for a future pass:** the cell-pitch
-  constant (~12.96pt), the proven measurement approach (box top/bottom
-  via a full-width darkness scan at `min_ratio` ~0.8-0.85, left/right
-  via an outer-column scan at `min_ratio` ~0.5, cell count =
-  `round((xEnd-xStart)/12.96)`), and the confirmed 4-DD-MMM-YYYY-field
-  pattern are all reusable directly against `BOC04.QF.001` first (most
-  measurement already done), then `BOC04.QF.002` and `CGAF-003-Rev 2`
-  (same family, not yet started).
+## H. The multi-page comb-grid family — completed
+
+The final pass of this engagement completed coordinate-mapping,
+questionnaire authoring, sample data, schema validation, and
+visually-inspected PDF generation for all four remaining eligible Class A
+forms: `BOC04.QF.001`, `CGAF-003-Rev 2`, `CGAF-002-Rev3`, and
+`BOC04.QF.002`. The library's Class A backlog is now zero (section F).
+
+### H.1 Engine changes required: multi-page support
+
+`BOC04.QF.001` was the engine's first genuinely multi-page form (2 real
+PDF pages), which required extending the shared engine itself rather
+than just adding another config:
+
+- An optional `page` property (0-indexed, default 0) added to every
+  field-type schema definition (charBoxField, checkboxField,
+  freeTextField, baselineSpan, namedRegion) in
+  `bi-forms-library/engine/schema/coordinate-map.schema.json`.
+- `pageFor(pages, field)` in `render-pipeline.js`, routing each field to
+  its own real PDF page when drawing the staff document and the
+  customer-fields-only document, instead of assuming page 0.
+- `rasterizeAllPages()` in the Poppler backend, used only when a
+  customer-preview composite actually spans more than one real page (the
+  existing single-page fast path is unchanged for every other form).
+- Page-aware region matching in `svg-compose.js`'s
+  `mapPointToCanvasTdPt` (now requires both a page match and a y-range
+  match, not y-range alone) and a same-page-vs-cross-page branch in the
+  divider-caption logic (`"FIS staff prepare the remaining sections of
+  this form"` for a same-page split vs `"This form continues on the next
+  page"` for a genuine page break).
+
+These changes were verified against every existing single-page mapping
+with zero regressions (every single-page form implicitly defaults every
+field to page 0, unchanged).
+
+### H.2 Comb-grid measurement methodology
+
+All four forms share the uniform ~12.96pt cell-pitch comb-grid template
+established in section G. The methodology used throughout: `pdftotext
+-bbox` for label word positions, `pdftoppm -r 300` high-res rasters,
+column/row darkness scans (full-width scan at `min_ratio` ~0.8-0.85 for
+box top/bottom, narrower-window scans at `min_ratio` ~0.5 for left/right
+bounds), cell count = `round((xEnd-xStart)/12.96)`, and — critically — a
+pixel-ruled visual grid-overlay crop as the authoritative tie-breaker
+whenever a darkness scan alone was ambiguous. DD-MMM-YYYY date fields on
+every form in this family are three separate comb clusters (2/3/4 cells)
+separated by one blank, unruled cell-width, not one continuous 9-cell
+comb — a distinction a column-darkness scan alone cannot make (a lone
+box's own end border and the next box's own start border land at the
+same pitch as a continuous comb's internal divider would), resolved each
+time by direct visual inspection of a pixel-ruled zoom crop.
+
+Mandatory visual inspection (never trusting a successful `generate` CLI
+run alone) caught multiple real coordinate bugs across this family,
+including on `BOC04.QF.002` specifically: a landline/mobile overlap and
+an undercounted Height field (`BOC04.QF.001`); a one-cell-shifted date
+measurement (`CGAF-002-Rev3`); and, on `BOC04.QF.002` itself, two
+distinct bugs only visible in a rendered test PDF — (1) `expiryDateDay/
+Month/Year` initially sharing the same row as `placeOfIssuance` and
+`lastDayAuthStay`, causing illegibly overlapping text and an empty
+Expiry Date box, corrected by re-measuring the field's own, earlier row;
+and (2) four fields (`charRefLandline`, `charRefMobile`, `charRefEmail`,
+`companyEmail`) whose left edges were mismeasured by one full cell-width
+because a column-darkness scan picked up the page's own left/right
+column table-divider line rather than the field's own border, causing
+each field's first character to render outside its printed box entirely
+— corrected by re-scanning past the divider. Both bug classes are
+documented in `bi-forms-library/configs/BOC04.QF.002/coordinate-map.json`'s
+own `measurementNotes` for future reference.
+
+### H.3 `BOC04.QF.002` vs `CGAF-002-Rev3`: guaranteed never confused
+
+Per the corrected note at the top of this document, both forms are
+mapped as fully independent, separately registered engine entries —
+`bi-forms-library/configs/BOC04.QF.002/` and
+`bi-forms-library/configs/CGAF-002-Rev3/` are two unrelated directories,
+each with its own coordinate-map.json, questionnaire.json, and
+sample-data.json, registered under two distinct keys
+(`"BOC04.QF.002"` and `"CGAF-002-Rev3"`) in
+`worker/src/lib/biFormEngine.js`'s `REGISTRY`. There is no shared code
+path, shared field-naming convention, or fallback logic that could
+substitute one for the other: `CGAF-002-Rev3` models two Character
+Reference slots (`charRef1Name`/`charRef2Name`) and a two-line
+institution name (`institutionNameLine1`/`institutionNameLine2`), while
+`BOC04.QF.002` models one Character Reference (`charRefName`) and a
+single-line company name (`companyName`) sharing a comb row with
+`registrationNumber` — structurally distinct field sets, not just
+different labels on the same shape. This is verified directly by
+`worker/test/biForms-customer.test.js`'s and
+`worker/test/biForms-staff.test.js`'s own targeted tests for each form,
+including an explicit assertion that `BOC04.QF.002`'s questionnaire
+contains `charRefName` and never contains `CGAF-002-Rev3`'s
+`institutionNameLine1` (and is itself never reachable through
+`CGAF-002-Rev3`'s own submission/generation path, or vice versa).
+
+Each is linked to its own, separate draft catalogue entry:
+`CGAF-002-Rev3` was linked to the pre-existing `svc-cgaf-...`-pattern row
+in an earlier pass; `BOC04.QF.002` is linked to a newly-added draft row,
+`svc-cgaf-work-visa` (`worker/migrations/0019_boc04_qf_002_mapping.sql`),
+since no existing draft row already described this specific
+employer-sponsored work-visa subject matter. Both remain `active=0` /
+`offering_status='draft'` — structurally unreachable by a customer until
+a real FIS staff member sets a real price and explicitly activates each
+one, independently, through the Staff Portal.

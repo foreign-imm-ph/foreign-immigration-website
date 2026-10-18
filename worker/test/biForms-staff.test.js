@@ -289,6 +289,53 @@ describe("staff-facing BI-form routes", () => {
     expect(resp.status).toBe(500);
   });
 
+  it("BOC04.QF.002 (kept distinct from CGAF-002-Rev3, never substituted; the engine's second genuinely multi-page form) works up through every precondition check before generation", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("BOC04.QF.002");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "BOC04.QF.002", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(
+        JSON.stringify({
+          presentImmigrationStatus: "9(G) PRE-ARRANGED EMPLOYMENT VISA", typeOfVisaPermitApplication: "Extension",
+          typeOfVisaPermit: "9(G) PRE-ARRANGED EMPLOYMENT VISA", numberMonthsYearsAppliedFor: "1 Year",
+          methodOfApplication: "Authorized Representative", biAccreditationNumber: "N/A",
+          passportNumber: "KE3344556", dateLatestArrivalDay: "09", dateLatestArrivalMonth: "FEB", dateLatestArrivalYear: "2022",
+          expiryDateDay: "14", expiryDateMonth: "NOV", expiryDateYear: "2027", placeOfIssuance: "NAIROBI",
+          lastDayAuthStayDay: "09", lastDayAuthStayMonth: "FEB", lastDayAuthStayYear: "2027",
+          lastName: "MWANGI", firstGivenName: "DAVID", middleName: "THOMAS", dobDay: "22", dobMonth: "SEP", dobYear: "1985",
+          sex: "M", countryOfBirth: "KENYA", countryOfCitizenship: "KENYAN", civilStatus: "Married",
+          height: "178", weight: "76", profession: "OPERATIONS MANAGER", landline: "N/A", mobile: "09178889900",
+          emailAddress: "d.mwangi@ex.com", charRefName: "SANTOS, ANA, LIM", charRefMobile: "09173334455",
+          companyName: "PACIFIC RIM LOGISTICS CORP", natureOfInstitution: "Commercial",
+        }),
+        submission.id
+      )
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/start-review`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(303);
+    submission = await getSubmissionById(env.DB, submission.id);
+    expect(submission.status).toBe("under_review");
+
+    // Same as every other mapped form's own staff-only field: applicationNumber
+    // is staffFieldRequirements.required: false (the BI office's own
+    // physical-counter tracking number), so approval proceeds straight
+    // through to the one precondition check this harness genuinely cannot
+    // get past (see the file-level comment above).
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { applicationNumber: "" },
+    });
+    expect(resp.status).toBe(303);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500);
+  });
+
   it("publish and cancel work correctly once reached through the lifecycle's own rules, independent of generation", async () => {
     // Fast-forwards status via transitionStatus() directly (bypassing the
     // approve HTTP action, which needs pdf-lib) to test publish/cancel in
