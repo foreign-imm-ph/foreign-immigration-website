@@ -198,6 +198,97 @@ describe("staff-facing BI-form routes", () => {
     expect(resp.status).toBe(500);
   });
 
+  it("CGAF-003-Rev 2 (a formId containing a literal space) works up through every precondition check before generation", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("CGAF-003-Rev 2");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "CGAF-003-Rev 2", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(
+        JSON.stringify({
+          presentImmigrationStatus: "9(F) STUDENT VISA APPLICANT", natureOfApplication: "Conversion", typeOfApplication: "Student Visa",
+          courseDegree: "BS COMPUTER SCIENCE", numberOfMonthsApplied: "12", schoolYearFrom: "2025", schoolYearTo: "2026",
+          nameOfSchoolRepRow1: "SANTOS, MARIA, REYES", schoolRepIdNum: "SR-2025-0041",
+          passportNumber: "PB7654321", dateLatestArrivalDay: "03", dateLatestArrivalMonth: "JUN", dateLatestArrivalYear: "2025",
+          expiryDateDay: "14", expiryDateMonth: "FEB", expiryDateYear: "2030", flightNumber: "PR102", placeOfIssuance: "SEOUL",
+          lastDayAuthStayDay: "03", lastDayAuthStayMonth: "JUN", lastDayAuthStayYear: "2026",
+          lastName: "PARK", firstGivenName: "JIWOO", middleName: "N/A", dobDay: "22", dobMonth: "SEP", dobYear: "2003",
+          gender: "F", countryOfBirth: "SOUTH KOREA", citizenshipNationality: "KOREAN", civilStatus: "Single",
+          height: "162", weight: "52", landline: "N/A", mobile: "09201234567", emailAddress: "jiwoo.park@ex.com",
+        }),
+        submission.id
+      )
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/start-review`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(303);
+    submission = await getSubmissionById(env.DB, submission.id);
+    expect(submission.status).toBe("under_review");
+
+    // Same as BOC04.QF.001: the one staff-only field (applicationNumber)
+    // is staffFieldRequirements.required: false (the BI office's own
+    // physical-counter tracking number, which doesn't exist yet at
+    // digital-preparation time), so approval proceeds straight through to
+    // the one precondition check this harness genuinely cannot get past
+    // (see the file-level comment above).
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { applicationNumber: "" },
+    });
+    expect(resp.status).toBe(303);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500);
+  });
+
+  it("CGAF-002-Rev3 (kept distinct from BOC04.QF.002, never substituted) works up through every precondition check before generation", async () => {
+    const client = await createTestClient();
+    const application = await createTestApplication(client);
+    const staff = await createTestStaff();
+    await putFakeOriginal("CGAF-002-Rev3");
+    let submission = await createSubmission(env.DB, { applicationId: application.id, clientId: client.id, biFormId: "CGAF-002-Rev3", assignedByStaffEmail: staff.email });
+
+    await env.DB.prepare("UPDATE bi_form_submissions SET customer_answers_json = ? WHERE id = ?")
+      .bind(
+        JSON.stringify({
+          presentImmigrationStatus: "9(G) PRE-ARRANGED EMPLOYEE", natureOfApplication: "Extension", typeOfVisaPermit: "9(G) PRE-ARRANGED EMPLOYMENT VISA",
+          numberOfMonthsYears: "1 Year", methodOfApplication: "Authorized Representative", biAccreditationNumber: "ACC-2024-00981",
+          nameOfAuthorizedRep: "SANTOS, RICARDO, DELA PENA", positionInCompany: "HR MANAGER",
+          passportNumber: "PB7654321", dateLatestArrivalDay: "03", dateLatestArrivalMonth: "FEB", dateLatestArrivalYear: "2026",
+          flightNumber: "PR215", expiryDateDay: "15", expiryDateMonth: "NOV", expiryDateYear: "2028", placeOfIssuance: "SEOUL",
+          lastDayAuthStayDay: "03", lastDayAuthStayMonth: "FEB", lastDayAuthStayYear: "2027",
+          lastName: "YOON", firstGivenName: "MINJUN", middleName: "N/A", dobDay: "22", dobMonth: "SEP", dobYear: "1988",
+          sex: "M", countryOfBirth: "SOUTH KOREA", citizenship: "SOUTH KOREAN", civilStatus: "Married",
+          height: "178", weight: "74", landline: "N/A", mobile: "09171239876", emailAddress: "m.yoon@examplecorp.ph",
+        }),
+        submission.id
+      )
+      .run();
+    submission = await transitionStatus(env.DB, submission, "submitted", { clientId: client.id });
+
+    let resp = await staffRequest(`/staff/bi-forms/${submission.id}/start-review`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(303);
+    submission = await getSubmissionById(env.DB, submission.id);
+    expect(submission.status).toBe("under_review");
+
+    // Same as every other mapped form's own staff-only field: applicationNumber
+    // is staffFieldRequirements.required: false (the BI office's own
+    // physical-counter tracking number), so approval proceeds straight
+    // through to the one precondition check this harness genuinely cannot
+    // get past (see the file-level comment above).
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/staff-fields`, {
+      method: "POST", staffEmail: staff.email,
+      body: { applicationNumber: "" },
+    });
+    expect(resp.status).toBe(303);
+
+    resp = await staffRequest(`/staff/bi-forms/${submission.id}/approve`, { method: "POST", staffEmail: staff.email });
+    expect(resp.status).toBe(500);
+  });
+
   it("publish and cancel work correctly once reached through the lifecycle's own rules, independent of generation", async () => {
     // Fast-forwards status via transitionStatus() directly (bypassing the
     // approve HTTP action, which needs pdf-lib) to test publish/cancel in

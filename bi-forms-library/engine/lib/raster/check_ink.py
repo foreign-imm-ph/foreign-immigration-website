@@ -34,6 +34,19 @@ for b in boxes:
     x1 = int(b["xRightPt"] * scale)
     y0 = int((page_h_pt - b["yTopPt"]) * scale)
     y1 = int((page_h_pt - b["yBottomPt"]) * scale)
+    # Inset a couple of points before clamping: a field's own declared edge
+    # sometimes coincides with a heavier-weight border (e.g. the outer
+    # rounded-rectangle some staff-only boxes are enclosed in, drawn bolder
+    # than an ordinary internal comb divider) that renders well under the
+    # "mid-grey" ~166 a plain grid line normally does -- dark enough to
+    # register as content ink at this threshold even though no value was
+    # ever drawn there. Character ink is always centered within its own
+    # cell with margin from the edges (drawCharInBox/fitCharFontSize), so
+    # this inset still reliably catches real content while excluding the
+    # box's own border.
+    inset = max(1, round(2 * scale))
+    x0, x1 = x0 + inset, x1 - inset
+    y0, y1 = y0 + inset, y1 - inset
     x0, x1 = max(0, x0), min(W, x1)
     y0, y1 = max(0, y0), min(H, y1)
     dark_count = 0

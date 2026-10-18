@@ -1,0 +1,1315 @@
+{
+  "formId": "CGAF-003-Rev 2",
+  "languages": [
+    "en",
+    "ja",
+    "ko",
+    "vi",
+    "zh-CN",
+    "zh-Hant"
+  ],
+  "staffFieldRequirements": {
+    "applicationNumber": {
+      "required": false
+    }
+  },
+  "questions": [
+    {
+      "id": "presentImmigrationStatus",
+      "type": "text",
+      "dataKey": "presentImmigrationStatus",
+      "labels": {
+        "en": "Present Immigration Status",
+        "zh-CN": "现有移民身份",
+        "zh-Hant": "現有移民身份",
+        "ko": "현재 이민 상태",
+        "ja": "現在の入国管理上の地位",
+        "vi": "Tình trạng nhập cư hiện tại"
+      },
+      "forFields": [
+        "presentImmigrationStatus"
+      ]
+    },
+    {
+      "id": "natureOfApplication",
+      "type": "select",
+      "dataKey": "natureOfApplication",
+      "labels": {
+        "en": "Nature of Application",
+        "zh-CN": "申请性质",
+        "zh-Hant": "申請性質",
+        "ko": "신청 성격",
+        "ja": "申請の性質",
+        "vi": "Tính chất đơn xin"
+      },
+      "options": [
+        "Conversion",
+        "Extension",
+        "Permit"
+      ],
+      "forFields": [
+        "natureConversion",
+        "natureExtension",
+        "naturePermit"
+      ]
+    },
+    {
+      "id": "typeOfApplication",
+      "type": "select",
+      "dataKey": "typeOfApplication",
+      "labels": {
+        "en": "Type of Application",
+        "zh-CN": "申请类型",
+        "zh-Hant": "申請類型",
+        "ko": "신청 유형",
+        "ja": "申請の種類",
+        "vi": "Loại đơn xin"
+      },
+      "options": [
+        "Student Visa",
+        "Special Study Permit"
+      ],
+      "forFields": [
+        "typeStudentVisa",
+        "typeSpecialStudyPermit"
+      ]
+    },
+    {
+      "id": "courseDegree",
+      "type": "text",
+      "dataKey": "courseDegree",
+      "labels": {
+        "en": "Course/Degree",
+        "zh-CN": "课程/学位",
+        "zh-Hant": "課程/學位",
+        "ko": "과정/학위",
+        "ja": "コース/学位",
+        "vi": "Khóa học/Bằng cấp"
+      },
+      "forFields": [
+        "courseDegree"
+      ]
+    },
+    {
+      "id": "numberOfMonthsApplied",
+      "type": "text",
+      "dataKey": "numberOfMonthsApplied",
+      "required": false,
+      "labels": {
+        "en": "Number of Months Applied For (e.g. write '12' for exactly 1 Year)",
+        "zh-CN": "申请月数（例如，恰好1年请填写“12”）",
+        "zh-Hant": "申請月數（例如，恰好1年請填寫「12」）",
+        "ko": "신청 개월 수 (예: 정확히 1년인 경우 '12' 입력)",
+        "ja": "申請月数（例：ちょうど1年の場合は「12」と記入）",
+        "vi": "Số tháng xin cấp (ví dụ: ghi '12' nếu xin đúng 1 năm)"
+      },
+      "forFields": [
+        "numberOfMonthsApplied"
+      ]
+    },
+    {
+      "id": "schoolYearFrom",
+      "type": "text",
+      "dataKey": "schoolYearFrom",
+      "labels": {
+        "en": "School Year (start year, e.g. 2025)",
+        "zh-CN": "学年（起始年份，例如2025）",
+        "zh-Hant": "學年（起始年份，例如2025）",
+        "ko": "학년도 (시작 연도, 예: 2025)",
+        "ja": "学年（開始年、例：2025）",
+        "vi": "Năm học (năm bắt đầu, ví dụ 2025)"
+      },
+      "forFields": [
+        "schoolYearFrom"
+      ]
+    },
+    {
+      "id": "schoolYearTo",
+      "type": "text",
+      "dataKey": "schoolYearTo",
+      "labels": {
+        "en": "School Year (end year, e.g. 2026)",
+        "zh-CN": "学年（结束年份，例如2026）",
+        "zh-Hant": "學年（結束年份，例如2026）",
+        "ko": "학년도 (종료 연도, 예: 2026)",
+        "ja": "学年（終了年、例：2026）",
+        "vi": "Năm học (năm kết thúc, ví dụ 2026)"
+      },
+      "forFields": [
+        "schoolYearTo"
+      ]
+    },
+    {
+      "id": "nameOfSchoolRepRow1",
+      "type": "text",
+      "dataKey": "nameOfSchoolRepRow1",
+      "labels": {
+        "en": "Name of School Representative [Last Name, First/Given Name, Middle Name]",
+        "zh-CN": "学校代表姓名（姓、名、中间名）",
+        "zh-Hant": "學校代表姓名（姓、名、中間名）",
+        "ko": "학교 대표자 성명 (성, 이름, 중간 이름)",
+        "ja": "学校代表者氏名（姓、名、ミドルネーム）",
+        "vi": "Tên đại diện trường (Họ, Tên, Tên đệm)"
+      },
+      "forFields": [
+        "nameOfSchoolRepRow1"
+      ]
+    },
+    {
+      "id": "nameOfSchoolRepRow2",
+      "type": "text",
+      "dataKey": "nameOfSchoolRepRow2",
+      "required": false,
+      "labels": {
+        "en": "Name of School Representative (continued, if needed)",
+        "zh-CN": "学校代表姓名（如需要，续写）",
+        "zh-Hant": "學校代表姓名（如需要，續寫）",
+        "ko": "학교 대표자 성명 (필요시 계속)",
+        "ja": "学校代表者氏名（必要な場合、続き）",
+        "vi": "Tên đại diện trường (tiếp theo, nếu cần)"
+      },
+      "forFields": [
+        "nameOfSchoolRepRow2"
+      ]
+    },
+    {
+      "id": "schoolRepIdNum",
+      "type": "text",
+      "dataKey": "schoolRepIdNum",
+      "labels": {
+        "en": "School Representative Identification Number",
+        "zh-CN": "学校代表身份证号码",
+        "zh-Hant": "學校代表身份證號碼",
+        "ko": "학교 대표자 신분증 번호",
+        "ja": "学校代表者身分証明書番号",
+        "vi": "Số định danh đại diện trường"
+      },
+      "forFields": [
+        "schoolRepIdNum"
+      ]
+    },
+    {
+      "id": "passportNumber",
+      "type": "text",
+      "dataKey": "passportNumber",
+      "labels": {
+        "en": "Passport Number",
+        "zh-CN": "护照号码",
+        "zh-Hant": "護照號碼",
+        "ko": "여권 번호",
+        "ja": "パスポート番号",
+        "vi": "Số hộ chiếu"
+      },
+      "forFields": [
+        "passportNumber"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalDay",
+      "type": "text",
+      "dataKey": "dateLatestArrivalDay",
+      "labels": {
+        "en": "Date of Latest Arrival - DD",
+        "zh-CN": "最近入境日期 - 日",
+        "zh-Hant": "最近入境日期 - 日",
+        "ko": "최근 입국일 - 일",
+        "ja": "直近の入国日 - 日",
+        "vi": "Ngày nhập cảnh gần nhất - Ngày"
+      },
+      "forFields": [
+        "dateLatestArrivalDay"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalMonth",
+      "type": "text",
+      "dataKey": "dateLatestArrivalMonth",
+      "labels": {
+        "en": "Date of Latest Arrival - MMM",
+        "zh-CN": "最近入境日期 - 月",
+        "zh-Hant": "最近入境日期 - 月",
+        "ko": "최근 입국일 - 월",
+        "ja": "直近の入国日 - 月",
+        "vi": "Ngày nhập cảnh gần nhất - Tháng"
+      },
+      "forFields": [
+        "dateLatestArrivalMonth"
+      ]
+    },
+    {
+      "id": "dateLatestArrivalYear",
+      "type": "text",
+      "dataKey": "dateLatestArrivalYear",
+      "labels": {
+        "en": "Date of Latest Arrival - YYYY",
+        "zh-CN": "最近入境日期 - 年",
+        "zh-Hant": "最近入境日期 - 年",
+        "ko": "최근 입국일 - 년",
+        "ja": "直近の入国日 - 年",
+        "vi": "Ngày nhập cảnh gần nhất - Năm"
+      },
+      "forFields": [
+        "dateLatestArrivalYear"
+      ]
+    },
+    {
+      "id": "expiryDateDay",
+      "type": "text",
+      "dataKey": "expiryDateDay",
+      "labels": {
+        "en": "Expiry Date/Valid Until (Passport) - DD",
+        "zh-CN": "护照有效期 - 日",
+        "zh-Hant": "護照有效期 - 日",
+        "ko": "여권 유효기间 - 일",
+        "ja": "パスポート有効期限 - 日",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Ngày"
+      },
+      "forFields": [
+        "expiryDateDay"
+      ]
+    },
+    {
+      "id": "expiryDateMonth",
+      "type": "text",
+      "dataKey": "expiryDateMonth",
+      "labels": {
+        "en": "Expiry Date/Valid Until (Passport) - MMM",
+        "zh-CN": "护照有效期 - 月",
+        "zh-Hant": "護照有效期 - 月",
+        "ko": "여권 유효기间 - 월",
+        "ja": "パスポート有効期限 - 月",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Tháng"
+      },
+      "forFields": [
+        "expiryDateMonth"
+      ]
+    },
+    {
+      "id": "expiryDateYear",
+      "type": "text",
+      "dataKey": "expiryDateYear",
+      "labels": {
+        "en": "Expiry Date/Valid Until (Passport) - YYYY",
+        "zh-CN": "护照有效期 - 年",
+        "zh-Hant": "護照有效期 - 年",
+        "ko": "여권 유효기间 - 년",
+        "ja": "パスポート有効期限 - 年",
+        "vi": "Ngày hết hạn (Hộ chiếu) - Năm"
+      },
+      "forFields": [
+        "expiryDateYear"
+      ]
+    },
+    {
+      "id": "flightNumber",
+      "type": "text",
+      "dataKey": "flightNumber",
+      "required": false,
+      "labels": {
+        "en": "Flight Number",
+        "zh-CN": "航班号",
+        "zh-Hant": "航班號",
+        "ko": "항공편명",
+        "ja": "フライト番号",
+        "vi": "Số hiệu chuyến bay"
+      },
+      "forFields": [
+        "flightNumber"
+      ]
+    },
+    {
+      "id": "placeOfIssuance",
+      "type": "text",
+      "dataKey": "placeOfIssuance",
+      "labels": {
+        "en": "Place of Issuance",
+        "zh-CN": "签发地点",
+        "zh-Hant": "簽發地點",
+        "ko": "발급 장소",
+        "ja": "発行地",
+        "vi": "Nơi cấp"
+      },
+      "forFields": [
+        "placeOfIssuance"
+      ]
+    },
+    {
+      "id": "lastDayAuthStayDay",
+      "type": "text",
+      "dataKey": "lastDayAuthStayDay",
+      "labels": {
+        "en": "Last Day of Authorized Stay - DD",
+        "zh-CN": "授权停留最后一天 - 日",
+        "zh-Hant": "授權停留最後一天 - 日",
+        "ko": "승인된 체류 마지막 날 - 일",
+        "ja": "滞在許可最終日 - 日",
+        "vi": "Ngày cuối cùng được phép lưu trú - Ngày"
+      },
+      "forFields": [
+        "lastDayAuthStayDay"
+      ]
+    },
+    {
+      "id": "lastDayAuthStayMonth",
+      "type": "text",
+      "dataKey": "lastDayAuthStayMonth",
+      "labels": {
+        "en": "Last Day of Authorized Stay - MMM",
+        "zh-CN": "授权停留最后一天 - 月",
+        "zh-Hant": "授權停留最後一天 - 月",
+        "ko": "승인된 체류 마지막 날 - 월",
+        "ja": "滞在許可最終日 - 月",
+        "vi": "Ngày cuối cùng được phép lưu trú - Tháng"
+      },
+      "forFields": [
+        "lastDayAuthStayMonth"
+      ]
+    },
+    {
+      "id": "lastDayAuthStayYear",
+      "type": "text",
+      "dataKey": "lastDayAuthStayYear",
+      "labels": {
+        "en": "Last Day of Authorized Stay - YYYY",
+        "zh-CN": "授权停留最后一天 - 年",
+        "zh-Hant": "授權停留最後一天 - 年",
+        "ko": "승인된 체류 마지막 날 - 년",
+        "ja": "滞在許可最終日 - 年",
+        "vi": "Ngày cuối cùng được phép lưu trú - Năm"
+      },
+      "forFields": [
+        "lastDayAuthStayYear"
+      ]
+    },
+    {
+      "id": "lastName",
+      "type": "text",
+      "dataKey": "lastName",
+      "labels": {
+        "en": "Last Name",
+        "zh-CN": "姓",
+        "zh-Hant": "姓",
+        "ko": "성",
+        "ja": "姓",
+        "vi": "Họ"
+      },
+      "forFields": [
+        "lastName"
+      ]
+    },
+    {
+      "id": "firstGivenName",
+      "type": "text",
+      "dataKey": "firstGivenName",
+      "labels": {
+        "en": "First/Given Name",
+        "zh-CN": "名",
+        "zh-Hant": "名",
+        "ko": "이름",
+        "ja": "名",
+        "vi": "Tên"
+      },
+      "forFields": [
+        "firstGivenName"
+      ]
+    },
+    {
+      "id": "middleName",
+      "type": "text",
+      "dataKey": "middleName",
+      "required": false,
+      "labels": {
+        "en": "Middle Name (if applicable)",
+        "zh-CN": "中间名（如适用）",
+        "zh-Hant": "中間名（如適用）",
+        "ko": "중간 이름 (해당 시)",
+        "ja": "ミドルネーム（該当する場合）",
+        "vi": "Tên đệm (nếu có)"
+      },
+      "forFields": [
+        "middleName"
+      ]
+    },
+    {
+      "id": "dobDay",
+      "type": "text",
+      "dataKey": "dobDay",
+      "labels": {
+        "en": "Date of Birth - DD",
+        "zh-CN": "出生日期 - 日",
+        "zh-Hant": "出生日期 - 日",
+        "ko": "생년월일 - 일",
+        "ja": "生年月日 - 日",
+        "vi": "Ngày sinh - Ngày"
+      },
+      "forFields": [
+        "dobDay"
+      ]
+    },
+    {
+      "id": "dobMonth",
+      "type": "text",
+      "dataKey": "dobMonth",
+      "labels": {
+        "en": "Date of Birth - MMM",
+        "zh-CN": "出生日期 - 月",
+        "zh-Hant": "出生日期 - 月",
+        "ko": "생년월일 - 월",
+        "ja": "生年月日 - 月",
+        "vi": "Ngày sinh - Tháng"
+      },
+      "forFields": [
+        "dobMonth"
+      ]
+    },
+    {
+      "id": "dobYear",
+      "type": "text",
+      "dataKey": "dobYear",
+      "labels": {
+        "en": "Date of Birth - YYYY",
+        "zh-CN": "出生日期 - 年",
+        "zh-Hant": "出生日期 - 年",
+        "ko": "생년월일 - 년",
+        "ja": "生年月日 - 年",
+        "vi": "Ngày sinh - Năm"
+      },
+      "forFields": [
+        "dobYear"
+      ]
+    },
+    {
+      "id": "gender",
+      "type": "select",
+      "dataKey": "gender",
+      "labels": {
+        "en": "Gender",
+        "zh-CN": "性别",
+        "zh-Hant": "性別",
+        "ko": "성별",
+        "ja": "性別",
+        "vi": "Giới tính"
+      },
+      "options": [
+        "M",
+        "F"
+      ],
+      "forFields": [
+        "genderM",
+        "genderF"
+      ]
+    },
+    {
+      "id": "countryOfBirth",
+      "type": "text",
+      "dataKey": "countryOfBirth",
+      "labels": {
+        "en": "Country of Birth",
+        "zh-CN": "出生国家",
+        "zh-Hant": "出生國家",
+        "ko": "출생 국가",
+        "ja": "出生国",
+        "vi": "Quốc gia sinh"
+      },
+      "forFields": [
+        "countryOfBirth"
+      ]
+    },
+    {
+      "id": "citizenshipNationality",
+      "type": "text",
+      "dataKey": "citizenshipNationality",
+      "labels": {
+        "en": "Citizenship/Nationality",
+        "zh-CN": "国籍",
+        "zh-Hant": "國籍",
+        "ko": "국적",
+        "ja": "国籍",
+        "vi": "Quốc tịch"
+      },
+      "forFields": [
+        "citizenshipNationality"
+      ]
+    },
+    {
+      "id": "civilStatus",
+      "type": "select",
+      "dataKey": "civilStatus",
+      "labels": {
+        "en": "Civil Status",
+        "zh-CN": "婚姻状况",
+        "zh-Hant": "婚姻狀況",
+        "ko": "혼인 상태",
+        "ja": "婚姻状況",
+        "vi": "Tình trạng hôn nhân"
+      },
+      "options": [
+        "Single",
+        "Married",
+        "Annulled",
+        "Separated",
+        "Widowed",
+        "Divorced"
+      ],
+      "forFields": [
+        "civilSingle",
+        "civilMarried",
+        "civilAnnulled",
+        "civilSeparated",
+        "civilWidowed",
+        "civilDivorced"
+      ]
+    },
+    {
+      "id": "height",
+      "type": "text",
+      "dataKey": "height",
+      "labels": {
+        "en": "Height [cm]",
+        "zh-CN": "身高（厘米）",
+        "zh-Hant": "身高（公分）",
+        "ko": "키 (cm)",
+        "ja": "身長（cm）",
+        "vi": "Chiều cao (cm)"
+      },
+      "forFields": [
+        "height"
+      ]
+    },
+    {
+      "id": "weight",
+      "type": "text",
+      "dataKey": "weight",
+      "labels": {
+        "en": "Weight [kg]",
+        "zh-CN": "体重（公斤）",
+        "zh-Hant": "體重（公斤）",
+        "ko": "몸무게 (kg)",
+        "ja": "体重（kg）",
+        "vi": "Cân nặng (kg)"
+      },
+      "forFields": [
+        "weight"
+      ]
+    },
+    {
+      "id": "ssrn",
+      "type": "text",
+      "dataKey": "ssrn",
+      "required": false,
+      "labels": {
+        "en": "Special Security Registration Number (SSRN) (if applicable)",
+        "zh-CN": "特别安全登记号码（SSRN）（如适用）",
+        "zh-Hant": "特別安全登記號碼（SSRN）（如適用）",
+        "ko": "특별 보안 등록 번호(SSRN) (해당 시)",
+        "ja": "特別安全登録番号（SSRN）（該当する場合）",
+        "vi": "Số đăng ký an ninh đặc biệt (SSRN) (nếu có)"
+      },
+      "forFields": [
+        "ssrn"
+      ]
+    },
+    {
+      "id": "landline",
+      "type": "text",
+      "dataKey": "landline",
+      "required": false,
+      "labels": {
+        "en": "Landline",
+        "zh-CN": "座机号码",
+        "zh-Hant": "座機號碼",
+        "ko": "유선 전화번호",
+        "ja": "固定電話番号",
+        "vi": "Số điện thoại cố định"
+      },
+      "forFields": [
+        "landline"
+      ]
+    },
+    {
+      "id": "mobile",
+      "type": "text",
+      "dataKey": "mobile",
+      "labels": {
+        "en": "Mobile",
+        "zh-CN": "手机号码",
+        "zh-Hant": "手機號碼",
+        "ko": "휴대폰 번호",
+        "ja": "携帯電話番号",
+        "vi": "Số điện thoại di động"
+      },
+      "forFields": [
+        "mobile"
+      ]
+    },
+    {
+      "id": "emailAddress",
+      "type": "text",
+      "dataKey": "emailAddress",
+      "labels": {
+        "en": "E-mail Address",
+        "zh-CN": "电子邮箱",
+        "zh-Hant": "電子郵箱",
+        "ko": "이메일 주소",
+        "ja": "メールアドレス",
+        "vi": "Địa chỉ email"
+      },
+      "forFields": [
+        "emailAddress"
+      ]
+    },
+    {
+      "id": "resPhHouseUnit",
+      "type": "text",
+      "dataKey": "resPhHouseUnit",
+      "labels": {
+        "en": "House/Unit No., Street, Subdivision/Village (Philippines)",
+        "zh-CN": "门牌号、街道、小区/村庄（菲律宾）",
+        "zh-Hant": "門牌號、街道、社區/村莊（菲律賓）",
+        "ko": "호수, 거리, 단지/마을 (필리핀)",
+        "ja": "号室番号、通り、サブディビジョン（フィリピン）",
+        "vi": "Số nhà/căn hộ, đường, khu dân cư (Philippines)"
+      },
+      "forFields": [
+        "resPhHouseUnit"
+      ]
+    },
+    {
+      "id": "resAbroadHouseUnit",
+      "type": "text",
+      "dataKey": "resAbroadHouseUnit",
+      "required": false,
+      "labels": {
+        "en": "House/Unit No., Street, Subdivision/Village (Abroad)",
+        "zh-CN": "门牌号、街道、小区/村庄（境外）",
+        "zh-Hant": "門牌號、街道、社區/村莊（境外）",
+        "ko": "호수, 거리, 단지/마을 (해외)",
+        "ja": "号室番号、通り、サブディビジョン（海外）",
+        "vi": "Số nhà/căn hộ, đường, khu dân cư (Nước ngoài)"
+      },
+      "forFields": [
+        "resAbroadHouseUnit"
+      ]
+    },
+    {
+      "id": "resPhBarangayMunicipality",
+      "type": "text",
+      "dataKey": "resPhBarangayMunicipality",
+      "labels": {
+        "en": "Barangay, Municipality/City (Philippines)",
+        "zh-CN": "村镇、市/镇（菲律宾）",
+        "zh-Hant": "村鎮、市/鎮（菲律賓）",
+        "ko": "바랑가이, 시/읍 (필리핀)",
+        "ja": "バランガイ、市町村（フィリピン）",
+        "vi": "Barangay, Thành phố/Thị trấn (Philippines)"
+      },
+      "forFields": [
+        "resPhBarangayMunicipality"
+      ]
+    },
+    {
+      "id": "resAbroadCityState",
+      "type": "text",
+      "dataKey": "resAbroadCityState",
+      "required": false,
+      "labels": {
+        "en": "City, State (Abroad)",
+        "zh-CN": "城市、州（境外）",
+        "zh-Hant": "城市、州（境外）",
+        "ko": "도시, 주 (해외)",
+        "ja": "市、州（海外）",
+        "vi": "Thành phố, Tiểu bang (Nước ngoài)"
+      },
+      "forFields": [
+        "resAbroadCityState"
+      ]
+    },
+    {
+      "id": "resPhProvinceZip",
+      "type": "text",
+      "dataKey": "resPhProvinceZip",
+      "labels": {
+        "en": "Province, Zip Code (Philippines)",
+        "zh-CN": "省份、邮政编码（菲律宾）",
+        "zh-Hant": "省份、郵遞區號（菲律賓）",
+        "ko": "주, 우편번호 (필리핀)",
+        "ja": "州、郵便番号（フィリピン）",
+        "vi": "Tỉnh, Mã bưu điện (Philippines)"
+      },
+      "forFields": [
+        "resPhProvinceZip"
+      ]
+    },
+    {
+      "id": "resAbroadCountryZip",
+      "type": "text",
+      "dataKey": "resAbroadCountryZip",
+      "required": false,
+      "labels": {
+        "en": "Country, Zip Code (Abroad)",
+        "zh-CN": "国家、邮政编码（境外）",
+        "zh-Hant": "國家、郵遞區號（境外）",
+        "ko": "국가, 우편번호 (해외)",
+        "ja": "国、郵便番号（海外）",
+        "vi": "Quốc gia, Mã bưu điện (Nước ngoài)"
+      },
+      "forFields": [
+        "resAbroadCountryZip"
+      ]
+    },
+    {
+      "id": "guardianName",
+      "type": "text",
+      "dataKey": "guardianName",
+      "required": false,
+      "labels": {
+        "en": "Name of Guardian [Last Name, First/Given Name, Middle Name] (if applicable)",
+        "zh-CN": "监护人姓名（姓、名、中间名）（如适用）",
+        "zh-Hant": "監護人姓名（姓、名、中間名）（如適用）",
+        "ko": "보호자 성명 (성, 이름, 중간 이름) (해당 시)",
+        "ja": "保護者氏名（姓、名、ミドルネーム）（該当する場合）",
+        "vi": "Tên người giám hộ (Họ, Tên, Tên đệm) (nếu có)"
+      },
+      "forFields": [
+        "guardianName"
+      ]
+    },
+    {
+      "id": "guardianRelationship",
+      "type": "text",
+      "dataKey": "guardianRelationship",
+      "required": false,
+      "labels": {
+        "en": "Relationship with the Applicant",
+        "zh-CN": "与申请人的关系",
+        "zh-Hant": "與申請人的關係",
+        "ko": "신청인과의 관계",
+        "ja": "申請者との関係",
+        "vi": "Quan hệ với người xin"
+      },
+      "forFields": [
+        "guardianRelationship"
+      ]
+    },
+    {
+      "id": "guardianHouseUnit",
+      "type": "text",
+      "dataKey": "guardianHouseUnit",
+      "required": false,
+      "labels": {
+        "en": "Guardian House/Unit No., Street, Subdivision/Village",
+        "zh-CN": "监护人门牌号、街道、小区/村庄",
+        "zh-Hant": "監護人門牌號、街道、社區/村莊",
+        "ko": "보호자 호수, 거리, 단지/마을",
+        "ja": "保護者号室番号、通り、サブディビジョン",
+        "vi": "Số nhà/căn hộ, đường, khu dân cư của người giám hộ"
+      },
+      "forFields": [
+        "guardianHouseUnit"
+      ]
+    },
+    {
+      "id": "guardianBarangayMunicipality",
+      "type": "text",
+      "dataKey": "guardianBarangayMunicipality",
+      "required": false,
+      "labels": {
+        "en": "Guardian Barangay, Municipality/City",
+        "zh-CN": "监护人村镇、市/镇",
+        "zh-Hant": "監護人村鎮、市/鎮",
+        "ko": "보호자 바랑가이, 시/읍",
+        "ja": "保護者バランガイ、市町村",
+        "vi": "Barangay, Thành phố/Thị trấn của người giám hộ"
+      },
+      "forFields": [
+        "guardianBarangayMunicipality"
+      ]
+    },
+    {
+      "id": "guardianProvinceZip",
+      "type": "text",
+      "dataKey": "guardianProvinceZip",
+      "required": false,
+      "labels": {
+        "en": "Guardian Province, Zip Code",
+        "zh-CN": "监护人省份、邮政编码",
+        "zh-Hant": "監護人省份、郵遞區號",
+        "ko": "보호자 주, 우편번호",
+        "ja": "保護者州、郵便番号",
+        "vi": "Tỉnh, Mã bưu điện của người giám hộ"
+      },
+      "forFields": [
+        "guardianProvinceZip"
+      ]
+    },
+    {
+      "id": "guardianCountryZip",
+      "type": "text",
+      "dataKey": "guardianCountryZip",
+      "required": false,
+      "labels": {
+        "en": "Guardian Country, Zip Code",
+        "zh-CN": "监护人国家、邮政编码",
+        "zh-Hant": "監護人國家、郵遞區號",
+        "ko": "보호자 국가, 우편번호",
+        "ja": "保護者国、郵便番号",
+        "vi": "Quốc gia, Mã bưu điện của người giám hộ"
+      },
+      "forFields": [
+        "guardianCountryZip"
+      ]
+    },
+    {
+      "id": "guardianLandline",
+      "type": "text",
+      "dataKey": "guardianLandline",
+      "required": false,
+      "labels": {
+        "en": "Guardian Landline",
+        "zh-CN": "监护人座机号码",
+        "zh-Hant": "監護人座機號碼",
+        "ko": "보호자 유선 전화번호",
+        "ja": "保護者固定電話番号",
+        "vi": "Số điện thoại cố định của người giám hộ"
+      },
+      "forFields": [
+        "guardianLandline"
+      ]
+    },
+    {
+      "id": "guardianMobile",
+      "type": "text",
+      "dataKey": "guardianMobile",
+      "required": false,
+      "labels": {
+        "en": "Guardian Mobile",
+        "zh-CN": "监护人手机号码",
+        "zh-Hant": "監護人手機號碼",
+        "ko": "보호자 휴대폰 번호",
+        "ja": "保護者携帯電話番号",
+        "vi": "Số điện thoại di động của người giám hộ"
+      },
+      "forFields": [
+        "guardianMobile"
+      ]
+    },
+    {
+      "id": "nameOfSchoolRow1",
+      "type": "text",
+      "dataKey": "nameOfSchoolRow1",
+      "labels": {
+        "en": "Name of School",
+        "zh-CN": "学校名称",
+        "zh-Hant": "學校名稱",
+        "ko": "학교명",
+        "ja": "学校名",
+        "vi": "Tên trường"
+      },
+      "forFields": [
+        "nameOfSchoolRow1"
+      ]
+    },
+    {
+      "id": "nameOfSchoolRow2",
+      "type": "text",
+      "dataKey": "nameOfSchoolRow2",
+      "required": false,
+      "labels": {
+        "en": "Name of School (continued, if needed)",
+        "zh-CN": "学校名称（如需要，续写）",
+        "zh-Hant": "學校名稱（如需要，續寫）",
+        "ko": "학교명 (필요시 계속)",
+        "ja": "学校名（必要な場合、続き）",
+        "vi": "Tên trường (tiếp theo, nếu cần)"
+      },
+      "forFields": [
+        "nameOfSchoolRow2"
+      ]
+    },
+    {
+      "id": "schoolAccreditationNumber",
+      "type": "text",
+      "dataKey": "schoolAccreditationNumber",
+      "labels": {
+        "en": "School Accreditation Number",
+        "zh-CN": "学校认证编号",
+        "zh-Hant": "學校認證編號",
+        "ko": "학교 인가 번호",
+        "ja": "学校認定番号",
+        "vi": "Số chứng nhận trường"
+      },
+      "forFields": [
+        "schoolAccreditationNumber"
+      ]
+    },
+    {
+      "id": "schoolResPhHouseUnit",
+      "type": "text",
+      "dataKey": "schoolResPhHouseUnit",
+      "labels": {
+        "en": "School House/Unit No., Street, Subdivision/Village",
+        "zh-CN": "学校门牌号、街道、小区/村庄",
+        "zh-Hant": "學校門牌號、街道、社區/村莊",
+        "ko": "학교 호수, 거리, 단지/마을",
+        "ja": "学校号室番号、通り、サブディビジョン",
+        "vi": "Số nhà/căn hộ, đường, khu dân cư của trường"
+      },
+      "forFields": [
+        "schoolResPhHouseUnit"
+      ]
+    },
+    {
+      "id": "schoolResPhBarangayMunicipality",
+      "type": "text",
+      "dataKey": "schoolResPhBarangayMunicipality",
+      "labels": {
+        "en": "School Barangay, Municipality/City",
+        "zh-CN": "学校村镇、市/镇",
+        "zh-Hant": "學校村鎮、市/鎮",
+        "ko": "학교 바랑가이, 시/읍",
+        "ja": "学校バランガイ、市町村",
+        "vi": "Barangay, Thành phố/Thị trấn của trường"
+      },
+      "forFields": [
+        "schoolResPhBarangayMunicipality"
+      ]
+    },
+    {
+      "id": "schoolResPhProvinceZip",
+      "type": "text",
+      "dataKey": "schoolResPhProvinceZip",
+      "labels": {
+        "en": "School Province, Zip Code",
+        "zh-CN": "学校省份、邮政编码",
+        "zh-Hant": "學校省份、郵遞區號",
+        "ko": "학교 주, 우편번호",
+        "ja": "学校州、郵便番号",
+        "vi": "Tỉnh, Mã bưu điện của trường"
+      },
+      "forFields": [
+        "schoolResPhProvinceZip"
+      ]
+    },
+    {
+      "id": "schoolResPhCountryZip",
+      "type": "text",
+      "dataKey": "schoolResPhCountryZip",
+      "labels": {
+        "en": "School Country, Zip Code",
+        "zh-CN": "学校国家、邮政编码",
+        "zh-Hant": "學校國家、郵遞區號",
+        "ko": "학교 국가, 우편번호",
+        "ja": "学校国、郵便番号",
+        "vi": "Quốc gia, Mã bưu điện của trường"
+      },
+      "forFields": [
+        "schoolResPhCountryZip"
+      ]
+    },
+    {
+      "id": "schoolLandline",
+      "type": "text",
+      "dataKey": "schoolLandline",
+      "required": false,
+      "labels": {
+        "en": "School Landline",
+        "zh-CN": "学校座机号码",
+        "zh-Hant": "學校座機號碼",
+        "ko": "학교 유선 전화번호",
+        "ja": "学校固定電話番号",
+        "vi": "Số điện thoại cố định của trường"
+      },
+      "forFields": [
+        "schoolLandline"
+      ]
+    },
+    {
+      "id": "schoolMobile",
+      "type": "text",
+      "dataKey": "schoolMobile",
+      "required": false,
+      "labels": {
+        "en": "School Mobile",
+        "zh-CN": "学校手机号码",
+        "zh-Hant": "學校手機號碼",
+        "ko": "학교 휴대폰 번호",
+        "ja": "学校携帯電話番号",
+        "vi": "Số điện thoại di động của trường"
+      },
+      "forFields": [
+        "schoolMobile"
+      ]
+    },
+    {
+      "id": "regSchoolRoomFloor",
+      "type": "text",
+      "dataKey": "regSchoolRoomFloor",
+      "labels": {
+        "en": "Registered Address of School: Room No., Floor No., Building, Street",
+        "zh-CN": "学校注册地址：室号、楼层、大厦、街道",
+        "zh-Hant": "學校註冊地址：室號、樓層、大廈、街道",
+        "ko": "학교 등록 주소: 호실, 층, 건물, 거리",
+        "ja": "学校登録住所：部屋番号、階数、建物、通り",
+        "vi": "Địa chỉ đăng ký trường: Số phòng, Tầng, Tòa nhà, Đường"
+      },
+      "forFields": [
+        "regSchoolRoomFloor"
+      ]
+    },
+    {
+      "id": "regSchoolBarangayMunicipality",
+      "type": "text",
+      "dataKey": "regSchoolBarangayMunicipality",
+      "labels": {
+        "en": "Registered Address: Barangay, Municipality/City",
+        "zh-CN": "注册地址：村镇、市/镇",
+        "zh-Hant": "註冊地址：村鎮、市/鎮",
+        "ko": "등록 주소: 바랑가이, 시/읍",
+        "ja": "登録住所：バランガイ、市町村",
+        "vi": "Địa chỉ đăng ký: Barangay, Thành phố/Thị trấn"
+      },
+      "forFields": [
+        "regSchoolBarangayMunicipality"
+      ]
+    },
+    {
+      "id": "regSchoolProvinceZip",
+      "type": "text",
+      "dataKey": "regSchoolProvinceZip",
+      "labels": {
+        "en": "Registered Address: Province, Zip Code",
+        "zh-CN": "注册地址：省份、邮政编码",
+        "zh-Hant": "註冊地址：省份、郵遞區號",
+        "ko": "등록 주소: 주, 우편번호",
+        "ja": "登録住所：州、郵便番号",
+        "vi": "Địa chỉ đăng ký: Tỉnh, Mã bưu điện"
+      },
+      "forFields": [
+        "regSchoolProvinceZip"
+      ]
+    },
+    {
+      "id": "regSchoolCountryZip",
+      "type": "text",
+      "dataKey": "regSchoolCountryZip",
+      "labels": {
+        "en": "Registered Address: Country, Zip Code",
+        "zh-CN": "注册地址：国家、邮政编码",
+        "zh-Hant": "註冊地址：國家、郵遞區號",
+        "ko": "등록 주소: 국가, 우편번호",
+        "ja": "登録住所：国、郵便番号",
+        "vi": "Địa chỉ đăng ký: Quốc gia, Mã bưu điện"
+      },
+      "forFields": [
+        "regSchoolCountryZip"
+      ]
+    },
+    {
+      "id": "regSchoolLandline",
+      "type": "text",
+      "dataKey": "regSchoolLandline",
+      "required": false,
+      "labels": {
+        "en": "Registered Address Landline",
+        "zh-CN": "注册地址座机号码",
+        "zh-Hant": "註冊地址座機號碼",
+        "ko": "등록 주소 유선 전화번호",
+        "ja": "登録住所固定電話番号",
+        "vi": "Số điện thoại cố định địa chỉ đăng ký"
+      },
+      "forFields": [
+        "regSchoolLandline"
+      ]
+    },
+    {
+      "id": "regSchoolMobile",
+      "type": "text",
+      "dataKey": "regSchoolMobile",
+      "required": false,
+      "labels": {
+        "en": "Registered Address Mobile",
+        "zh-CN": "注册地址手机号码",
+        "zh-Hant": "註冊地址手機號碼",
+        "ko": "등록 주소 휴대폰 번호",
+        "ja": "登録住所携帯電話番号",
+        "vi": "Số điện thoại di động địa chỉ đăng ký"
+      },
+      "forFields": [
+        "regSchoolMobile"
+      ]
+    },
+    {
+      "id": "acrNumber",
+      "type": "text",
+      "dataKey": "acrNumber",
+      "required": false,
+      "labels": {
+        "en": "Alien Certificate of Registration (ACR) Number (if you already have one)",
+        "zh-CN": "外侨登记证（ACR）号码（如已有）",
+        "zh-Hant": "外僑登記證（ACR）號碼（如已有）",
+        "ko": "외국인 등록증(ACR) 번호 (이미 있는 경우)",
+        "ja": "外国人登録証明書（ACR）番号（既にお持ちの場合）",
+        "vi": "Số Giấy chứng nhận đăng ký người nước ngoài (ACR) (nếu đã có)"
+      },
+      "forFields": [
+        "acrNumber"
+      ]
+    },
+    {
+      "id": "dateOfIssuanceDay",
+      "type": "text",
+      "dataKey": "dateOfIssuanceDay",
+      "labels": {
+        "en": "ACR Date of Issuance - DD",
+        "zh-CN": "ACR 签发日期 - 日",
+        "zh-Hant": "ACR 簽發日期 - 日",
+        "ko": "ACR 발급일 - 일",
+        "ja": "ACR発行日 - 日",
+        "vi": "Ngày cấp ACR - Ngày"
+      },
+      "forFields": [
+        "dateOfIssuanceDay"
+      ],
+      "required": false
+    },
+    {
+      "id": "dateOfIssuanceMonth",
+      "type": "text",
+      "dataKey": "dateOfIssuanceMonth",
+      "labels": {
+        "en": "ACR Date of Issuance - MMM",
+        "zh-CN": "ACR 签发日期 - 月",
+        "zh-Hant": "ACR 簽發日期 - 月",
+        "ko": "ACR 발급일 - 월",
+        "ja": "ACR発行日 - 月",
+        "vi": "Ngày cấp ACR - Tháng"
+      },
+      "forFields": [
+        "dateOfIssuanceMonth"
+      ],
+      "required": false
+    },
+    {
+      "id": "dateOfIssuanceYear",
+      "type": "text",
+      "dataKey": "dateOfIssuanceYear",
+      "labels": {
+        "en": "ACR Date of Issuance - YYYY",
+        "zh-CN": "ACR 签发日期 - 年",
+        "zh-Hant": "ACR 簽發日期 - 年",
+        "ko": "ACR 발급일 - 년",
+        "ja": "ACR発行日 - 年",
+        "vi": "Ngày cấp ACR - Năm"
+      },
+      "forFields": [
+        "dateOfIssuanceYear"
+      ],
+      "required": false
+    },
+    {
+      "id": "acrExpiryDateDay",
+      "type": "text",
+      "dataKey": "acrExpiryDateDay",
+      "labels": {
+        "en": "ACR Expiry Date/Valid Until - DD",
+        "zh-CN": "ACR 有效期 - 日",
+        "zh-Hant": "ACR 有效期 - 日",
+        "ko": "ACR 유효기간 - 일",
+        "ja": "ACR有効期限 - 日",
+        "vi": "Ngày hết hạn ACR - Ngày"
+      },
+      "forFields": [
+        "acrExpiryDateDay"
+      ],
+      "required": false
+    },
+    {
+      "id": "acrExpiryDateMonth",
+      "type": "text",
+      "dataKey": "acrExpiryDateMonth",
+      "labels": {
+        "en": "ACR Expiry Date/Valid Until - MMM",
+        "zh-CN": "ACR 有效期 - 月",
+        "zh-Hant": "ACR 有效期 - 月",
+        "ko": "ACR 유효기간 - 월",
+        "ja": "ACR有効期限 - 月",
+        "vi": "Ngày hết hạn ACR - Tháng"
+      },
+      "forFields": [
+        "acrExpiryDateMonth"
+      ],
+      "required": false
+    },
+    {
+      "id": "acrExpiryDateYear",
+      "type": "text",
+      "dataKey": "acrExpiryDateYear",
+      "labels": {
+        "en": "ACR Expiry Date/Valid Until - YYYY",
+        "zh-CN": "ACR 有效期 - 年",
+        "zh-Hant": "ACR 有效期 - 年",
+        "ko": "ACR 유효기간 - 년",
+        "ja": "ACR有効期限 - 年",
+        "vi": "Ngày hết hạn ACR - Năm"
+      },
+      "forFields": [
+        "acrExpiryDateYear"
+      ],
+      "required": false
+    },
+    {
+      "id": "crn",
+      "type": "text",
+      "dataKey": "crn",
+      "required": false,
+      "labels": {
+        "en": "Certificate of Residence Number (CRN)",
+        "zh-CN": "居留证明编号（CRN）",
+        "zh-Hant": "居留證明編號（CRN）",
+        "ko": "거주 증명서 번호(CRN)",
+        "ja": "居住証明書番号（CRN）",
+        "vi": "Số Giấy chứng nhận cư trú (CRN)"
+      },
+      "forFields": [
+        "crn"
+      ]
+    }
+  ],
+  "fieldBindings": {
+    "checkboxSelect": [
+      {
+        "dataKey": "natureOfApplication",
+        "options": {
+          "Conversion": "natureConversion",
+          "Extension": "natureExtension",
+          "Permit": "naturePermit"
+        }
+      },
+      {
+        "dataKey": "typeOfApplication",
+        "options": {
+          "Student Visa": "typeStudentVisa",
+          "Special Study Permit": "typeSpecialStudyPermit"
+        }
+      },
+      {
+        "dataKey": "gender",
+        "options": {
+          "M": "genderM",
+          "F": "genderF"
+        }
+      },
+      {
+        "dataKey": "civilStatus",
+        "options": {
+          "Single": "civilSingle",
+          "Married": "civilMarried",
+          "Annulled": "civilAnnulled",
+          "Separated": "civilSeparated",
+          "Widowed": "civilWidowed",
+          "Divorced": "civilDivorced"
+        }
+      }
+    ]
+  }
+}
