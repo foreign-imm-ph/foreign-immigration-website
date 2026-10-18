@@ -27,18 +27,29 @@ const CUSTOMER_EDITABLE_STATUSES = new Set(["draft", "revision_requested"]);
 export async function handleListBiForms(request, env) {
   const client = await requireClient(request, env);
   const submissions = await listSubmissionsForClient(env.DB, client.id);
+  const lang = client.preferred_communication_language || "en";
   return json({
-    submissions: submissions.map((s) => ({
-      id: s.id,
-      applicationId: s.application_id,
-      biFormId: s.bi_form_id,
-      status: s.status,
-      preferredLanguage: s.preferred_language,
-      createdAt: s.created_at,
-      updatedAt: s.updated_at,
-      submittedAt: s.submitted_at,
-      publishedAt: s.published_at,
-    })),
+    submissions: await Promise.all(
+      submissions.map(async (s) => {
+        // Directive section 3: the friendly, customer-facing service name
+        // must be shown, not the raw BI form identifier -- this list was
+        // the one customer-facing surface still returning only biFormId.
+        const friendly = await getFriendlyFormInfo(env.DB, s.bi_form_id, s.id, lang);
+        return {
+          id: s.id,
+          applicationId: s.application_id,
+          biFormId: s.bi_form_id,
+          serviceName: friendly.title,
+          technicalReference: friendly.technicalReference,
+          status: s.status,
+          preferredLanguage: s.preferred_language,
+          createdAt: s.created_at,
+          updatedAt: s.updated_at,
+          submittedAt: s.submitted_at,
+          publishedAt: s.published_at,
+        };
+      })
+    ),
   });
 }
 

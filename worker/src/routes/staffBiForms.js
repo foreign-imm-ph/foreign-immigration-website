@@ -60,17 +60,25 @@ export async function listBiForms(env, staff, url) {
   let decorated = submissions.map((s) => ({ s, exceptionCount: exceptionCountFor(s) }));
   if (onlyExceptions) decorated = decorated.filter((d) => d.exceptionCount !== null && d.exceptionCount > 0);
 
-  const rows = decorated
-    .map(
-      ({ s, exceptionCount }) => `<tr>
-        <td><a class="ref" href="/staff/bi-forms/${s.id}">${escapeHtml(s.bi_form_id)}</a></td>
+  // Directive section 3: the Staff Portal must show the friendly,
+  // customer-facing service name prominently, with the official BI form
+  // ID as a secondary reference -- not the raw ID alone, which is what
+  // this list showed before. One lookup per row (this list is a solo
+  // owner's own exception dashboard, never a high-volume table).
+  const rows = (
+    await Promise.all(
+      decorated.map(async ({ s, exceptionCount }) => {
+        const friendly = await getFriendlyFormInfo(env.DB, s.bi_form_id, s.id, "en");
+        return `<tr>
+        <td><a class="ref" href="/staff/bi-forms/${s.id}">${escapeHtml(friendly.title)}</a><br><span class="muted">${escapeHtml(s.bi_form_id)}</span></td>
         <td><span class="status">${escapeHtml(s.status)}</span></td>
         <td>${exceptionBadgeHtml(exceptionCount)}</td>
         <td class="muted">${escapeHtml(s.application_id || "(none)")}</td>
         <td class="muted">${escapeHtml(s.updated_at)}</td>
-      </tr>`
+      </tr>`;
+      })
     )
-    .join("");
+  ).join("");
   return staffPage(
     "BI Forms",
     `<h1>BI Forms</h1>
@@ -99,9 +107,14 @@ export async function renderBiFormsCard(env, applicationId) {
   )
     .bind(applicationId)
     .all();
-  const rows = submissions
-    .map((s) => `<tr><td><a class="ref" href="/staff/bi-forms/${s.id}">${escapeHtml(s.bi_form_id)}</a></td><td><span class="status">${escapeHtml(s.status)}</span></td></tr>`)
-    .join("");
+  const rows = (
+    await Promise.all(
+      submissions.map(async (s) => {
+        const friendly = await getFriendlyFormInfo(env.DB, s.bi_form_id, s.id, "en");
+        return `<tr><td><a class="ref" href="/staff/bi-forms/${s.id}">${escapeHtml(friendly.title)}</a><br><span class="muted">${escapeHtml(s.bi_form_id)}</span></td><td><span class="status">${escapeHtml(s.status)}</span></td></tr>`;
+      })
+    )
+  ).join("");
   const formOptions = KNOWN_BI_FORM_IDS.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join("");
   return `<div class="card">
     <h2>BI Forms</h2>

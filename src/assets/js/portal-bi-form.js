@@ -416,8 +416,11 @@
   function renderBiFormsSectionHtml(lang, submissions) {
     var items = submissions
       .map(function (s) {
+        // Directive section 3: the friendly service name is the primary
+        // label; the official BI form ID is a secondary reference, never
+        // the primary one shown to a customer.
         return '<li class="portal-bi-form-item" data-submission-id="' + s.id + '">' +
-          '<span>' + escapeHtml(s.biFormId) + '</span> ' +
+          '<span>' + escapeHtml(s.serviceName || s.biFormId) + '</span> ' +
           '<span class="status-badge">' + escapeHtml(statusLabel(lang, s.status)) + '</span>' +
           '<button type="button" class="btn btn-secondary portal-bi-form-open" data-submission-id="' + s.id + '">→</button>' +
           '</li>';
