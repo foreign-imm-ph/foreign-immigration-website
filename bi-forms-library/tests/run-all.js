@@ -37,7 +37,7 @@ const {
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
 const { composeCustomerCanvas, finalizeCustomerPreview } = require(path.join(ENGINE_DIR, "lib", "raster-pipeline"));
 const { getCanvasDims } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
-const { composeAndFinalizeCustomerPreviewWasm } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
+const { composeAndFinalizeCustomerPreviewWasm, highlightRectForField, highlightRectForQuestion } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
 const { execFileSync } = require("child_process");
@@ -73,6 +73,60 @@ function loadFixture(formId, name) {
 
 test("every form has a non-empty configs/ directory", () => {
   assert.ok(FORM_IDS.length >= 3, `expected at least the 3 migrated forms, found: ${FORM_IDS.join(", ")}`);
+});
+
+// Directive section 6 (real-time preview field highlighting): geometry
+// correctness, independent of any original PDF or resvg rendering --
+// pure coordinate math against the already-committed, non-confidential
+// coordinate-map.json/questionnaire.json.
+test("highlightRectForField: a customer-visible charBoxField returns a sane, positive-area rect matching its own measured span", () => {
+  const { coordinateMap } = loadFormConfig("CCS-A-CDR-2016");
+  const rect = highlightRectForField(coordinateMap, "lastName");
+  assert.ok(rect, "expected a rect for a known customer-visible field");
+  const f = coordinateMap.charBoxFields.lastName;
+  const SCALE = 300 / 72;
+  assert.ok(rect.widthPx > 0 && rect.heightPx > 0, "rect must have positive area");
+  assert.ok(Math.abs(rect.widthPx - (f.colsPt[f.colsPt.length - 1] - f.colsPt[0]) * SCALE) < 0.01, "width must match the field's own full comb span");
+  assert.ok(Math.abs(rect.heightPx - (f.yTopPt - f.yBottomPt) * SCALE) < 0.01, "height must match the field's own measured row height");
+  assert.equal(rect.page, 0);
+});
+
+test("highlightRectForField: a staff-only field never returns a rect (never highlighted to a customer)", () => {
+  const { coordinateMap } = loadFormConfig("CCS-A-CDR-2016");
+  assert.equal(coordinateMap.freeTextFields.documentsToBeCertified.roles.visibleTo.includes("customer"), false, "fixture assumption: this field must actually be staff-only");
+  assert.equal(highlightRectForField(coordinateMap, "documentsToBeCertified"), null);
+});
+
+test("highlightRectForField: an unknown field key returns null, not a throw", () => {
+  const { coordinateMap } = loadFormConfig("CCS-A-CDR-2016");
+  assert.equal(highlightRectForField(coordinateMap, "no-such-field"), null);
+});
+
+test("highlightRectForQuestion: a single-field question's rect matches highlightRectForField directly", () => {
+  const { coordinateMap, questionnaire } = loadFormConfig("CCS-A-CDR-2016");
+  const question = questionnaire.questions.find((q) => q.id === "lastName");
+  assert.ok(question, "fixture assumption: CCS-A-CDR-2016 has a lastName question");
+  const direct = highlightRectForField(coordinateMap, "lastName");
+  const viaQuestion = highlightRectForQuestion(coordinateMap, question);
+  // Approximate, not exact: the union path re-derives xPx/yPx/widthPx/
+  // heightPx via Math.min/Math.max over a single-element array, which can
+  // differ from the direct value by float-rounding noise far below any
+  // visually meaningful amount (confirmed: ~1e-13px here).
+  for (const k of ["xPx", "yPx", "widthPx", "heightPx", "page"]) {
+    assert.ok(Math.abs(viaQuestion[k] - direct[k]) < 1e-6, `${k}: expected ~${direct[k]}, got ${viaQuestion[k]}`);
+  }
+});
+
+test("highlightRectForQuestion: a gender checkboxSelect question's rect is the union of both its checkbox options", () => {
+  const { coordinateMap, questionnaire } = loadFormConfig("CCS-A-CDR-2016");
+  const question = questionnaire.questions.find((q) => q.dataKey === "gender" || q.id === "gender");
+  assert.ok(question, "fixture assumption: CCS-A-CDR-2016 has a gender question");
+  const rect = highlightRectForQuestion(coordinateMap, question);
+  assert.ok(rect, "expected a unioned rect for the gender question");
+  const m = highlightRectForField(coordinateMap, "genderM");
+  const fm = highlightRectForField(coordinateMap, "genderF");
+  assert.ok(rect.xPx <= Math.min(m.xPx, fm.xPx) + 0.01, "union must start at or before the leftmost option");
+  assert.ok(rect.xPx + rect.widthPx >= Math.max(m.xPx + m.widthPx, fm.xPx + fm.widthPx) - 0.01, "union must end at or after the rightmost option");
 });
 
 for (const formId of FORM_IDS) {

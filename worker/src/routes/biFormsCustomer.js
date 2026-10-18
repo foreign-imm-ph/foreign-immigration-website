@@ -108,6 +108,68 @@ export async function handleSaveDraft(request, env, submissionId) {
   return json({ ok: true });
 }
 
+// Directive section 6: the real-time official BI PDF preview, called by
+// the wizard (debounced client-side, never per-keystroke) as the customer
+// fills in answers -- NOT a save (handleSaveDraft is the only route that
+// persists anything; this never touches the DB). `answers` is passed in
+// the request body, not read back from the stored draft, so the preview
+// always reflects exactly what's on screen, including a field the
+// customer hasn't clicked "Save Draft" on yet. Returns a base64 PNG (not
+// a PDF -- a live preview is a convenience image, not the generated
+// document) plus the currently-focused question's own highlight rect, so
+// the wizard can draw an overlay without duplicating any coordinate math
+// client-side. Graceful by design: a form with no pre-rendered background
+// yet, or no activeFieldKey supplied, degrades to "no highlight"/"no
+// image" rather than an error -- this feature sits on top of an
+// already-complete, independently working wizard.
+export async function handleBiFormPreviewImage(request, env, submissionId) {
+  const client = await requireClient(request, env);
+  const submission = await requireOwnedSubmission(env.DB, client, submissionId);
+  if (!CUSTOMER_EDITABLE_STATUSES.has(submission.status)) {
+    throw new HttpError(409, `This form is not currently editable (status: ${submission.status}).`);
+  }
+
+  const body = await request.json().catch(() => {
+    throw new HttpError(400, "Invalid request body");
+  });
+  requireFields(body, ["answers"]);
+  if (typeof body.answers !== "object" || body.answers === null || Array.isArray(body.answers)) {
+    throw new HttpError(400, "answers must be an object");
+  }
+  const answersJson = JSON.stringify(body.answers);
+  if (answersJson.length > MAX_ANSWERS_JSON_BYTES) throw new HttpError(413, "Answers payload too large");
+
+  const { coordinateMap, questionnaire } = getFormConfig(submission.bi_form_id);
+  const activeQuestion = body.activeFieldKey
+    ? questionnaire.questions.find((q) => q.dataKey === body.activeFieldKey || q.id === body.activeFieldKey)
+    : null;
+
+  const { renderDraftPreviewImage } = await import("../lib/biFormRaster.js");
+  const result = await renderDraftPreviewImage(env, submission.bi_form_id, coordinateMap, questionnaire, body.answers, activeQuestion);
+  if (!result) return json({ available: false });
+
+  return json({
+    available: true,
+    imageBase64: bytesToBase64(result.pngBytes),
+    widthPx: result.widthPx,
+    heightPx: result.heightPx,
+    highlight: result.highlight,
+  });
+}
+
+// Same chunked approach as svg-compose.js's own bytesToBase64 (no Buffer
+// global in the Workers runtime), duplicated rather than imported since
+// that one lives in the lazily-loaded engine module and this is a tiny,
+// self-contained, Workers-standard-API-only utility.
+function bytesToBase64(bytes) {
+  const CHUNK = 8192;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 // Discoverability: lists both (a) the published customer_preview, if any
 // -- a document listed here is reachable (and a staff_pdf or an
 // unpublished customer_preview is refused) via the same rule enforced

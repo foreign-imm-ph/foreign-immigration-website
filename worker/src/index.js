@@ -17,6 +17,7 @@ import {
   handleListBiFormDocuments,
   handleUploadBiFormDocument,
   handleDownloadBiFormDocument,
+  handleBiFormPreviewImage,
 } from "./routes/biFormsCustomer.js";
 import { handleListCatalogue, handleGetCatalogueService, handleBeginCheckout, handlePreviewOfficialForm } from "./routes/checkoutPublic.js";
 import {
@@ -125,6 +126,8 @@ async function route(request, env, path, method, url) {
   if (biFormMatch && method === "GET") return handleGetBiForm(request, env, biFormMatch[1]);
   const biFormDraftMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/draft$/);
   if (biFormDraftMatch && method === "PATCH") return handleSaveDraft(request, env, biFormDraftMatch[1]);
+  const biFormPreviewMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/preview-image$/);
+  if (biFormPreviewMatch && method === "POST") return handleBiFormPreviewImage(request, env, biFormPreviewMatch[1]);
   const biFormSubmitMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/submit$/);
   if (biFormSubmitMatch && method === "POST") return handleSubmitBiForm(request, env, biFormSubmitMatch[1]);
   const biFormDocsMatch = path.match(/^\/api\/bi-forms\/([^/]+)\/documents$/);

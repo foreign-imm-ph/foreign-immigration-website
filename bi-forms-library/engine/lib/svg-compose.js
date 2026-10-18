@@ -214,6 +214,92 @@ function buildFieldTextElements(coordinateMap, measureFont, resolved) {
   return elements;
 }
 
+// Directive section 6 (real-time preview field highlighting): returns the
+// SAME canvas pixel rect this module would draw `fieldKey`'s value at, for
+// a highlight overlay -- never a separately-eyeballed box, so a highlight
+// can never silently drift out of sync with where the field's value
+// actually renders. Returns null for a field that either doesn't exist, is
+// not customer-visible (never highlights a staff-only field to a
+// customer), or doesn't fall within an approved customerVisibleRegions
+// entry (the same "refuse to draw" rule buildFieldTextElements's own calls
+// to mapPointToCanvasTdPt enforce, caught here rather than thrown since an
+// unhighlightable field should just mean no highlight, not a broken
+// preview).
+function highlightRectForField(coordinateMap, fieldKey) {
+  const pageHeightPt = coordinateMap.pageHeightPt;
+  const regions = getRegions(coordinateMap);
+  const dims = getCanvasDims(coordinateMap);
+  const customerFields = fieldsForAudience(coordinateMap, "customer");
+
+  let xMinPt, xMaxPt, yBottomPt, yTopPt, page;
+  if (fieldKey in customerFields.charBoxFields) {
+    const f = coordinateMap.charBoxFields[fieldKey];
+    xMinPt = f.colsPt[0];
+    xMaxPt = f.colsPt[f.colsPt.length - 1];
+    yBottomPt = f.yBottomPt;
+    yTopPt = f.yTopPt;
+    page = f.page || 0;
+  } else if (fieldKey in customerFields.checkboxFields) {
+    const f = coordinateMap.checkboxFields[fieldKey];
+    xMinPt = f.xLeftPt;
+    xMaxPt = f.xRightPt;
+    yBottomPt = f.yBottomPt;
+    yTopPt = f.yTopPt;
+    page = f.page || 0;
+  } else if (fieldKey in customerFields.freeTextFields) {
+    const f = coordinateMap.freeTextFields[fieldKey];
+    xMinPt = f.xStartPt;
+    xMaxPt = f.xEndPt;
+    // freeTextFields declare only a baseline, not a box -- approximated
+    // with a generous ascent/descent per line (visual highlight only,
+    // never used to draw the actual value).
+    const lines = f.maxLines || 1;
+    yBottomPt = f.baselinePt - 4 - 12 * (lines - 1);
+    yTopPt = f.baselinePt + 9;
+    page = f.page || 0;
+  } else {
+    return null;
+  }
+
+  let tdTop, tdBottom;
+  try {
+    tdTop = mapPointToCanvasTdPt(pageHeightPt, regions, dims, yTopPt, yBottomPt, yTopPt, page);
+    tdBottom = mapPointToCanvasTdPt(pageHeightPt, regions, dims, yBottomPt, yBottomPt, yTopPt, page);
+  } catch {
+    return null;
+  }
+
+  return {
+    xPx: xMinPt * SCALE,
+    yPx: tdTop * SCALE,
+    widthPx: (xMaxPt - xMinPt) * SCALE,
+    heightPx: (tdBottom - tdTop) * SCALE,
+    page,
+  };
+}
+
+// Directive section 6: the union of every forFields entry's own box, for a
+// whole question (a question may bind to more than one field -- e.g. a
+// wrapped two-line free-text pair). Returns null if none of the question's
+// fields are highlightable (see highlightRectForField).
+function highlightRectForQuestion(coordinateMap, question) {
+  const boxes = (question.forFields || [])
+    .map((key) => highlightRectForField(coordinateMap, key))
+    .filter(Boolean);
+  if (!boxes.length) return null;
+  // Only ever union boxes on the SAME page -- a question whose fields
+  // somehow spanned two pages would otherwise produce a meaningless
+  // combined rect; keep the first page's boxes only, which covers every
+  // real case in this project (no question's forFields spans pages today).
+  const page = boxes[0].page;
+  const samePage = boxes.filter((b) => b.page === page);
+  const xPx = Math.min(...samePage.map((b) => b.xPx));
+  const yPx = Math.min(...samePage.map((b) => b.yPx));
+  const xMaxPx = Math.max(...samePage.map((b) => b.xPx + b.widthPx));
+  const yMaxPx = Math.max(...samePage.map((b) => b.yPx + b.heightPx));
+  return { xPx, yPx, widthPx: xMaxPx - xPx, heightPx: yMaxPx - yPx, page };
+}
+
 function pushFreeTextElement(elements, measureFont, pageHeightPt, regions, dims, f, text, availableWidthPt) {
   if (!text) return;
   const { size } = fitFreeTextSize(measureFont, text, availableWidthPt);
@@ -351,6 +437,8 @@ module.exports = {
   buildComposedSvg,
   renderComposedPng,
   composeAndFinalizeCustomerPreviewWasm,
+  highlightRectForField,
+  highlightRectForQuestion,
   ensureWasmInitialized,
   mapPointToCanvasTdPt,
 };

@@ -49,6 +49,30 @@ async function getComposer() {
   return import("../../../bi-forms-library/engine/lib/svg-compose.js");
 }
 
+// Directive section 6's live preview, DURING questionnaire completion --
+// a separate, much cheaper call than composeAndFinalizeCustomerPreview
+// below (which this file already uses at approval time): skips the
+// pdf-lib wrap step entirely (buildComposedSvg + renderComposedPng
+// directly) since the caller wants a displayable image, not a document,
+// and returns null rather than throwing when no background exists yet for
+// this form -- a live preview is a convenience on top of an already-
+// working wizard, not something that should ever block or break
+// questionnaire completion itself. `data` is the customer's current,
+// possibly incomplete draft answers; nothing here validates completeness
+// (validateAnswers is for submission, not this).
+export async function renderDraftPreviewImage(env, biFormId, coordinateMap, questionnaire, data, activeQuestion) {
+  const backgroundKey = backgroundTemplateKey(biFormId);
+  const backgroundObject = await env.BI_FORMS_LIBRARY.get(backgroundKey);
+  if (!backgroundObject) return null;
+  const backgroundPngBytes = new Uint8Array(await backgroundObject.arrayBuffer());
+
+  const { buildComposedSvg, renderComposedPng, highlightRectForQuestion } = await getComposer();
+  const { svg, widthPx, heightPx } = await buildComposedSvg(coordinateMap, questionnaire, data, backgroundPngBytes);
+  const pngBytes = await renderComposedPng(svg, widthPx, heightPx, resvgWasmModule, fontBuffers);
+  const highlight = activeQuestion ? highlightRectForQuestion(coordinateMap, activeQuestion) : null;
+  return { pngBytes, widthPx, heightPx, highlight };
+}
+
 export async function composeAndFinalizeCustomerPreview(env, biFormId, coordinateMap, questionnaire, data) {
   const backgroundKey = backgroundTemplateKey(biFormId);
   const backgroundObject = await env.BI_FORMS_LIBRARY.get(backgroundKey);
