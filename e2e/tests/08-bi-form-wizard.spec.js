@@ -18,12 +18,16 @@ const {
   signInStaff,
   beginGuestOrderAndSignIn,
   createActiveCheckoutServiceDirect,
+  uploadSyntheticBiFormBackground,
   d1Json,
 } = require("../fixtures/testHelpers");
 
 test.describe("Journey 8: BI-form wizard + assisted-completion intake", () => {
   test.beforeAll(() => {
     ensureTestStaffAdmin();
+    // Directive section 6's real-time preview (see 08b below): needs a
+    // pre-rendered background in R2 before it renders anything.
+    uploadSyntheticBiFormBackground("CCS-A-CDR-2016");
   });
 
   test("self-service: real step-by-step navigation, blocks on a missing required field, Edit returns to Step 1 without losing data, submits", async ({ page }) => {
@@ -98,6 +102,35 @@ test.describe("Journey 8: BI-form wizard + assisted-completion intake", () => {
     const answers = JSON.parse(submission[0].customer_answers_json);
     expect(answers.lastName).toBe("Dela Cruz");
     expect(answers.passportNumber).toBe("P1234567");
+  });
+
+  test("live preview (directive section 6): a real image renders beside the wizard and highlights the field being filled", async ({ page }) => {
+    const serviceId = createActiveCheckoutServiceDirect({ serviceSlug: `e2e-wizard-preview-${uniqueSuffix()}`, biFormId: "CCS-A-CDR-2016" });
+    await beginGuestOrderAndSignIn(page, { serviceId, fullName: "E2E Preview Tester", emailPrefix: "e2e-j8c" });
+
+    await expect(page.locator(".portal-bi-form-choice-panel")).toBeVisible({ timeout: 15_000 });
+    await page.click(".portal-bi-form-choice-self");
+
+    // Desktop viewport (Playwright's default, >=900px): the preview panel
+    // is open by default, no toggle click needed, and fetches on load.
+    const previewImg = page.locator(".portal-bi-form-preview-img");
+    await expect(previewImg).toBeVisible({ timeout: 15_000 });
+    // visible (not [hidden]) fires the instant imgEl.hidden is cleared --
+    // a data: URI's own decode is still async relative to that, so poll
+    // rather than check naturalWidth exactly once.
+    await expect.poll(() => previewImg.evaluate((img) => img.naturalWidth), { timeout: 10_000 }).toBeGreaterThan(0);
+
+    // No highlight until a field has actually been focused.
+    const highlight = page.locator(".portal-bi-form-preview-highlight");
+    await expect(highlight).toBeHidden();
+
+    // Debounced (750ms) -- focusing + typing into a real field must
+    // produce a positively-sized, positioned highlight shortly after.
+    await page.fill('[data-answer-key="lastName"]', "Dela Cruz");
+    await expect(highlight).toBeVisible({ timeout: 5_000 });
+    const box = await highlight.evaluate((el) => ({ width: el.offsetWidth, height: el.offsetHeight }));
+    expect(box.width).toBeGreaterThan(0);
+    expect(box.height).toBeGreaterThan(0);
   });
 
   test("assisted: a genuinely shorter intake, never auto-submitted, reviewed and deliberately confirmed, visible to staff as needing assistance", async ({ page }) => {

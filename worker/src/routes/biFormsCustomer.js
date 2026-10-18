@@ -145,7 +145,18 @@ export async function handleBiFormPreviewImage(request, env, submissionId) {
     : null;
 
   const { renderDraftPreviewImage } = await import("../lib/biFormRaster.js");
-  const result = await renderDraftPreviewImage(env, submission.bi_form_id, coordinateMap, questionnaire, body.answers, activeQuestion);
+  let result;
+  try {
+    result = await renderDraftPreviewImage(env, submission.bi_form_id, coordinateMap, questionnaire, body.answers, activeQuestion);
+  } catch (err) {
+    // A live preview sits ON TOP of an independently working wizard --
+    // any rendering failure against necessarily-incomplete, in-progress
+    // draft data (an unusual repeatable-group shape mid-edit, etc.) must
+    // degrade to "not available right now", never break the step the
+    // customer is actively filling in.
+    console.error("Live BI form preview render failed:", err.message);
+    result = null;
+  }
   if (!result) return json({ available: false });
 
   return json({

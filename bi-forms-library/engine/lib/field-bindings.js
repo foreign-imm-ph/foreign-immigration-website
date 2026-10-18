@@ -20,6 +20,19 @@ function resolveFieldValues(bindings, data) {
 
   for (const sel of bindings.checkboxSelect || []) {
     const chosen = data[sel.dataKey];
+    // Not yet answered (undefined, or the empty string a <select> with no
+    // chosen option submits) is a normal, expected state for an
+    // IN-PROGRESS draft -- directive section 6's live preview calls this
+    // with exactly that kind of incomplete data, deliberately, on every
+    // keystroke. Every existing caller already only ever reaches this
+    // function with complete, validated (validateAnswers already ran) or
+    // synthetic-complete (fixtures/sample-data.json) data, so this never
+    // changes behavior for any of them -- it only stops a genuinely
+    // unanswered question from crashing a feature that explicitly expects
+    // to render partial data. A chosen value that IS present but matches
+    // no declared option is still a real data-integrity bug and still
+    // throws, same as before.
+    if (chosen === undefined || chosen === null || chosen === "") continue;
     const fieldKey = sel.options[chosen];
     if (!fieldKey) {
       throw new Error(`checkboxSelect: data.${sel.dataKey} = ${JSON.stringify(chosen)} does not match any option in ${JSON.stringify(sel.options)}`);

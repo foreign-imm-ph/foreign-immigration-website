@@ -6,6 +6,8 @@
 const { execFileSync } = require("child_process");
 const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs");
+const os = require("os");
 const { expect } = require("@playwright/test");
 
 const WORKER_DIR = path.join(__dirname, "..", "..", "worker");
@@ -360,6 +362,32 @@ async function acceptAirportVipPolicyIfPresent(page) {
 const ONE_PIXEL_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUAAScY42YAAAAASUVORK5CYII=";
 
+// Directive section 6's live preview (worker/src/lib/biFormRaster.js)
+// needs a pre-rendered background PNG in R2 at backgrounds/<biFormId>.png
+// before it will render anything -- without one it degrades gracefully
+// to "unavailable", by design. That real background is generated offline
+// from the confidential original (never committed here, same
+// FIS_BI_ORIGINALS_DIR policy as bi-forms-library/tests/run-all.js), but
+// the compositor itself only ever stretches whatever PNG it's given to
+// the computed canvas size (confirmed directly in worker/test/
+// biFormRaster.test.js's own TINY_PNG_BASE64 fixture) -- so this synthetic
+// one-pixel PNG (same fixture already used for payment-proof uploads
+// above) is a perfectly valid, non-confidential stand-in for exercising
+// the real end-to-end preview pipeline in a real browser.
+function uploadSyntheticBiFormBackground(biFormId) {
+  const tmpPath = path.join(os.tmpdir(), `e2e-bg-${biFormId.replace(/[^A-Za-z0-9.-]/g, "_")}-${uniqueSuffix()}.png`);
+  fs.writeFileSync(tmpPath, Buffer.from(ONE_PIXEL_PNG_BASE64, "base64"));
+  try {
+    execFileSync(
+      "npx",
+      ["wrangler", "r2", "object", "put", `fis-bi-forms-library/backgrounds/${biFormId}.png`, "--local", "--file", tmpPath, "--content-type", "image/png"],
+      { cwd: WORKER_DIR, encoding: "utf8" }
+    );
+  } finally {
+    fs.unlinkSync(tmpPath);
+  }
+}
+
 async function uploadSyntheticPaymentProof(page) {
   await page.waitForSelector("#instant-services-proof-upload", { timeout: 15_000 });
   await page.setInputFiles("#instant-services-proof-upload", {
@@ -483,6 +511,7 @@ module.exports = {
   fillAirportVipBookingForm,
   acceptAirportVipPolicyIfPresent,
   uploadSyntheticPaymentProof,
+  uploadSyntheticBiFormBackground,
   ONE_PIXEL_PNG_BASE64,
   createConfirmedAirportVipBooking,
   createTestClientWithApplication,

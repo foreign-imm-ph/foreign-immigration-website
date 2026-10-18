@@ -106,6 +106,12 @@
       assistReviewIntro: "Here's what you've provided. Anything left blank will be marked as needing FIS's help. Please review before submitting.",
       confirmAndSubmitButton: "Confirm and Submit",
       documentsOptionalNotice: "You may upload what you have now and provide the rest later.",
+      officialPreviewHeading: "Official Form Preview",
+      officialPreviewUpdating: "Updating preview…",
+      officialPreviewUnavailable: "A live preview isn't available for this form yet.",
+      officialPreviewEnlargeLabel: "Enlarge",
+      officialPreviewCollapseLabel: "Hide preview",
+      officialPreviewShowLabel: "Show form preview",
     },
     "zh-CN": {
       sectionTitle: "BI 表格", noForms: "尚未分配 BI 表格。",
@@ -146,6 +152,12 @@
       assistReviewIntro: "以下是您已提供的信息。留空的内容将标记为需要FIS协助。请在提交前核对。",
       confirmAndSubmitButton: "确认并提交",
       documentsOptionalNotice: "您可以先上传现有文件，其余文件稍后再提供。",
+      officialPreviewHeading: "官方表格预览",
+      officialPreviewUpdating: "正在更新预览…",
+      officialPreviewUnavailable: "此表格暂无实时预览。",
+      officialPreviewEnlargeLabel: "放大",
+      officialPreviewCollapseLabel: "隐藏预览",
+      officialPreviewShowLabel: "显示表格预览",
     },
     "zh-Hant": {
       sectionTitle: "BI 表格", noForms: "尚未分配 BI 表格。",
@@ -186,6 +198,12 @@
       assistReviewIntro: "以下是您已提供的資訊。留空的內容將標記為需要FIS協助。請在提交前核對。",
       confirmAndSubmitButton: "確認並提交",
       documentsOptionalNotice: "您可以先上傳現有文件，其餘文件稍後再提供。",
+      officialPreviewHeading: "官方表格預覽",
+      officialPreviewUpdating: "正在更新預覽…",
+      officialPreviewUnavailable: "此表格暫無即時預覽。",
+      officialPreviewEnlargeLabel: "放大",
+      officialPreviewCollapseLabel: "隱藏預覽",
+      officialPreviewShowLabel: "顯示表格預覽",
     },
     ko: {
       sectionTitle: "BI 양식", noForms: "아직 배정된 BI 양식이 없습니다.",
@@ -226,6 +244,12 @@
       assistReviewIntro: "입력하신 내용입니다. 비워둔 항목은 FIS의 도움이 필요한 것으로 표시됩니다. 제출 전에 검토해 주십시오.",
       confirmAndSubmitButton: "확인 및 제출",
       documentsOptionalNotice: "지금 가지고 있는 서류를 먼저 업로드하고, 나머지는 나중에 제공하실 수 있습니다.",
+      officialPreviewHeading: "공식 양식 미리보기",
+      officialPreviewUpdating: "미리보기 업데이트 중…",
+      officialPreviewUnavailable: "이 양식에는 아직 실시간 미리보기를 사용할 수 없습니다.",
+      officialPreviewEnlargeLabel: "확대",
+      officialPreviewCollapseLabel: "미리보기 숨기기",
+      officialPreviewShowLabel: "양식 미리보기 표시",
     },
     ja: {
       sectionTitle: "BI フォーム", noForms: "まだ割り当てられた BI フォームはありません。",
@@ -266,6 +290,12 @@
       assistReviewIntro: "ご入力いただいた内容です。未入力の項目はFISのサポートが必要として記録されます。送信前にご確認ください。",
       confirmAndSubmitButton: "確認して送信",
       documentsOptionalNotice: "現在お持ちの資料のみ先にアップロードし、残りは後日ご提出いただけます。",
+      officialPreviewHeading: "公式フォームのプレビュー",
+      officialPreviewUpdating: "プレビューを更新中…",
+      officialPreviewUnavailable: "このフォームのライブプレビューはまだご利用いただけません。",
+      officialPreviewEnlargeLabel: "拡大",
+      officialPreviewCollapseLabel: "プレビューを隠す",
+      officialPreviewShowLabel: "フォームのプレビューを表示",
     },
     vi: {
       sectionTitle: "Mẫu BI", noForms: "Chưa có mẫu BI nào được chỉ định.",
@@ -306,6 +336,12 @@
       assistReviewIntro: "Đây là những gì quý khách đã cung cấp. Những mục để trống sẽ được đánh dấu là cần FIS hỗ trợ. Vui lòng xem lại trước khi nộp.",
       confirmAndSubmitButton: "Xác Nhận và Nộp",
       documentsOptionalNotice: "Quý khách có thể tải lên những gì hiện có và cung cấp phần còn lại sau.",
+      officialPreviewHeading: "Xem trước mẫu đơn chính thức",
+      officialPreviewUpdating: "Đang cập nhật bản xem trước…",
+      officialPreviewUnavailable: "Bản xem trước trực tiếp chưa khả dụng cho mẫu đơn này.",
+      officialPreviewEnlargeLabel: "Phóng to",
+      officialPreviewCollapseLabel: "Ẩn bản xem trước",
+      officialPreviewShowLabel: "Hiện bản xem trước mẫu đơn",
     },
   };
 
@@ -686,6 +722,7 @@
 
       var stepContentHtml;
       var navHtml;
+      var livePreviewHtml = "";
       if (currentKey === "info" || currentKey === "service") {
         var stepQuestions = currentKey === "info" ? split.step1 : split.step2;
         var fieldsHtml = stepQuestions.map(function (q) { return renderQuestionHtml(q, lang, answers); }).join("");
@@ -695,6 +732,22 @@
           '<button type="button" class="btn btn-secondary portal-bi-form-save">' + escapeHtml(t(lang, "saveDraft")) + '</button>' +
           '<button type="button" class="btn btn-primary portal-wizard-continue">' + escapeHtml(t(lang, "continueButton")) + '</button>' +
           '<p class="portal-bi-form-status form-status" aria-live="polite"></p></div>';
+        // Directive section 6: the real-time official BI PDF preview, only
+        // meaningful on the two steps that actually have live fields to
+        // preview (info/service) -- the documents and review steps show
+        // no input controls, so there is nothing for it to reflect.
+        livePreviewHtml =
+          '<div class="portal-bi-form-live-preview">' +
+          '<button type="button" class="portal-bi-form-preview-toggle">' + escapeHtml(t(lang, "officialPreviewShowLabel")) + '</button>' +
+          '<div class="portal-bi-form-preview-panel">' +
+          '<div class="portal-bi-form-preview-header"><h3>' + escapeHtml(t(lang, "officialPreviewHeading")) + '</h3>' +
+          '<button type="button" class="portal-bi-form-preview-enlarge" aria-label="' + escapeAttr(t(lang, "officialPreviewEnlargeLabel")) + '" title="' + escapeAttr(t(lang, "officialPreviewEnlargeLabel")) + '">⤢</button></div>' +
+          '<div class="portal-bi-form-preview-imgwrap">' +
+          '<img class="portal-bi-form-preview-img" alt="' + escapeAttr(t(lang, "officialPreviewHeading")) + '" hidden>' +
+          '<div class="portal-bi-form-preview-highlight" hidden></div>' +
+          '</div>' +
+          '<p class="portal-bi-form-preview-status muted"></p>' +
+          '</div></div>';
       } else if (currentKey === "documents") {
         // Step 3: the ONLY step that shows the upload control -- info,
         // service and review deliberately do not repeat it.
@@ -726,7 +779,9 @@
           '<p class="muted">' + escapeHtml(t(lang, "submitNotice")) + '</p>';
       }
 
-      bodyHtml = revisionNote + indicatorHtml + stepContentHtml + navHtml;
+      bodyHtml = revisionNote + indicatorHtml + (livePreviewHtml
+        ? '<div class="portal-bi-form-wizard-layout"><div class="portal-bi-form-wizard-main">' + stepContentHtml + navHtml + '</div>' + livePreviewHtml + '</div>'
+        : stepContentHtml + navHtml);
     }
 
     return '<div class="card portal-detail-card portal-bi-form-detail" data-submission-id="' + submission.id + '" data-lang="' + lang + '">' +
@@ -814,11 +869,120 @@
         return merged;
       }
 
+      // Directive section 6: live, debounced preview of the real official
+      // BI PDF as the customer types, with the currently-focused field
+      // highlighted. Does nothing when this step has no live-preview
+      // panel (documents/review steps, or a read-only view) -- `panelEl`
+      // is simply null there. Never fires on every keystroke: a single
+      // shared debounce timer coalesces rapid typing into one request
+      // ~750ms after the customer stops, exactly the kind of "efficient,
+      // not full-regen-per-keystroke" rendering the directive requires.
+      function wireLivePreview(rootEl, stepFormEl) {
+        var panelEl = rootEl.querySelector(".portal-bi-form-live-preview");
+        if (!panelEl || !stepFormEl) return;
+
+        var toggleBtn = panelEl.querySelector(".portal-bi-form-preview-toggle");
+        var enlargeBtn = panelEl.querySelector(".portal-bi-form-preview-enlarge");
+        var imgWrap = panelEl.querySelector(".portal-bi-form-preview-imgwrap");
+        var imgEl = panelEl.querySelector(".portal-bi-form-preview-img");
+        var highlightEl = panelEl.querySelector(".portal-bi-form-preview-highlight");
+        var statusEl2 = panelEl.querySelector(".portal-bi-form-preview-status");
+        var debounceTimer = null;
+        var currentHighlight = null;
+        var requestSeq = 0;
+
+        toggleBtn.addEventListener("click", function () {
+          var expanded = panelEl.classList.toggle("is-expanded");
+          toggleBtn.textContent = expanded ? t(lang, "officialPreviewCollapseLabel") : t(lang, "officialPreviewShowLabel");
+          if (expanded) schedulePreview(null);
+        });
+        enlargeBtn.addEventListener("click", function () {
+          imgWrap.classList.toggle("is-enlarged");
+        });
+
+        function positionHighlight() {
+          if (!currentHighlight || !imgEl.naturalWidth) {
+            highlightEl.hidden = true;
+            return;
+          }
+          highlightEl.hidden = false;
+          highlightEl.style.left = (currentHighlight.xPx / imgEl.naturalWidth * 100) + "%";
+          highlightEl.style.top = (currentHighlight.yPx / imgEl.naturalHeight * 100) + "%";
+          highlightEl.style.width = (currentHighlight.widthPx / imgEl.naturalWidth * 100) + "%";
+          highlightEl.style.height = (currentHighlight.heightPx / imgEl.naturalHeight * 100) + "%";
+        }
+        imgEl.addEventListener("load", positionHighlight);
+
+        function schedulePreview(activeFieldKey) {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(function () { fetchPreview(activeFieldKey); }, 750);
+        }
+
+        function fetchPreview(activeFieldKey) {
+          var mySeq = ++requestSeq;
+          statusEl2.textContent = t(lang, "officialPreviewUpdating");
+          window
+            .portalFetch("/api/bi-forms/" + submissionId + "/preview-image", {
+              method: "POST",
+              body: JSON.stringify({ answers: mergeCollect(), activeFieldKey: activeFieldKey || null }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (result) {
+              // A slower-than-expected response for an earlier keystroke
+              // must never overwrite what a later one already showed.
+              if (mySeq !== requestSeq) return;
+              if (!result.available) {
+                imgEl.hidden = true;
+                highlightEl.hidden = true;
+                statusEl2.textContent = t(lang, "officialPreviewUnavailable");
+                return;
+              }
+              statusEl2.textContent = "";
+              currentHighlight = result.highlight;
+              imgEl.src = "data:image/png;base64," + result.imageBase64;
+              imgEl.hidden = false;
+              positionHighlight();
+            })
+            .catch(function () {
+              if (mySeq !== requestSeq) return;
+              statusEl2.textContent = t(lang, "officialPreviewUnavailable");
+            });
+        }
+
+        stepFormEl.addEventListener("input", function (event) {
+          if (!panelEl.classList.contains("is-expanded") && !isPreviewAlwaysVisible()) return;
+          schedulePreview(event.target && event.target.dataset ? event.target.dataset.answerKey : null);
+        });
+        stepFormEl.addEventListener("focusin", function (event) {
+          if (!panelEl.classList.contains("is-expanded") && !isPreviewAlwaysVisible()) return;
+          schedulePreview(event.target && event.target.dataset ? event.target.dataset.answerKey : null);
+        });
+
+        // Desktop (side-by-side layout, CSS media query) shows the panel
+        // open by default; mobile starts collapsed behind the toggle
+        // button (directive: "accessible expandable mobile preview...
+        // with enlarge option"). Detected once at wiring time via the
+        // same breakpoint the CSS uses, not re-checked on resize -- a
+        // live mid-session viewport change re-rendering this panel's
+        // open/closed state is not a real scenario for a form being
+        // filled in on one device.
+        function isPreviewAlwaysVisible() {
+          return window.matchMedia && window.matchMedia("(min-width: 900px)").matches;
+        }
+        if (isPreviewAlwaysVisible()) {
+          panelEl.classList.add("is-expanded");
+          toggleBtn.hidden = true;
+          schedulePreview(null);
+        }
+      }
+
       if (formEl && currentStepQuestions.length) {
         formEl.addEventListener("input", function () { updateConditionalVisibility(formEl, currentStepQuestions, mergeCollect()); });
         formEl.addEventListener("change", function () { updateConditionalVisibility(formEl, currentStepQuestions, mergeCollect()); });
         updateConditionalVisibility(formEl, currentStepQuestions, data.submission.answers || {});
       }
+
+      wireLivePreview(root, formEl);
 
       function goTo(nextUi) {
         if (formEl) mergeCollect();
