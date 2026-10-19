@@ -714,14 +714,12 @@ created).
 release above — this was a UI-organization-only release and added no
 new business decision to make.
 
-## 14. Fifth Release (PLANNED — prepared, not executed; pending owner approval)
+## 14. Fifth Release — BI Forms Library, Multilingual Emails, Message Attachments & Staging Additions (2026-10-19)
 
-Prepared per the owner's explicit "controlled production release" directive:
-publish the latest verified work from `claude/fis-website-planning-r52sii`
-without enabling real checkout, payment collection, or any priced/active
-offering. Nothing in this section has been executed — no production
-migration applied, no Worker deployed, no merge to `main` — per that
-directive's explicit instruction to wait for separate approval.
+Authorized and executed 2026-10-19 per the owner's explicit "controlled
+production release" directive: publish the latest verified work from
+`claude/fis-website-planning-r52sii` without enabling real checkout,
+payment collection, or any priced/active offering.
 
 ### Scope of this release
 
@@ -840,7 +838,7 @@ masking defect would have hidden a real production Resend outage too.
   6) was confirmed to be load-related flakiness, not a regression — it
   passes cleanly every time run in isolation.
 
-### Release plan (prepared; requires separate explicit approval to execute)
+### Release plan (as executed)
 
 1. **Backup production D1** (`wrangler d1 export fis-backend --remote`),
    same routine precaution as every prior release.
@@ -857,10 +855,13 @@ masking defect would have hidden a real production Resend outage too.
    `git merge-base --is-ancestor origin/main <release-commit>` immediately
    before pushing.
 5. **Smoke test**, mirroring every prior release's own pattern: public
-   catalogue API still returns `{"services":[],"lang":"en"}`; a known
-   draft/new offering ID still 404s directly; Staff Portal and its new
-   routes still return the Cloudflare Access challenge (302), not a
-   500; homepage and `/instant-services/` 200 in all 6 locales; no real
+   catalogue API returns exactly the set of services already active
+   before this release (by the time of execution, that was 1 —
+   `svc-travel-records`, activated by the owner between the fourth and
+   fifth releases, see the Execution Record below); a known draft/new
+   offering ID still 404s directly; Staff Portal and its new routes
+   still return the Cloudflare Access challenge (302), not a 500;
+   homepage and `/instant-services/` 200 in all 6 locales; no real
    payment, refund, booking, catalogue activation, or customer email
    during this pass.
 
@@ -898,3 +899,110 @@ objects to the production `fis-bi-forms-library` R2 bucket (restores the
 live-preview feature; not required for the final document itself) and
 perform one real Approve click against a test submission for that
 specific form.
+
+### Execution Record
+
+Explicit written authorization for the deployment described above was
+received from the owner on 2026-10-19, covering steps 1–6 of this
+section in full, subject to the same non-negotiable restrictions
+already enforced in code (draft/inactive catalogue, no real payment
+collection) plus an explicit instruction to stop and report rather than
+improvise if anything unexpected was found.
+
+**Release commit**: `98609c5` (same commit this document already
+describes; no code changed between approval and execution).
+
+#### Step 1 — Baseline re-confirmed at execution time, one finding
+
+`main` unchanged at `604ee6d`; dev branch at `98609c5`; clean
+fast-forward reconfirmed. Live Worker version reconfirmed as
+`9d755339-fe08-4acb-aeef-d73185eaf9f5` (matching the fourth release
+exactly — no unexpected deploy). D1 `migrations list` showed exactly
+the 6 expected pending migrations, nothing more.
+
+**Unexpected finding, investigated before proceeding**: production row
+counts had grown since the fourth release's own baseline —
+`checkout_services` active count was **1** (not 0) and
+`checkout_orders` was **2** (not 0), with `clients`/`applications`/
+`audit_log` grown correspondingly. Investigated directly (not assumed):
+the active row was `svc-travel-records`, priced ₱3,880 regular /
+₱7,880 express, `updated_at = 2026-10-16 13:27:30` — six minutes after
+the fourth release's own deployment timestamp — with 2 `draft`-status
+orders created 39 seconds apart shortly after, both never paid. This is
+the owner's own real activation/testing of the live catalogue between
+releases, not an application defect, and not touched by this release's
+migrations (which don't reference `svc-travel-records` at all). Per the
+owner's explicit instruction after this was reported: left completely
+untouched for the remainder of execution.
+
+#### Step 2 — Production backup
+
+`wrangler d1 export fis-backend --remote`: **107,910 bytes**, 36
+`CREATE TABLE` statements, SHA-256
+`29545d75ade71d84e0062129ec7a9ee5a1b522da27cca4d20687caf393c98eb8`.
+Every table's row count cross-checked against a direct live query taken
+immediately beforehand and matched exactly, including the unexpected
+`svc-travel-records`/2-orders state above (`enquiries`=7, `clients`=3,
+`staff`=1, `applications`=6, `audit_log`=50, `checkout_services`=19,
+`checkout_orders`=2). Stored outside the repository (session
+scratchpad), never committed.
+
+#### Step 3 — Migrations applied
+
+`wrangler d1 migrations apply fis-backend --remote` applied all 6 ✅.
+`migrations list` afterward: "No migrations to apply." Post-migration
+verification: every pre-existing row count unchanged
+(`enquiries`=7, `clients`=3, `staff`=1, `applications`=6,
+`checkout_orders`=2); `checkout_services` grew from 19 to **20**
+(exactly migration `0019`'s one new draft row); active-service count
+still exactly **1** (`svc-travel-records`, unchanged) — a direct
+`unexpected_active` query (active rows excluding `svc-travel-records`)
+confirmed **0**.
+
+#### Step 4 — Worker deployed
+
+`wrangler deploy` (bare, no `--env`) from `worker/`. **Version ID
+`dbe186df-7ed4-46b9-a42b-93692d844397`**. Bindings confirmed in the
+deploy output: `DB`→`fis-backend`, `CLIENT_FILES`→`fis-client-files`,
+`BI_FORMS_LIBRARY`→`fis-bi-forms-library`, `AI`, all existing
+Access/email environment variables unchanged, route
+`api.foreignimmigration.ph/*` unchanged. `RESEND_API_KEY` untouched (a
+secret, never touched by `deploy`).
+
+#### Step 5 — Website published
+
+`main` fast-forwarded `604ee6d` → `98609c5` and pushed (confirmed
+fast-forward-only via `git merge-base --is-ancestor` immediately
+before). GitHub Actions "Build and Deploy" run
+[`39273990411`](https://github.com/foreign-imm-ph/foreign-immigration-website/actions/runs/39273990411)
+triggered automatically and completed with `conclusion: success`.
+
+#### Step 6 — Production smoke tests
+
+- Public catalogue API: still returns exactly `svc-travel-records` —
+  nothing newly activated by this release's migrations or deploy.
+- New draft rows from this release (`svc-cgaf-work-visa`, `svc-ntsp`):
+  direct access returns **404** — not exposed, not purchasable.
+- Staff Portal (`/staff/enquiries/`) and the new catalogue admin route:
+  both **302** (Cloudflare Access challenge) — alive, still protected.
+- Customer-auth route (`/api/qr-ph-image`): **401** — unchanged.
+- Homepage, `/instant-services/`, `/client-portal/`, `/portal/login/`:
+  **200**.
+- `/instant-services/` in all 6 locales (en/ja/zh-cn/zh-hant/ko/vi):
+  **200**.
+- Original FIS logo: **200**, unchanged.
+- Live `instant-services-catalogue.js` fetched from production and
+  confirmed to contain the new preview-button strings — the actual new
+  build is being served, not a cached prior version.
+- No real payment, refund, booking, catalogue activation, or
+  unsolicited customer email was created or sent during this
+  verification.
+
+#### Step 7 — This document
+
+Updated and committed as this section.
+
+**Outstanding business configuration**: unchanged from the list above —
+nothing here activates, prices, or approves anything new. The owner's
+own `svc-travel-records` activation predates this release and was left
+exactly as found.
