@@ -6,6 +6,7 @@
   "scripts": {
     "start": "eleventy --serve",
     "build": "eleventy",
+    "build:staging": "eleventy && node scripts/set-staging-api-base.js",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

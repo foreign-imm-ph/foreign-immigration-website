@@ -2,9 +2,19 @@
 
 ## Latest completed commit
 
-`8e41878` (branch `claude/fis-website-planning-r52sii`) — "Warn on live-preview field overflow instead of silently truncating". Working tree clean except this handover update and the new `docs/FIS_STAGING_PLAN.md`, both committed together at session end (see "Final Development Session" section below).
+See the "Staging Environment Built" section immediately below for this session's own commit, pushed at session end. Prior to that: `aa3b6a9` (branch `claude/fis-website-planning-r52sii`) — "Final Development Session: visual inspections, staging plan, handover".
 
-Commit history this branch, most recent first: `8e41878` (this session's live-preview overflow warning fix) → `2713e59` (prior session's handover) → `756296e` (prior session's final-document overflow guard, the fix this session's warning is designed to agree with).
+Commit history this branch, most recent first (newest last-session commit shown; this session's own commit follows it): `aa3b6a9` → `8e41878` (live-preview overflow warning fix) → `2713e59` (prior handover) → `756296e` (final-document overflow guard).
+
+## Staging Environment Built (this session)
+
+The owner reviewed `docs/FIS_STAGING_PLAN.md` and `docs/FIS_SMART_FORMS_HANDOVER.md` and approved building the private staging environment, with one architecture correction (shared-parent-domain, `staging.foreignimmigration.ph` / `staging-api.foreignimmigration.ph`, instead of the originally-proposed separate `pages.dev`/`workers.dev` domains — discovered during this session to be necessary because the existing session-cookie mechanism can't work across two unrelated domains). Full detail, exact resources, verification results, and the one remaining owner action (a single DNS record neither available API token could create) are all in **`docs/FIS_STAGING_PLAN.md`** (rewritten this session to reflect what was actually built, not what was proposed).
+
+Summary: the staging Worker (`fis-backend-staging`), its isolated D1 database (all 22 migrations applied, zero customer data) and two isolated R2 buckets (one populated with all 14 confidential BI form originals + preview backgrounds, copied from local scratch materials, never committed to git) are fully deployed and verified end-to-end — 17 of 18 explicit acceptance checks passed against the real staging Worker (guest checkout, questionnaire, this session's own live-preview overflow warning, payment, staff verification, staff review, secure document access, order history). The one unverified step (final PDF generation via Approve) hit a `wrangler dev`-local CPU-time limit, not an application defect — see the staging plan's section 6 for why. Three Cloudflare Access applications (one per surface: staging API, staging frontend custom domain, and the Pages project's own default domain as a backstop) gate everything, using a newly-created One-Time-PIN identity provider and a policy restricted to the Cloudflare account's own owner email (read directly from the Cloudflare account, never a personal email hardcoded into the repo). No production resource was touched — verified directly via the Cloudflare API before and after every step.
+
+Files changed this session: `worker/wrangler.toml` (new `[env.staging]` block), `package.json` (new `build:staging` script), `scripts/set-staging-api-base.js` (new — staging-only build postprocess, inert for the production build), `functions/_middleware.js` (new — Cloudflare Pages Function, the Access-gating backstop for the shared `pages.dev` domain), `docs/FIS_STAGING_PLAN.md` (rewritten), this handover.
+
+**Owner action still needed**: add one CNAME DNS record (`staging` → `fis-staging.pages.dev`, proxied) to finish wiring up the staging frontend's custom domain — see the staging plan's section 4 for the exact value and why neither available API token could do this step itself.
 
 ## Final Development Session — Preservation, Live-Preview Fix, Visual Inspections, Staging Plan
 

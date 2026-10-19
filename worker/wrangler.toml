@@ -92,3 +92,84 @@ CF_ACCESS_TEAM_DOMAIN = "still-wave-079c.cloudflareaccess.com"
 # Copied from: Zero Trust dashboard → Access → Applications →
 # "FIS Staff Portal" → Overview → Application Audience (AUD) Tag.
 CF_ACCESS_AUD = "40fa2e08ff7eaad1e3a9813beb0f139a0068e852d8ac48b63a4decf32fbf6b42"
+
+# ============================================================================
+# Staging environment (owner-approved "Final Development Session" directive,
+# and its follow-up approval of a shared-parent-domain architecture:
+# staging.foreignimmigration.ph / staging-api.foreignimmigration.ph, instead
+# of unrelated *.pages.dev/*.workers.dev domains, so the existing session-
+# cookie Domain-attribute + SameSite=Lax model -- see worker/src/lib/
+# session.js -- keeps working unmodified for staging exactly as it already
+# does for production, with zero authentication code changes).
+#
+# Isolated D1 + R2, entirely separate from everything in the default
+# environment above. Deploy with `wrangler deploy --env staging` -- never the
+# bare `wrangler deploy`, which always targets production.
+#
+# A Cloudflare Access application (self-hosted, owner-email-only, via a
+# One-Time-PIN identity provider -- no external OAuth needed) was created for
+# this exact hostname BEFORE the custom domain below was (re-)declared, so
+# the hostname was never reachable without Access. See
+# docs/FIS_STAGING_PLAN.md for the exact resources and how to verify this.
+[env.staging]
+name = "fis-backend-staging"
+workers_dev = false
+# Unlike `vars`, top-level `routes` IS inherited by an environment unless
+# overridden -- without this, `wrangler deploy --env staging` tries to
+# assign api.foreignimmigration.ph/* (production's route) to the staging
+# Worker too, and correctly fails rather than stealing it (hit this exact
+# error during this session's first deploy attempt). `custom_domain = true`
+# makes Wrangler manage the Cloudflare Workers Custom Domain (DNS + TLS cert)
+# declaratively from this file, the same mechanism production could use
+# instead of the legacy zone-route style it already has.
+routes = [
+  { pattern = "staging-api.foreignimmigration.ph", custom_domain = true }
+]
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "fis-backend-staging"
+database_id = "34eb40c1-6214-45a3-8125-7ed7fc569f47"
+
+[[env.staging.r2_buckets]]
+binding = "CLIENT_FILES"
+bucket_name = "fis-client-files-staging"
+
+[[env.staging.r2_buckets]]
+binding = "BI_FORMS_LIBRARY"
+bucket_name = "fis-bi-forms-library-staging"
+
+[env.staging.ai]
+binding = "AI"
+# Same Workers AI account-level binding as production -- not a per-
+# environment resource, see docs/FIS_STAGING_PLAN.md section 1.
+
+[env.staging.vars]
+# The staging frontend's own custom domain (Cloudflare Pages project, same
+# shared-parent-domain reasoning as the route declared above) -- this is
+# what makes the existing Domain=.foreignimmigration.ph session-cookie model
+# (worker/src/lib/session.js) work for staging exactly as it does for
+# production, and what CORS (worker/src/lib/http.js) and the CSRF
+# same-site-origin check (session.js's isSameSiteOrigin) key off of.
+PUBLIC_SITE_URL = "https://staging.foreignimmigration.ph"
+EMAIL_FROM = "Foreign Immigration Services STAGING (not real) <portal@foreignimmigration.ph>"
+EMAIL_REPLY_TO = "info@foreignimmigration.ph"
+STAFF_NOTIFICATION_EMAIL = "info@foreignimmigration.ph"
+# RESEND_API_KEY is deliberately never set for staging -- worker/src/lib/
+# email.js already no-ops safely without it (confirmed this session), which
+# is how "no real customer emails from staging" is satisfied with no code
+# change at all.
+#
+# A dedicated staging Cloudflare Access application (self-hosted, owner-
+# email-only via a One-Time-PIN identity provider -- no external OAuth
+# needed) protects staging-api.foreignimmigration.ph. Same Zero Trust team
+# as production (CF_ACCESS_TEAM_DOMAIN), but its OWN, separate Access
+# application and AUD tag -- production's existing AUD (see the default
+# [vars] block above) is never reused or modified.
+CF_ACCESS_TEAM_DOMAIN = "still-wave-079c.cloudflareaccess.com"
+CF_ACCESS_AUD = "757f12f3248c3f821882f2a88bb2be76cfc1c0f28c29a0458b2d98e824ff40e5"
+#
+# DEV_STAFF_BYPASS_EMAIL must NEVER be added here -- see the explicit
+# warning in worker/src/lib/staffAuth.js. It only ever comes from a local,
+# gitignored .dev.vars file read by `wrangler dev`, never from a deployed
+# environment's vars.
