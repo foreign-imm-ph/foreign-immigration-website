@@ -280,6 +280,84 @@ one-time-PIN inbox) -- the owner should simply reload the
 widens what was already Access-protected back to the correct, narrower
 scope.
 
+## 10. Owner acceptance testing: one service activated (this session)
+
+One existing, already BI-form-linked catalogue service was activated in
+**staging D1 only**, for a complete fictional owner journey. No new
+service was created; no production catalogue data was touched.
+
+**Service**: `svc-cdr` -- "Certificate of Derogatory Record (CDR)"
+(`service_slug: motions-blacklist`), linked to the real, fully-verified
+`CCS-A-CDR-2016` BI form (the most exercised form in this entire
+project's history -- it has a committed golden reference and is the form
+every prior session's e2e/acceptance tests used). `offering_type:
+document_automated`, `supports_delivery: true` -- exercises the guided
+questionnaire, the live official-PDF preview (including this session's
+own overflow-warning fix), a processing-tier choice, a delivery-address
+step, guest checkout, fictional GCash payment evidence, Staff Portal
+review, and real PDF generation, all in one journey.
+
+**Changes made, staging D1 only** (via direct SQL, no code changed):
+- `checkout_services` (`svc-cdr`): `active = 1`, `offering_status =
+  'active'`, `customer_price_label = 'STAGING TEST PRICE (not a real
+  fee)'`, Regular tier ₱1.23 (1-2 business days), Express tier ₱4.56 (1
+  business day) -- both deliberately, unmistakably fake amounts, not
+  realistic pricing.
+- `checkout_service_i18n` (`svc-cdr`, `en`): `notices_text` replaced with
+  an explicit "STAGING TEST ONLY ... not a real FIS offering and no real
+  payment is processed" disclaimer, shown to the customer on the
+  service's own card/detail page.
+- Every other `checkout_services` row confirmed `active = 0` (including
+  the twelve leftover rows from section 9's own acceptance-testing runs,
+  already deactivated there).
+- QR Ph payment settings re-confirmed unchanged from section 6: the
+  existing synthetic, non-payable test image ("FIS (STAGING TEST -- NOT A
+  REAL GCASH CODE)"), `enabled = 1`.
+
+**Verified via direct HTTPS requests to the real deployed
+`staging-api.foreignimmigration.ph`** (not a local Worker):
+- `GET /api/instant-services/catalogue` → exactly one service, `svc-cdr`,
+  with both processing tiers, the fake prices, and the staging-test
+  notice text.
+- `GET /api/instant-services/catalogue/svc-cdr` (detail) → `200`.
+- `GET /api/instant-services/catalogue/svc-cdr/preview-form` (official
+  blank-form preview) → `200`.
+- `GET /staff/` and `GET /staff/instant-services/payment-settings/`
+  (unauthenticated) → still `302` to Access's login page -- confirms
+  nothing about Access was weakened while doing this.
+- Production's route and D1 re-confirmed unchanged via the Cloudflare API.
+
+**No fictional order, application, or submission was created by this
+session** -- the owner asked to complete the journey themselves, so
+nothing beyond the catalogue/pricing/i18n configuration above was
+touched.
+
+### Owner testing checklist
+
+1. Go to **`https://staging.foreignimmigration.ph/instant-services/`**
+   (sign in with the one-time PIN if prompted).
+2. You should see exactly one card: **"Certificate of Derogatory Record
+   (CDR)"**, priced at a clearly fake **₱1.23 / ₱4.56**, with a visible
+   "STAGING TEST ONLY" notice. **Click that card.**
+3. Proceed through: guest details → the real guided questionnaire (try
+   typing an overly long Last Name to see this session's live overflow
+   warning) → choose a processing tier → delivery address (any fictional
+   address) → review → "Confirm and Pay".
+4. On the payment screen, you'll see the synthetic "STAGING TEST -- NOT A
+   REAL GCASH CODE" QR image -- upload any small image file as your
+   "payment evidence" (it's never checked against a real QR Ph
+   transaction).
+5. To act as staff and finish the journey: go to
+   **`https://staging-api.foreignimmigration.ph/staff/`** (same one-time
+   PIN), find your test order under Instant Services → Orders, verify the
+   payment, open the linked BI form submission, start review, fill in any
+   staff-only fields it asks for, and Approve -- this generates the real
+   final PDF from the staging original.
+6. Back in the Client Portal (the link from your original guest
+   checkout, or `https://staging.foreignimmigration.ph/portal/`), confirm
+   you can see the order status update and download the generated
+   document.
+
 Nothing here authorizes production deployment. Merging to `main`,
 deploying to `fis-backend` (the production Worker), or touching the
 production R2/D1 remains a separate, explicit future approval.
