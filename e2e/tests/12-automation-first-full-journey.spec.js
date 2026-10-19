@@ -98,7 +98,18 @@ async function fillQuestionnaireMarkingOneFieldUnsure(page, unsureKey) {
           if (optionValues.length) await field.selectOption(optionValues[0]);
         } else {
           const current = await field.inputValue();
-          if (!current) await field.fill("Dela Cruz");
+          if (!current) {
+            // Day/Month/Year date-component fields (e.g. CCS-A-NTSP-2016's
+            // dobDay/dobMonth/dobYear) render as 2/3/4-character-box fields
+            // on the real form -- the generic "Dela Cruz" fallback below
+            // overflows them and correctly trips the server-side overflow
+            // guard, which blocks approval. That guard is working as
+            // designed; this fallback just needs to supply a value a real
+            // customer actually could for a date component instead of
+            // reusing the arbitrary surname placeholder everywhere.
+            const dateValue = /day$/i.test(key) ? "15" : /month$/i.test(key) ? "JUN" : /year$/i.test(key) ? "1990" : null;
+            await field.fill(dateValue || "Dela Cruz");
+          }
         }
       }
     }

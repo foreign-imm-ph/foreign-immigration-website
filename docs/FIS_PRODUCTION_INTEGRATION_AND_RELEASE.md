@@ -713,3 +713,188 @@ created).
 **Outstanding business configuration**: unchanged from the third
 release above — this was a UI-organization-only release and added no
 new business decision to make.
+
+## 14. Fifth Release (PLANNED — prepared, not executed; pending owner approval)
+
+Prepared per the owner's explicit "controlled production release" directive:
+publish the latest verified work from `claude/fis-website-planning-r52sii`
+without enabling real checkout, payment collection, or any priced/active
+offering. Nothing in this section has been executed — no production
+migration applied, no Worker deployed, no merge to `main` — per that
+directive's explicit instruction to wait for separate approval.
+
+### Scope of this release
+
+Relative to what is actually live today (Worker at commit `eebc281`,
+`main`/published site at `604ee6d` — one release behind the live Worker,
+by the fourth release's own deliberate, documented choice not to publish
+a Worker-only change to the public site): the real new content is BI
+Forms Library's full integration (3 additional form-engine mappings —
+`BOC04.QF.001`, `CGAF-003-Rev 2`, `BOC04.QF.002` — plus 7 already-linked
+forms promoted from staff-manual to customer self-service
+`document_automated`), multilingual transactional emails (6 languages),
+secure message attachments, an official-blank-form preview link on
+catalogue cards, and the private staging environment (additive-only,
+inert for production — see below). It also carries forward the guest-
+checkout email fix from the immediately preceding task: `handleBeginCheckout`
+previously reported "Check your email" success unconditionally, regardless
+of whether the email actually sent; a new staff-only "Resend verification
+email" action (already committed, `810a80b`) now falls back to displaying
+a fresh link when a real send genuinely fails, instead of silently losing
+the token — a correctness fix, not staging-specific, since the same
+masking defect would have hidden a real production Resend outage too.
+
+### Release-critical blocker checks
+
+1. **Guest-confirmation-email failure: staging-specific or also
+   production-affecting?** Root cause (`RESEND_API_KEY` absent) is
+   staging-only — production already has this secret set (confirmed in
+   the first release's own execution record, §10, and unchanged since).
+   The masking defect in the success response was NOT staging-specific
+   and is now fixed (above), independent of which environment's
+   `RESEND_API_KEY` state triggers it.
+2. **Production secrets / email configuration present?** Yes — no new
+   secret or binding is required by anything in this diff.
+   `worker/src/lib/email.js`'s new functions reference only
+   `EMAIL_FROM`/`EMAIL_REPLY_TO`/`STAFF_NOTIFICATION_EMAIL`/
+   `RESEND_API_KEY`, all already live in production's default
+   environment. `wrangler.toml`'s diff against the currently-deployed
+   commit (`eebc281`) is a pure append of a new `[env.staging]` block —
+   confirmed via direct diff, zero bytes changed above the append point,
+   so nothing in the production environment's own config is touched.
+3. **Can the deployed Worker generate the final official PDF without
+   exceeding CPU limits?** Directly tested, not assumed: Journey 12 (new
+   this release, exercises the representative newly-automated form,
+   `CCS-A-NTSP-2016`, end to end through guest checkout → questionnaire →
+   payment → staff review → Approve → final PDF) initially failed —
+   investigated and found to be a test-fixture data bug (the test's own
+   generic field-filler supplied a 9-character placeholder into 2/3/4-
+   character date-of-birth boxes, correctly tripping the existing
+   overflow guard — the application behaved correctly). Fixed the test
+   fixture only (no application code changed) and reran: **Approve now
+   completes successfully in a real local Workers runtime, full journey
+   in 42s**, with no CPU-time error. This directly supersedes the
+   staging plan's earlier, inconclusive "hit a `wrangler dev`-local CPU
+   constraint" note for this same step. Residual, bounded risk: the 3
+   newly-mapped multi-page forms (`BOC04.QF.001`, `CGAF-003-Rev 2`,
+   `BOC04.QF.002`) have not themselves had a real Approve click timed —
+   but since catalogue stays fully inactive in this release (below), no
+   customer order can reach Approve for any service, so this has zero
+   production exposure until a specific service is later activated.
+   **Recommendation, not a blocker**: before activating any of those 3
+   specific offerings, click Approve once on a real test submission
+   (staging already provides a real, non-local Cloudflare Worker for
+   this) to confirm.
+4. **Customer data / payment evidence / official BI documents still
+   protected?** Spot-checked (not re-audited from scratch) the new
+   routes: `messages.js`'s attachment upload/download and
+   `biFormsCustomer.js`'s submission/document routes all still enforce
+   the existing `requireAuth`-then-ownership pattern (401 unauthenticated,
+   403/404 on cross-client access, staff-only `staff_pdf` kind never
+   customer-downloadable) — consistent with, not a departure from, the
+   existing, previously-audited security model.
+
+### Other findings
+
+- All 6 new migrations (`0017`–`0022`) are purely additive — verified by
+  direct read of every file: no `DROP`/`DELETE`/`TRUNCATE`/rename, and
+  every row they touch or insert stays `active = 0` /
+  `offering_status = 'draft'`. `lib/checkout.js`'s `setOfferingStatus()`
+  still structurally refuses activation without an approved, non-zero
+  price — catalogue safety is enforced in code, not merely by omission.
+- The new "Preview Official BI Form" catalogue-card button
+  (`checkoutPublic.js`'s `hasOfficialFormPreview`) is gated entirely on
+  the live, currently-empty active-catalogue API response — with 0
+  active offerings, it is not rendered anywhere a real visitor can reach
+  it in this release, confirmed by tracing every place it's referenced
+  (only inside the dynamically-populated catalogue-card loop; no static
+  per-service page renders it unconditionally).
+- Known, pre-existing, gracefully-degrading gap (unchanged by this
+  release, carried forward from `docs/FIS_SMART_FORMS_HANDOVER.md`):
+  production's R2 `fis-bi-forms-library` bucket still lacks
+  `backgrounds/<formId>.png` for all 14 forms. The customer-facing live
+  preview feature returns a clear HTTP 501 (not 500, not a crash) when
+  this happens, and the final staff-generated PDF does not depend on
+  this object at all (confirmed by direct code read) — so this is an
+  operational task for later (upload the 14 PNGs before relying on the
+  live-preview feature), not a release blocker.
+- `functions/_middleware.js` (new) only ever executes on the Cloudflare
+  Pages staging project; GitHub Pages (production's actual host) has no
+  `functions/` concept and `deploy.yml` never uploads that directory —
+  confirmed by direct read of both files.
+- `scripts/set-staging-api-base.js` is invoked only by the new
+  `build:staging` npm script; the production `deploy.yml` workflow runs
+  the original `npm run build`, unchanged — confirmed by direct read.
+
+### Tests run
+
+- `npx vitest run` (worker, full suite): **342 passed, 2 skipped, 4 todo**
+  — 0 failures. (An initial run showed 118 false failures, traced to a
+  stray local `worker/.dev.vars` file left over from the prior task's own
+  testing, overriding `PUBLIC_SITE_URL`; removed, and confirmed not a
+  tracked/committed file.)
+- `npx playwright test` (all e2e journeys, including two new ones added
+  this release — Journey 12 automation-first, Journey 13 overflow guard
+  + `CGAF-003-Rev 2` real-PDF regression): full suite passed after the
+  Journey 12 test-fixture fix above; the other transient failure (Journey
+  6) was confirmed to be load-related flakiness, not a regression — it
+  passes cleanly every time run in isolation.
+
+### Release plan (prepared; requires separate explicit approval to execute)
+
+1. **Backup production D1** (`wrangler d1 export fis-backend --remote`),
+   same routine precaution as every prior release.
+2. **Apply migrations** `0017` → `0022`, in that exact order, against
+   the remote `fis-backend` D1 database, before touching the Worker —
+   same expand-first safe-migration practice as every prior release.
+3. **Deploy the Worker** (`cd worker && wrangler deploy`, bare, no
+   `--env`) from the dev branch's working tree at the commit approved
+   for release. No new binding or secret is required.
+4. **Fast-forward `main`** to the same commit and push, so `deploy.yml`
+   rebuilds and republishes the static site via GitHub Pages — a clean
+   fast-forward is possible exactly as in releases 1–3 (not release 4,
+   which deliberately skipped this step); confirm with
+   `git merge-base --is-ancestor origin/main <release-commit>` immediately
+   before pushing.
+5. **Smoke test**, mirroring every prior release's own pattern: public
+   catalogue API still returns `{"services":[],"lang":"en"}`; a known
+   draft/new offering ID still 404s directly; Staff Portal and its new
+   routes still return the Cloudflare Access challenge (302), not a
+   500; homepage and `/instant-services/` 200 in all 6 locales; no real
+   payment, refund, booking, catalogue activation, or customer email
+   during this pass.
+
+### Rollback procedure
+
+- **Worker code**: `wrangler rollback <version-id>` to the last known
+  live version (`9d755339-fe08-4acb-aeef-d73185eaf9f5`, from the fourth
+  release — reconfirm the actual current version via
+  `wrangler deployments list` immediately before deploying, in case
+  anything changed since this document was written).
+- **D1 migrations**: none of the six are destructive — rolling back the
+  Worker simply leaves the new tables/columns unused again. As with
+  every prior release, the real rollback risk is new legitimate data
+  created in the new tables/columns after go-live (a real order against
+  a newly-automated form, a real message attachment) — never restore
+  the pre-migration export over that without a separate, deliberate
+  recovery decision.
+- **Static site**: revert the fast-forward on `main` (or push the prior
+  commit) and let `deploy.yml` redeploy; GitHub Pages' own deployment
+  history is a second fallback.
+- **Priority if anything goes wrong**: protect the original enquiries
+  system above all, exactly as every prior release's rollback plan has
+  stated — it is the one thing already confirmed in continuous real use.
+
+### Outstanding business configuration (unchanged, plus one addition)
+
+Which draft offerings to sell and at what price, Airport VIP package
+pricing/activation, the real QR Ph payment image, the payment-
+verification/refund staff-permission recommendation, and the actual
+Express/Regular prices and lead times per document offering — all
+unchanged from prior releases, none populated or activated by this one
+either. **New**: before activating any of the 3 newly-mapped multi-page
+offerings specifically, upload the 14 missing `backgrounds/<formId>.png`
+objects to the production `fis-bi-forms-library` R2 bucket (restores the
+live-preview feature; not required for the final document itself) and
+perform one real Approve click against a test submission for that
+specific form.
