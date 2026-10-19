@@ -32,7 +32,7 @@ const { loadFormConfig, listFormIds } = require("../lib/config-loader");
 const { getCanvasDims } = require("../lib/render-pipeline");
 const { composeCustomerCanvas } = require("../lib/raster-pipeline");
 
-const DPI = 300; // must match svg-compose.js's DPI constant exactly
+const DPI = 144; // must match svg-compose.js's DPI constant exactly
 
 async function main() {
   const originalsDir = process.env.FIS_BI_ORIGINALS_DIR;

@@ -37,7 +37,7 @@ const {
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
 const { composeCustomerCanvas, finalizeCustomerPreview } = require(path.join(ENGINE_DIR, "lib", "raster-pipeline"));
 const { getCanvasDims } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
-const { composeAndFinalizeCustomerPreviewWasm, highlightRectForField, highlightRectForQuestion, buildComposedSvg } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
+const { composeAndFinalizeCustomerPreviewWasm, highlightRectForField, highlightRectForQuestion, buildComposedSvg, SCALE: COMPOSE_SCALE } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
 const { execFileSync } = require("child_process");
@@ -84,7 +84,7 @@ test("highlightRectForField: a customer-visible charBoxField returns a sane, pos
   const rect = highlightRectForField(coordinateMap, "lastName");
   assert.ok(rect, "expected a rect for a known customer-visible field");
   const f = coordinateMap.charBoxFields.lastName;
-  const SCALE = 300 / 72;
+  const SCALE = COMPOSE_SCALE; // must track svg-compose.js's own SCALE, never a second hardcoded copy
   assert.ok(rect.widthPx > 0 && rect.heightPx > 0, "rect must have positive area");
   assert.ok(Math.abs(rect.widthPx - (f.colsPt[f.colsPt.length - 1] - f.colsPt[0]) * SCALE) < 0.01, "width must match the field's own full comb span");
   assert.ok(Math.abs(rect.heightPx - (f.yTopPt - f.yBottomPt) * SCALE) < 0.01, "height must match the field's own measured row height");

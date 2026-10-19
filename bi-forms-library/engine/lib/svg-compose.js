@@ -51,7 +51,7 @@ const { computeWatermarkPlacement, WATERMARK_COLOR_RGB01 } = require("./watermar
 const { getRegions, getCanvasDims } = require("./render-pipeline");
 const { applyMetadataStandard } = require("./metadata");
 
-const DPI = 300; // must match the DPI the blank backgrounds were pre-rendered at (scripts/generate-blank-backgrounds.js)
+const DPI = 144; // must match the DPI the blank backgrounds were pre-rendered at (scripts/generate-blank-backgrounds.js)
 const SCALE = DPI / 72;
 
 // @resvg/resvg-wasm's initWasm() is a module-level singleton -- calling it
@@ -455,4 +455,5 @@ module.exports = {
   highlightRectForQuestion,
   ensureWasmInitialized,
   mapPointToCanvasTdPt,
+  SCALE,
 };
