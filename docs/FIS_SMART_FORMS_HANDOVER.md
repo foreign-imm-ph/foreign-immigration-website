@@ -2,7 +2,55 @@
 
 ## Latest completed commit
 
-`756296e` (branch `claude/fis-website-planning-r52sii`) — "Block document generation on character-box overflow instead of silently truncating". Working tree clean at time of writing.
+`8e41878` (branch `claude/fis-website-planning-r52sii`) — "Warn on live-preview field overflow instead of silently truncating". Working tree clean except this handover update and the new `docs/FIS_STAGING_PLAN.md`, both committed together at session end (see "Final Development Session" section below).
+
+Commit history this branch, most recent first: `8e41878` (this session's live-preview overflow warning fix) → `2713e59` (prior session's handover) → `756296e` (prior session's final-document overflow guard, the fix this session's warning is designed to agree with).
+
+## Final Development Session — Preservation, Live-Preview Fix, Visual Inspections, Staging Plan
+
+This section records the outcome of the "FIS — Final Development Session, GitHub Preservation and Staging Preparation" directive. It supersedes nothing above (kept intact as history) but is the authoritative status as of session end.
+
+### 1. Preservation check (directive item 1)
+
+Confirmed at session start: repository `foreign-imm-ph/foreign-immigration-website`, branch `claude/fis-website-planning-r52sii`, latest commit `2713e59`, working tree clean. All prior session's work (the overflow guard commit `756296e` and its handover commit `2713e59`) was already pushed — nothing was found uncommitted.
+
+### 2. Live-preview overflow fix (directive item 2) — DONE, commit `8e41878`
+
+The gap recorded below as "Residual gap #2" (in the pre-existing section further down this document) is now fixed. Summary:
+
+- `bi-forms-library/engine/lib/svg-compose.js`'s `buildFieldTextElements`/`buildComposedSvg` now collects an `overflowFields` array using the exact same `value.length > nBoxes` comparison `pdf-fields.js`'s `populateCharField` (the final-document guard, commit `756296e`) already uses, against the same coordinate-map box-count data — not a second, independently-maintained threshold.
+- `worker/src/lib/biFormRaster.js` and `worker/src/routes/biFormsCustomer.js` thread `overflowFields` through to the live-preview JSON response (`/api/bi-forms/.../preview-image`).
+- `src/assets/js/portal-bi-form.js` renders a non-blocking, localized (`overflowWarning` STRINGS key, all 6 languages) warning beside the affected field, stating the character count, the form's actual limit, that the full answer is already saved untouched, and what the customer can do. It **never blocks** continuing or checkout — only the final-document guard at Approve does that; this is a warning surfaced earlier, not a second gate.
+- CSS: `.portal-overflow-warning` added to `src/assets/css/style.css`.
+- Tests added to `bi-forms-library/tests/run-all.js` (per-form, 14 forms): an agreement test (same overlong value fed to both `buildStaffDocument` and `buildComposedSvg`, asserts both flag the identical field), a zero-false-positive test against ordinary baseline data, and a correction-clears-the-warning test. Two forms (`2014-01-011`, `IRD04.QF.004`) have no customer-visible char-box field at all (checkbox-only forms) — these three tests skip cleanly for those two, rather than asserting a false universal invariant (an early version of this test wrongly assumed every form has one, caught and fixed before committing — see "Actual tests run" below).
+- A new Playwright test (`e2e/tests/08-bi-form-wizard.spec.js`) drives the real wizard UI: types a 40+ character `lastName` (CCS-A-CDR-2016's field has 39 boxes), asserts the warning appears with the correct box count, asserts the input's value is never truncated, then corrects it and asserts the warning clears.
+- All verified passing before commit (see "Actual tests run" below). Pushed as `8e41878`.
+
+**Environment note for the next session**: this branch's e2e suite needs `worker/.dev.vars` (gitignored, never committed) with `PUBLIC_SITE_URL="http://127.0.0.1:8080"` and `DEV_STAFF_BYPASS_EMAIL="dev-staff@local.test"` — documented in `e2e/README.md` and written identically by `.github/workflows/e2e.yml`'s CI step. A fresh container/session has no `.dev.vars` file; create it (exact two lines above) before running `npx playwright test` locally. This is routine, not a defect — CI does the same thing on every run.
+
+### 3. Visual inspections of the 5 remaining forms (directive item 3) — DONE
+
+All 5 confidential originals were still present in this session's scratch directory (`FIS_BI_ORIGINALS_DIR`, same path as the prior session). Each form's staff document and customer-fields document were generated from sample data, rasterized to PNG at 200 DPI, and visually compared side-by-side against the real original:
+
+| Form ID | Finding |
+|---|---|
+| `CCS-A-NTSP-2016` | Clean. All char-box fields (name, DOB, address, passport, contact) aligned precisely; gender checkbox (F) correctly marked; staff-only "Certification and Clearance Section" window and the "Claim Stub" both correctly rendered blank (no customer data placed there); zero overflow. |
+| `2021-03-001` | Clean. "SPECIAL VISA FOR EMPLOYMENT GENERATION" and "Married" checkboxes correctly marked; all name/address/date char-boxes aligned; spouse name/address correctly populated only because marital status triggered it; zero overflow. |
+| `ADM05.QF.001` | Clean. "Female" checkbox correctly marked; "Date Requested" and "Date of Birth" comb-boxes aligned with no drift; staff-only "Verified By / Date-Time / Remarks / Document(s) to be CTC / Copies to be CTC" fields and the "Claim Stub" correctly separate from the customer-fields document (already proven by the existing automated per-field ink-check test for this form); zero overflow. |
+| `ARD04.QF.003` | Clean. "Emigration Clearance Certificate", "Married", "Female" checkboxes correctly marked; mobile-number "+63" static prefix correctly preserved ahead of the filled number; SSRN/Derogatory Record box (staff-only) correctly separate from customer view; all three date-of-birth/admission/departure comb-box groups aligned; zero overflow. |
+| `IRD04.QF.004` | Clean. "Personal", "Regular", "Two (2) months", "M", "Married" checkboxes all correctly marked; multi-line "reason for extension" free text correctly wrapped across its allotted lines; "Name and signature of evaluator" (staff-only) correctly left for staff; all comb-box date groups aligned; zero overflow. |
+
+**No confirmed defects found in any of the 5.** Per the governing directive, none of these is marked "owner-approved" — this is an engineering inspection only; owner sign-off is a separate, explicit step not taken by this session. No mapping or configuration changes were made to any of the 5 forms (none were needed).
+
+### 4. Staging environment plan (directive item 4) — DONE, plan only
+
+See **`docs/FIS_STAGING_PLAN.md`** (new, committed this session) for the full proposed architecture: a separate Cloudflare Pages project (frontend, building only from this branch) plus a second Wrangler `[env.staging]` environment on the existing `fis-backend` Worker code (API), both on default `*.pages.dev`/`*.workers.dev` subdomains — no DNS changes, no new paid infrastructure, isolated D1 + R2, Cloudflare Access gating the *entire* staging surface (reusing the existing Zero Trust team), and email reliably suppressed by simply never setting `RESEND_API_KEY` on the staging Worker (confirmed this session that the existing code already no-ops safely without it). **Nothing has been deployed or created in Cloudflare.** The plan ends with an explicit numbered list of approval decisions the owner needs to make before anything is provisioned.
+
+### 5. This handover (directive item 5) — DONE (this update)
+
+### 6/7/8. Usage-limit discipline, deployment constraints, final report
+
+No merge to `main`, no deployment, no production Cloudflare resource touched, no catalogue/price/payment-method changes, no re-litigation of already-verified form mappings. See the "Final report" at the very end of this document for the exact 8-point summary the directive requires.
 
 ## This session's unlock: real original PDFs are now available locally
 
@@ -41,13 +89,13 @@ Classification key (per the governing directive — never auto-assigned to "Owne
 | `CCS-A-CDR-2016` | `svc-cdr`, document_automated | Real original used; engine suite passes (metadata/leak/boundary audits); has a committed golden reference, matched pixel-for-pixel | Previously inspected (prior sessions); baseline in this session's full regression re-confirmed clean | **Engineering verified** |
 | `2014-13-002` | `svc-bi-clearance`, document_automated | Real original used; golden reference matched pixel-for-pixel | Previously inspected | **Engineering verified** |
 | `2014-13-006` | `svc-travel-records`, document_automated | Real original used; golden reference matched; staff-only Court/Legal leak-isolation test passes | Previously inspected | **Engineering verified** |
-| `CCS-A-NTSP-2016` | `svc-ntsp`, document_automated | Real original used; engine suite passes (no golden reference committed yet — see below) | Not visually inspected this session (budget triage; lower risk, single-page, simple layout) | **Engineering verified** (pending golden reference / visual spot-check) |
+| `CCS-A-NTSP-2016` | `svc-ntsp`, document_automated | Real original used; engine suite passes (no golden reference committed yet — see below) | **Visually inspected this Final Development Session** — clean, no defects (see section 3 above) | **Engineering verified** |
 | `2014-08-015` | `svc-acr-icard-cert`, document_automated | Real original used; engine suite passes; has a golden reference, matched | Previously inspected | **Engineering verified** |
-| `2021-03-001` | `svc-travel-pass`, document_automated | Real original used; engine suite passes (no golden reference committed yet); also covered end-to-end by Playwright journey 10 (confidential-gated, now unblockable with the downloaded original) | Not visually inspected this session | **Engineering verified** |
+| `2021-03-001` | `svc-travel-pass`, document_automated | Real original used; engine suite passes (no golden reference committed yet); also covered end-to-end by Playwright journey 10 (confidential-gated, now unblockable with the downloaded original) | **Visually inspected this Final Development Session** — clean, no defects (see section 3 above) | **Engineering verified** |
 | `2014-01-011` | `svc-ext-reconsideration`, document_automated | Real original used; golden reference matched | Previously inspected | **Engineering verified** |
-| `ADM05.QF.001` | `svc-ctc-records`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | Not visually inspected this session | **Engineering verified** |
-| `ARD04.QF.003` | `svc-ecc-application`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | Not visually inspected this session | **Engineering verified** |
-| `IRD04.QF.004` | `svc-cgaf-tvv-extension`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | Not visually inspected this session | **Engineering verified** |
+| `ADM05.QF.001` | `svc-ctc-records`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | **Visually inspected this Final Development Session** — clean, no defects (see section 3 above) | **Engineering verified** |
+| `ARD04.QF.003` | `svc-ecc-application`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | **Visually inspected this Final Development Session** — clean, no defects (see section 3 above) | **Engineering verified** |
+| `IRD04.QF.004` | `svc-cgaf-tvv-extension`, document_automated | Real original used; engine suite passes (no golden reference committed yet) | **Visually inspected this Final Development Session** — clean, no defects (see section 3 above) | **Engineering verified** |
 | `BOC04.QF.001` | `svc-cgaf-immigrant-visa`, document_manual | Real original used; engine suite passes (no golden reference committed yet); CLI generation: 0 overflow issues, all audits PASSED | **Yes, this session** — both pages rendered to PNG and inspected; page 2's institutional section (signatures, "DO NOT FILL OUT THIS PORTION", ACR I-Card release conditions) correctly blank/staff-only, no misplacement | **Engineering verified** |
 | `BOC04.QF.002` | `svc-cgaf-work-visa`, document_manual | Real original used; engine suite passes (no golden reference committed yet); CLI generation: 0 overflow issues, all audits PASSED | Generated and rendered this session (both pages); not line-by-line re-described here, same clean result as BOC04.QF.001 | **Engineering verified** |
 | `CGAF-002-Rev3` | none (no catalogue row) | Real original used; engine suite passes (no golden reference committed yet); CLI generation: 0 overflow issues, all audits PASSED | Generated and rendered this session (both pages) | **Engineering verified** (and separately: no catalogue offering exists — see prior session's owner-approval item, unchanged) |
@@ -64,6 +112,11 @@ Classification key (per the governing directive — never auto-assigned to "Owne
 5. **CLI-level generation + overflow/leak/boundary audits** (`bi-forms-library/engine/cli.js generate`) run directly against real originals for `CGAF-003-Rev 2` (baseline + stress), `BOC04.QF.001`, `BOC04.QF.002`, `CGAF-002-Rev3`: all PASSED (0 overflow on baseline data; stress run correctly caught 3 deliberately-induced overflows).
 6. **Full local Playwright suite**: run once as a checkpoint earlier in this multi-session effort (prior commit `2142967`) — 22 passed / 2 skipped / 0 failed. Not re-run in full after this session's changes (per the explicit "avoid repeated full-suite runs" instruction); the overflow-guard fix and journey 13 were verified with targeted runs instead, and the full worker vitest suite (which exercises every route-level precondition the fix touches) was re-run clean.
 
+### Final Development Session's own test runs (this session, on top of the above)
+
+7. **`bi-forms-library/tests/run-all.js`, full run** with `FIS_BI_ORIGINALS_DIR` set (all 14 forms, including the 3 new overflow tests added per form): first run caught a genuine test-fixture bug (2 forms with no customer-visible char-box field broke an assumption in the new tests' own setup, not a production-code defect) — **4 failed**, root-caused and fixed (tests now skip cleanly for those 2 forms), then **confirmed via a targeted rerun of just the overflow tests** (`--test-name-pattern="overflow"`, not the full suite, per the "don't rerun unnecessarily" instruction): **64 passed / 0 failed / 6 skipped** (6 = 2 forms × 3 tests, correctly skipped for having no char-box field).
+8. **New Playwright test** (`e2e/tests/08-bi-form-wizard.spec.js`, "live-preview overflow warning"): run standalone against a real `wrangler dev` process: **1 passed**. (Required creating the gitignored, undocumented-as-missing `worker/.dev.vars` first — see the environment note in the "Final Development Session" section above; this is routine local/CI setup, not a code change.)
+
 **Nothing in this document claims a skipped or unexecuted test as passed.** Where "no golden reference" skips remain, they are reported as skipped, not passed.
 
 ## Outstanding defects (ranked by severity)
@@ -73,9 +126,12 @@ Classification key (per the governing directive — never auto-assigned to "Owne
 1. **[CRITICAL — data integrity, now fixed] `approveBiForm` silently truncated overflowing character-box fields on the real, released document, with zero signal to staff.**
    See commit `756296e` for full detail. The shared engine (`pdf-fields.js`'s `populateCharField`) always correctly detected overflow and populated an `overflowReport`; `staffBiForms.js`'s `approveBiForm()` discarded it. Now blocks approval (422, naming every overflowing field) before anything is written to R2/D1. Verified end-to-end against the real `CGAF-003-Rev 2` original.
 
+### FIXED in the Final Development Session (this session)
+
+2. **[Was LOW severity — UX only, now FIXED] The live, in-progress Client Portal preview had no overflow DETECTION of its own.** See commit `8e41878` and the "Final Development Session" section above for full detail. `svg-compose.js` now reports the same `value.length > nBoxes` condition the final-document guard already enforces, and the wizard shows a non-blocking, localized, per-field warning. Verified to agree with the final-document guard by direct automated test (same overlong input, both pipelines flag the same field) across all 14 forms (12 with a customer-visible char-box field; 2 checkbox-only forms correctly have nothing to flag).
+
 ### Residual gaps (not fixed this session — documented, not silently ignored)
 
-2. **[LOW severity — UX only] The live, in-progress Client Portal preview (`svg-compose.js`, used while the customer is still typing, and for the WASM-based final customer preview compositing) has no overflow DETECTION of its own** — it truncates silently at the character level exactly like the pdf-lib path used to. Because `approveBiForm` now blocks before the final customer-preview composition step is ever reached when overflow exists, **the released/official customer preview can no longer be wrong** — this gap only affects the transient, pre-submission live preview, which the customer can still correct before submitting regardless. Recommended follow-up: add the same `value.length > nBoxes` check `svg-compose.js`'s char-box renderer already has the raw data for, and surface it as an inline wizard warning. Not attempted this session (Priority 3/7 territory, lower urgency than the Priority 1 fix already made).
 3. **[LOW severity — traceability, not a correctness bug] No per-document mapping/questionnaire version or answers-snapshot is stored alongside each generated `documents` row.** A generated PDF always correctly reflects whatever `customer_answers_json`/`staff_answers_json` existed at the moment of generation (verified — each Approve/Regenerate reads current data fresh and inserts a new, never-overwritten `documents` row with its own timestamp), but reconstructing exactly what values produced a specific historical document requires cross-referencing `bi_form_submissions` status-history timestamps rather than reading it directly off the document row. Not implemented this session: it would need a schema migration and is a traceability/auditability enhancement, not an active correctness defect, so it was deliberately deprioritized below the Priority 1 fix per the explicit instruction to prioritize correctness over new infrastructure. Flagged here rather than silently skipped.
 4. **[Pre-existing, unrelated to form accuracy] `backgrounds/<formId>.png` objects do not exist in the real production R2 bucket** for any of the 14 forms (confirmed by a direct failed fetch this session). This session generated all 14 locally (see above) for local testing only, per the generation script's own explicit "local-only, not applied without separate authorization" policy. Uploading them to the real bucket — required before the live preview feature can work in production — needs separate, explicit authorization and is a deployment action, out of scope for this session.
 
@@ -85,8 +141,23 @@ Reviewed, not re-built: `worker/test/biForms-document-access.test.js` (8 tests) 
 
 ## Exact next actions for resuming this session
 
-1. If continuing real-PDF verification: re-export `FIS_BI_ORIGINALS_DIR`/`FIS_BI_BACKGROUNDS_DIR` (see above) if the scratch directories survived, or request a fresh Cloudflare API token from the user if not.
-2. Visually inspect the remaining forms not yet spot-checked this session: `CCS-A-NTSP-2016`, `2021-03-001`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004` (single-page, lower risk than the multi-page family already inspected, but not yet confirmed). Use `bi-forms-library/engine/cli.js generate <formId> --original <path> --out <dir>` then `pdftoppm -png -r 120 <pdf> <prefix>`.
-3. Decide (with the form owner, or independently if authorized) whether to commit any of the above as official golden-reference images under `bi-forms-library/tests/golden/<formId>/` — only after explicit review, never auto-committed.
-4. If pursuing the residual gaps above: implement live-preview overflow indication (gap #2) before the version-snapshot traceability enhancement (gap #3), since #2 is customer-facing UX and #3 is purely internal.
-5. Decide on the two carried-over owner-approval items from the prior session (CGAF-002-Rev3's catalogue status; whether to wire up the unused `sendInstantServicesConfirmation` email) — unchanged, not re-litigated this session.
+All 4 engineering-priority items from the prior handover (real-PDF verification, live-preview overflow fix, visual inspections, golden-reference decision groundwork) are now either done or reduced to owner decisions, not engineering work. What's left:
+
+1. **Owner decisions needed before any further engineering work** (nothing below is blocked on usage/time, all are blocked on the owner):
+   - Review and approve (or redirect) `docs/FIS_STAGING_PLAN.md` — see its own numbered approval-steps section. Nothing in Cloudflare has been created yet.
+   - Decide whether to commit any of this session's (or prior sessions') rendered sample PDFs as official golden-reference images under `bi-forms-library/tests/golden/<formId>/` for the 9 forms still missing one (`CCS-A-NTSP-2016`, `2021-03-001`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004`, `BOC04.QF.001`, `BOC04.QF.002`, `CGAF-002-Rev3`, `CGAF-003-Rev 2`) — only after explicit review, never auto-committed.
+   - Decide on the two carried-over owner-approval items from a prior session (CGAF-002-Rev3's catalogue status; whether to wire up the unused `sendInstantServicesConfirmation` email) — unchanged, not re-litigated this session.
+   - Sign off (or not) on owner acceptance for any form currently "Engineering verified" — no form in this document has been marked "Owner approved" by any session; that step is exclusively the owner's.
+2. **If/when staging is approved**: follow `docs/FIS_STAGING_PLAN.md`'s exact resource list and command shapes (new Cloudflare Pages project, new D1 database + migrations, new R2 bucket(s), new Cloudflare Access application, `wrangler deploy --env staging`).
+3. **Residual gap #3** (per-document version/answers-snapshot traceability, see above) remains open and low-priority — a schema migration, not a correctness fix. Pick it up only if there's no owner-decision work pending and usage budget allows a full engineering cycle (don't start it with limited remaining budget, per the directive's own priority order).
+4. **To resume real-PDF work in a future session** (visual spot-checks, golden-reference capture, etc.): re-export `FIS_BI_ORIGINALS_DIR` (see the top of this document) if the scratch directories survived this container's lifetime, or request a fresh Cloudflare API token from the user if not.
+
+## Final report (per the "Final Development Session" directive's required 8-point summary)
+
+1. **Exact latest commit pushed to GitHub**: `8e41878` ("Warn on live-preview field overflow instead of silently truncating"), branch `claude/fis-website-planning-r52sii`. This handover update and `docs/FIS_STAGING_PLAN.md` are committed in a follow-up commit at the very end of this session (see this document's own top commit reference once that lands).
+2. **Working tree**: clean as of the commit above, except this handover update and the new staging-plan document, both committed together immediately after this document was finalized.
+3. **Outstanding issues fixed this session**: the live-preview silent-truncation gap (residual gap #2 from the prior handover) — now detects overflow, warns the customer in all 6 languages, never blocks, and is verified to agree with the final-document guard.
+4. **Forms visually verified this session**: `CCS-A-NTSP-2016`, `2021-03-001`, `ADM05.QF.001`, `ARD04.QF.003`, `IRD04.QF.004` — all 5, all clean, no defects found (none marked owner-approved).
+5. **Tests passed / skipped**: see "Actual tests run" above in full; headline numbers — engine suite 64/64 new overflow tests passing (6 correctly skipped for the 2 checkbox-only forms), new Playwright overflow-warning test passing, full worker vitest suite previously clean and not touched by this session's changes in a way that would invalidate it (no worker route logic changed beyond threading one new JSON field through).
+6. **Staging readiness**: a complete architecture plan exists (`docs/FIS_STAGING_PLAN.md`) but **nothing has been deployed**. Approval needed on: the overall Pages+Workers-environment approach, the BI-forms-library bucket-sharing decision, and explicit authorization to create each new Cloudflare resource listed in the plan.
+7. **Exact next action on resume**: read this document's "Exact next actions" section above — in short, the engineering queue is empty pending owner decisions; the next session should start by asking the owner which of the decisions in that section to act on, rather than starting new engineering work unprompted.
