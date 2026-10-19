@@ -2,9 +2,59 @@
 
 ## Latest completed commit
 
-See the "Staging Environment Built" section immediately below for this session's own commit, pushed at session end. Prior to that: `aa3b6a9` (branch `claude/fis-website-planning-r52sii`) — "Final Development Session: visual inspections, staging plan, handover".
+See "Fifth Production Release, Guest-Checkout Email Fix & Live-Preview Crash Fix" immediately below for this session's own commits (the newest work). Prior to that: `aa3b6a9` → `8e41878` (live-preview overflow warning fix) → `2713e59` (prior handover) → `756296e` (final-document overflow guard).
 
-Commit history this branch, most recent first (newest last-session commit shown; this session's own commit follows it): `aa3b6a9` → `8e41878` (live-preview overflow warning fix) → `2713e59` (prior handover) → `756296e` (final-document overflow guard).
+**Development branch** (`claude/fis-website-planning-r52sii`) **HEAD**: `593c4ec` — "Fix live-preview Worker crash on multi-page forms: lower background render DPI 300 -> 144". Working tree clean, pushed.
+
+**Production**: `main` branch HEAD `8050afd` (docs-only commit, fast-forwarded — no functional change to the published site over `98609c5`). Live Worker version **`dbe186df-7ed4-46b9-a42b-93692d844397`**, deployed from commit `98609c5` (the fifth production release — see `docs/FIS_PRODUCTION_INTEGRATION_AND_RELEASE.md` §14 for its full execution record). **Production does NOT yet have this session's DPI fix (`593c4ec`)** — that commit exists only on the dev branch, not deployed, per explicit instruction to pause before any further production action.
+
+## Fifth Production Release, Guest-Checkout Email Fix & Live-Preview Crash Fix (this session)
+
+Covers, in chronological order: (a) execution of the fifth production release (migrations `0017`–`0022`, Worker deploy, site publish — already fully documented in `docs/FIS_PRODUCTION_INTEGRATION_AND_RELEASE.md` §14, not repeated here), and (b) investigating and fixing the owner-reported "Missing official BI form preview" issue on the newly-released Smart Application System, which is this section's main subject. Development paused here for a scheduled usage-allowance reset (resuming Saturday 24 October) — **nothing in part (b) has been deployed or uploaded to any production resource.**
+
+### Confirmed causes (vs. hypotheses) of the broken live preview
+
+1. **CONFIRMED — missing R2 objects.** All 14 `backgrounds/<formId>.png` objects are absent from the production `fis-bi-forms-library` R2 bucket. Verified directly this session via 14 individual `wrangler r2 object get --remote` existence checks (not inferred): every one returned "not found." This matches the owner-visible symptom exactly — `worker/src/lib/biFormRaster.js` throws `HttpError(501, ...)` when a background is missing, `biFormsCustomer.js`'s `/preview-image` route catches it and returns `{available:false}`, and `portal-bi-form.js` renders "A live preview isn't available for this form yet." This is a content/ops gap, not a code defect — the degrade-gracefully behavior is working exactly as designed.
+2. **CONFIRMED — a second, more serious problem, found only by testing with the real asset instead of the test suite's synthetic 1x1 PNG stand-in.** Uploading a real background is necessary but was **not sufficient**: the 4 two-page forms' backgrounds (`BOC04.QF.001`, `BOC04.QF.002`, `CGAF-002-Rev3`, `CGAF-003-Rev 2`), rendered at the original 300 DPI (~58MB raw pixel data per form), caused the Worker to **lose its connection entirely** during live-preview composition (SVG embed + resvg-wasm render) — directly reproduced twice, for both `BOC04.QF.001` and `BOC04.QF.002` (the largest of the four), against a real local Workers runtime (`wrangler dev --local`, not a mock). The existing `try/catch` around this call in `biFormsCustomer.js` never saw the failure — this is a connection-level/isolate-level abort, not a catchable JS exception. Single-page forms are confirmed unaffected (`CCS-A-CDR-2016` rendered correctly at the original 300 DPI).
+3. **Hypothesis, not directly instrumented**: the specific failure mechanism is believed to be the Workers isolate's memory ceiling (Cloudflare Workers limit this at 128MB; decoding + compositing + re-encoding a ~58MB raw two-page raster inside resvg-wasm plausibly exceeds it with V8/wasm overhead). This is the most consistent explanation and guided the fix, but **no explicit "out of memory" error was ever captured** — the only observed symptom was an abrupt, uncatchable "Network connection lost." Treat the mechanism as a strong inference, not a confirmed root cause, if this resurfaces differently in the future.
+4. `CGAF-002-Rev3` and `CGAF-003-Rev 2` (the other two 2-page forms, same page-count/size class as the two tested) were **not individually crash-tested live** — only confirmed to regenerate cleanly at the new DPI through the same consistency check the tested forms passed. High confidence they behave the same as `BOC04.QF.001`/`BOC04.QF.002`, but this is inferred from size/structure similarity, not independently reproduced. Worth a quick direct check before activating either form's catalogue offering.
+
+### Exact changes implemented (commit `593c4ec`, dev branch only)
+
+- `bi-forms-library/engine/lib/svg-compose.js` and `bi-forms-library/engine/scripts/generate-blank-backgrounds.js`: shared `DPI` constant lowered from `300` to `144` (exactly 2x the PDF point base — chosen empirically: it was the only tested value that regenerates all 14 forms' backgrounds without tripping the existing `pureDims`/`rasterDims` geometry-consistency safety check; 150 DPI's rounding broke that check for one form, `2014-08-015`). `svg-compose.js` now also exports its `SCALE` constant.
+- `bi-forms-library/tests/run-all.js`: fixed a latent, now-exposed test bug — one test independently re-hardcoded `SCALE = 300/72` instead of importing the real constant from `svg-compose.js`, so it silently drifted out of sync the moment DPI changed (this was the one test failure found mid-session; root-caused as a test-only staleness bug, not a real defect, and fixed by importing the shared constant instead of re-declaring it, so this specific drift can't recur).
+- **Not committed, not uploaded anywhere**: the actual regenerated background PNGs. All 14 were regenerated locally at the new 144 DPI and are cached, confidential, outside the repository at:
+  ```
+  /tmp/claude-0/-home-user-foreign-immigration-website/9b6bb15b-a588-5829-bac7-ca81faaddb89/scratchpad/fis-bi-backgrounds-144dpi/   (14 <formId>.png files, ready to upload)
+  ```
+  (The original 300 DPI set generated in a prior session is still at the sibling `fis-bi-backgrounds/` directory — superseded, do not upload those.)
+
+### Test results
+
+- `bi-forms-library/tests/run-all.js` (engine's own regression suite, real confidential originals, full run after the fix): **274 tests, 246 pass, 0 fail, 28 skipped** (pre-existing — no golden reference committed yet for several forms; unrelated to this change, same skips as before).
+- `worker/` vitest suite (full): **342 passed, 0 failed, 2 skipped, 4 todo**.
+- Direct browser verification (ad hoc Playwright, run locally, not committed — ephemeral by design, matching the confidential-asset convention): real content (not the synthetic 1x1 stand-in) confirmed rendering correctly for `CCS-A-CDR-2016` (single-page) and `BOC04.QF.001`/`BOC04.QF.002` (both two-page, the largest), on both desktop and mobile viewports, including the open/close toggle and the enlarge control, with no crash at the new DPI. Screenshots were visually reviewed (official form layout intact, correctly blank, no sensitive content, no misalignment).
+
+### Remaining production work (none of it done — owner approval required first)
+
+1. Upload all 14 regenerated 144 DPI backgrounds (path above) to the production `fis-bi-forms-library` R2 bucket at `backgrounds/<formId>.png`, e.g. `wrangler r2 object put fis-bi-forms-library/backgrounds/CCS-A-CDR-2016.png --file=... --remote`.
+2. Deploy the dev branch's current Worker code (commit `593c4ec`, includes the DPI fix) to production (`wrangler deploy`, bare, no `--env`) — production is still running the pre-fix Worker (`dbe186df...`, from `98609c5`).
+3. No D1 migration, no site/`main` change, no catalogue/pricing change is needed for this fix — steps 1–2 alone restore the live-preview feature.
+4. Recommended before activating either `CGAF-002-Rev3` or `CGAF-003-Rev 2` specifically (see confirmed-causes point 4 above): one direct live-preview check against real content for each, since only the other two 2-page forms were actually crash-tested.
+
+### Outstanding defects, ranked
+
+1. **[Was CRITICAL, now fixed — pending deployment] Live-preview Worker crash on 2-page forms at the original 300 DPI.** Fixed in commit `593c4ec`; not yet deployed (see "Remaining production work" above).
+2. **[Operational, not a code defect] Missing R2 background objects in production.** Root cause of the original symptom; fix is the upload in "Remaining production work" item 1, pending owner approval.
+3. **[LOW, unconfirmed assumption carried forward] `CGAF-002-Rev3`/`CGAF-003-Rev 2` 2-page live-preview behavior inferred, not directly tested** — see confirmed-causes point 4. Recommend a quick direct check before either is activated, not before the general fix is deployed.
+4. All previously-recorded residual gaps (per-document version/answers-snapshot traceability; the staging DNS CNAME; golden-reference sign-off decisions) are unchanged by this session — see their original entries further down this document, not repeated here.
+
+### Exact next steps for Saturday (24 October) — do not repeat the investigation above
+
+1. Confirm with the owner: approve uploading the 14 cached 144 DPI backgrounds (path above) to production R2, and approve deploying dev branch commit `593c4ec` to the production Worker.
+2. If approved: backup, upload the 14 backgrounds, `wrangler deploy` (no `--env`), then smoke-test exactly the live-preview feature end-to-end against the real production Worker for at least one single-page and one two-page form (a real click-through, not just an HTTP status check) — this is the one piece of direct production verification that hasn't happened yet for the actual fix.
+3. Per "Remaining production work" item 4: do the one quick direct check on `CGAF-002-Rev3`/`CGAF-003-Rev 2` if either is being considered for catalogue activation.
+4. Resume the owner's stated next objective from before this fix: configuring and activating real services one at a time through the published Staff Portal.
 
 ## Staging Environment Built (this session)
 
