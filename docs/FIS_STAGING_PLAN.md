@@ -67,7 +67,7 @@ production already does.
 | Worker environment | `fis-backend-staging` (`worker/wrangler.toml`'s `[env.staging]`) | Same code as production, isolated bindings above, `workers_dev = false` (no public `*.workers.dev` URL at all). |
 | Workers Custom Domain | `staging-api.foreignimmigration.ph` | Declared in `wrangler.toml` (`custom_domain = true`), managed declaratively by Wrangler -- DNS + TLS cert auto-provisioned by the Workers Custom Domains API, no raw DNS permission needed. **Live and verified.** |
 | Zero Trust Identity Provider | "One-time PIN" (`onetimepin` type) | No external OAuth app needed -- Cloudflare's own built-in email-code login. Account had zero IdPs before this session. |
-| Access Application 1 | "FIS Staging API (owner-only)" | Covers `staging-api.foreignimmigration.ph` in full. Policy: single email `Foreignimmigrationservices.ph@gmail.com` (the Cloudflare account's own owner identity, read directly from the Cloudflare account itself -- never a personal email hardcoded into the repo). **Verified live**: an unauthenticated request gets redirected (302) to Access's login page, never reaches the Worker. |
+| Access Application 1 | "FIS Staging API Staff Portal (owner-only)" | Covers `staging-api.foreignimmigration.ph/staff/*` **only** -- corrected in a follow-up session after it was first scoped to the whole domain, which broke the public catalogue (see section 9). Matches production's own real "FIS Staff Portal" Access application exactly (`api.foreignimmigration.ph/staff/*`, discovered to genuinely exist during that same follow-up session). Policy: single email `Foreignimmigrationservices.ph@gmail.com` (the Cloudflare account's own owner identity, read directly from the Cloudflare account itself -- never a personal email hardcoded into the repo). **Verified live**: an unauthenticated request to `/staff/*` still redirects (302) to Access's login page; every other route (catalogue, guest checkout, etc.) now returns real JSON with no Access interception, exactly like production. |
 | Access Application 2 | "FIS Staging Frontend (owner-only)" | Covers `staging.foreignimmigration.ph`. Same policy. |
 | Access Application 3 | "FIS Staging Pages default domain (owner-only)" | Covers `fis-staging.pages.dev` and `*.fis-staging.pages.dev` (every per-deployment preview alias). Same policy. **Finding**: Access does not reliably gate Cloudflare's own shared `pages.dev` domain the way it gates a zone you control -- as a backstop, `functions/_middleware.js` (new, committed) refuses any request whose Host header isn't exactly `staging.foreignimmigration.ph`, so the raw Pages domain serves nothing useful even if Access's gate on it is ever bypassed. |
 | Cloudflare Pages project | `fis-staging` | Deployed via Direct Upload (`wrangler pages deploy`), building from a local `npm run build:staging` (new script, see below) -- **not** Git-integration-based, since that requires an interactive GitHub App authorization step neither available token could complete non-interactively. Production branch set to `claude/fis-website-planning-r52sii`. |
@@ -200,14 +200,85 @@ CLOUDFLARE_API_TOKEN=<token with Pages edit> CLOUDFLARE_ACCOUNT_ID=1c557802167a5
 
 1. **The one DNS record** (section 4) -- needed to finish wiring up the
    friendly custom domain for the frontend.
-2. **Production's own Access Application status** (section 1) is worth
-   the owner independently confirming in the Cloudflare dashboard --this
-   session found no evidence one currently exists, which is outside this
-   session's authorization to investigate further or fix.
+2. ~~Production's own Access Application status~~ -- **resolved in the
+   follow-up session (section 9)**: it does exist, correctly scoped to
+   `/staff/*`. A prior session's API token simply lacked the read
+   permission to see it; no action needed.
 3. **Workers AI is account-level**, not isolated between staging and
    production (section elsewhere unchanged from the original proposal).
 4. **The Approve/PDF-generation step** should be spot-checked once by the
    owner through the real UI once DNS is live (section 6).
+
+## 9. Fixed in a follow-up session: public catalogue returned Access's login page instead of JSON
+
+**Reported symptom**: once DNS was live and the owner reached
+`https://staging.foreignimmigration.ph/instant-services/`, the page
+rendered but the catalogue showed "We couldn't load the catalogue right
+now."
+
+**Root cause, confirmed by direct network evidence** (not assumed):
+`curl https://staging-api.foreignimmigration.ph/api/instant-services/catalogue`
+returned an HTTP 302 to Cloudflare Access's own login page
+(`text/html`), not JSON -- this public, unauthenticated, customer-facing
+endpoint was being intercepted by Access before it ever reached the
+Worker. The frontend's `.catch()` in
+`src/assets/js/instant-services-catalogue.js` (its `resp.json()` throws a
+`SyntaxError` parsing the HTML redirect body) is what produced the
+generic error message -- confirmed by reading that exact code path, not
+guessed.
+
+**Why**: the staging API's Access Application (section 3, Application 1)
+was originally scoped to the *entire* `staging-api.foreignimmigration.ph`
+domain, not just `/staff/*` -- unlike production, which (contrary to what
+an earlier session's handover recorded) **does** have a real, live Access
+Application, discovered this session by querying the Access API with a
+token that had the right read permission: `"FIS Staff Portal"`, scoped
+to exactly `api.foreignimmigration.ph/staff/*`. Production's public,
+customer-facing routes (catalogue, guest checkout, questionnaire,
+payment) have never been behind Access; only `/staff/*` is.
+
+**Fix**: narrowed the staging Access Application's scope from the whole
+domain to `staging-api.foreignimmigration.ph/staff/*`, matching
+production's own pattern exactly (see the `wrangler.toml` comment update
+alongside this entry). The application's AUD tag was preserved
+unchanged, so no Worker redeploy was needed -- `CF_ACCESS_AUD` in
+`[env.staging.vars]` already matched. No code was changed; this was a
+Cloudflare Access configuration correction only.
+
+**Also found and fixed while investigating**: twelve leftover, fictional
+`checkout_services` rows from this session's own earlier automated
+acceptance-testing runs (`service_slug LIKE 'staging-accept-%'`) were
+still marked `active = 1`, meaning the catalogue -- once reachable --
+would have shown a dozen duplicate "Staging Acceptance Test Service"
+cards instead of being properly empty. Deactivated (`active = 0`, not
+deleted, in case the owner wants to inspect them later) via a single D1
+`UPDATE`, consistent with "offerings remain inactive unless a clearly
+isolated fictional test is required." The staging catalogue now correctly
+returns `{"services": [], "lang": "en"}` -- empty, not an error, and the
+frontend's own existing "No documents or services are available right
+now" copy (not the error path) is what renders for this state.
+
+**Verified** (via direct HTTPS requests to the real deployed
+`staging-api.foreignimmigration.ph` -- not a local Worker):
+- `GET /api/instant-services/catalogue` → `200`, `content-type:
+  application/json`, body `{"services": [], "lang": "en"}`.
+- `OPTIONS /api/instant-services/catalogue` with
+  `Origin: https://staging.foreignimmigration.ph` (the real CORS
+  preflight the browser sends) → `200`, correct
+  `access-control-allow-origin`/`-credentials`/`-methods` headers, no
+  Access interception.
+- `GET /staff/` (unauthenticated) → still `302` to Access's login page --
+  confirms `/staff/*` remains fully protected; nothing was weakened.
+- Production's own route (`api.foreignimmigration.ph/*` → `fis-backend`)
+  and D1 database re-confirmed unchanged via the Cloudflare API
+  immediately after this fix.
+
+**Not independently re-verified through an actual rendered Chrome
+session** (no access to the owner's authenticated browser or their
+one-time-PIN inbox) -- the owner should simply reload the
+`/instant-services/` page; no re-login is required, since the fix only
+widens what was already Access-protected back to the correct, narrower
+scope.
 
 Nothing here authorizes production deployment. Merging to `main`,
 deploying to `fis-backend` (the production Worker), or touching the

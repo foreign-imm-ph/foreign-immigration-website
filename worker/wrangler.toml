@@ -162,7 +162,15 @@ STAFF_NOTIFICATION_EMAIL = "info@foreignimmigration.ph"
 #
 # A dedicated staging Cloudflare Access application (self-hosted, owner-
 # email-only via a One-Time-PIN identity provider -- no external OAuth
-# needed) protects staging-api.foreignimmigration.ph. Same Zero Trust team
+# needed) protects staging-api.foreignimmigration.ph/staff/* ONLY -- same
+# scope as production's own real "FIS Staff Portal" Access application
+# (api.foreignimmigration.ph/staff/*, discovered via the Access API during
+# this corrective session; it does exist, contrary to an earlier session's
+# reading). An initial whole-domain scope briefly broke the public
+# customer-facing catalogue endpoint (Access returned its own HTML login
+# redirect instead of JSON) -- narrowed to /staff/* to match production
+# exactly, since every non-staff route here is meant to behave like
+# production: publicly reachable, no Access prompt. Same Zero Trust team
 # as production (CF_ACCESS_TEAM_DOMAIN), but its OWN, separate Access
 # application and AUD tag -- production's existing AUD (see the default
 # [vars] block above) is never reused or modified.
