@@ -46,6 +46,7 @@ import {
 import {
   listOrders as listCheckoutOrders,
   viewOrder as viewCheckoutOrder,
+  resendOrderVerification,
   verifyOrderPayment,
   rejectOrderPayment,
   viewOrderPaymentProof,
@@ -251,7 +252,9 @@ async function dispatch(request, env, url) {
   // same pattern as staffBiForms.js above.
   if (path === "/instant-services/orders/" && method === "GET") return listCheckoutOrders(env, staff, url);
   const orderMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/?$/);
-  if (orderMatch && method === "GET") return viewCheckoutOrder(env, staff, orderMatch[1]);
+  if (orderMatch && method === "GET") return viewCheckoutOrder(env, staff, orderMatch[1], url);
+  const orderResendVerifyMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/resend-verification$/);
+  if (orderResendVerifyMatch && method === "POST") return resendOrderVerification(request, env, staff, orderResendVerifyMatch[1]);
 
   const orderVerifyMatch = path.match(/^\/instant-services\/orders\/([^/]+)\/payments\/([^/]+)\/verify$/);
   if (orderVerifyMatch && method === "POST") return verifyOrderPayment(request, env, staff, orderVerifyMatch[1], orderVerifyMatch[2]);

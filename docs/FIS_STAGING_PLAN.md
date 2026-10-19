@@ -358,6 +358,97 @@ touched.
    you can see the order status update and download the generated
    document.
 
+## 11. Fixed in a follow-up session: guest checkout's "Check Your Email" never arrived
+
+**Reported symptom**: during the first real owner acceptance test (the
+CDR journey from section 10), after submitting a guest email the site
+showed "Check Your Email -- We've sent a confirmation link" but no email
+ever arrived, blocking the whole journey.
+
+**Root cause, confirmed by direct evidence, not assumed**:
+`npx wrangler secret list --env staging` returns an empty list -- **zero
+secrets are configured on the staging Worker**, so `RESEND_API_KEY` is
+definitively absent (names only were checked; no secret value was ever
+read or printed). `worker/src/lib/email.js`'s `send()` already has an
+explicit branch for exactly this: `if (!env.RESEND_API_KEY) { ...
+throw new Error("email_send_failed"); }` -- so Resend's API is never even
+called; there is no "rejected by Resend" to look up, only "never
+attempted," which is the correct, intentional behavior established
+earlier this session (`docs/FIS_STAGING_PLAN.md` section 1: "no real
+customer emails from staging... with no code change at all").
+
+**The actual defect** (this session's priority check 6): `handleBeginCheckout`
+(`worker/src/routes/checkoutPublic.js`) already catches that thrown error
+and logs it (`console.error("Instant Services verification email
+failed:", err.message)`) -- confirmed directly in the staging Worker's own
+logs during this session's verification run -- but then returns the exact
+same `{"message": "Check your email to verify your request and
+continue."}` regardless of whether the email actually sent. This is a
+deliberate, existing pattern shared by every transactional email in this
+codebase (a delivery hiccup must never block an order record that
+already exists from being usable) and is reasonable in production, where
+a real Resend key is normally configured and this only matters during a
+rare outage. In staging, where no key is ever configured by design, it
+means the message is unconditionally misleading -- there is no outage,
+delivery is permanently impossible, and the UI never says so.
+
+**Fix, smallest safe staging-only-relevant change**: added a "Resend
+verification email" action to the existing Staff Portal order-detail page
+(`worker/src/routes/staffCheckout.js`'s `viewOrder`, new
+`resendOrderVerification` function; routed in `staff.js` as
+`POST /staff/instant-services/orders/:id/resend-verification`). It issues
+a fresh, single-use token (the original can never be recovered -- only
+its SHA-256 hash is ever stored, by design) and attempts the real email
+exactly as the initial request did. **Only when that attempt fails** (the
+only way it ever fails is `!env.RESEND_API_KEY` -- Resend itself is never
+called without one) does it show the fresh verification link directly on
+this same, already Access-protected staff page -- never logged, never
+written to the audit log (only the fact that a resend happened is
+audited, never the token or link), never shown to an anonymous customer.
+In production, with a real key configured, this code path is
+unreachable and the feature degrades to an ordinary, useful
+"resend the email" button -- so nothing about this change is actually
+staging-only in a way that required an environment flag; it is purely
+reactive to whether a real send already failed, the exact same condition
+that caused the reported symptom.
+
+**Verified** (local `wrangler dev --env staging --remote`, bound to the
+real isolated staging D1 -- an isolated fictional test client/order was
+created and deleted for this verification, never the owner's own
+in-progress order):
+- `POST .../resend-verification` → `303`, redirecting with the fresh link
+  as a one-time query parameter (confirmed absent from the Worker's own
+  structured logs and never written to `audit_log`).
+- The staff order page renders "Email delivery is not configured in this
+  environment" with the clickable link.
+- `POST /api/auth/verify` with that exact fresh token → `200` -- the link
+  is genuinely live and establishes a real session, not just displayed.
+- Production's route and D1 reconfirmed unchanged via the Cloudflare API
+  immediately before and after.
+
+**Deployed** to `fis-backend-staging` via `wrangler deploy --env staging`
+(code only -- no `wrangler.toml` or secret change).
+
+**Owner action, if real staging emails are ever wanted instead of this
+fallback**: configure a real `RESEND_API_KEY` secret scoped to the
+staging environment only --
+`cd worker && npx wrangler secret put RESEND_API_KEY --env staging`
+(paste the key at the interactive prompt; it is never written to any
+file this session can read or commit). This is optional -- the fallback
+above already fully unblocks owner testing without it, and configuring
+it is a deliberate choice to start sending real emails from staging
+(still never to production customers, regardless).
+
+**What to do now**: the owner's original attempt's order record and
+client still exist (the order/draft and the submitted email were both
+saved correctly throughout -- only the notification email itself failed
+to send) -- **no need to start over**. Go to the Staff Portal's Instant
+Services Orders list, find that order (filter by status `draft`,
+or search by the email used), open it, and click **"Resend verification
+email"** -- the fresh link will appear directly on that same page since
+email still cannot be delivered in this environment. Click it to
+continue exactly where the journey left off.
+
 Nothing here authorizes production deployment. Merging to `main`,
 deploying to `fis-backend` (the production Worker), or touching the
 production R2/D1 remains a separate, explicit future approval.

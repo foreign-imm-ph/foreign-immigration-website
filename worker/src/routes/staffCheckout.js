@@ -8,8 +8,9 @@
 import { staffPage, escapeHtml } from "../lib/staffHtml.js";
 import { HttpError, streamObject, sniffContentType } from "../lib/storage.js";
 import { logAudit } from "../lib/db.js";
-import { newId } from "../lib/crypto.js";
+import { newId, newToken, sha256Hex } from "../lib/crypto.js";
 import { centavosToPhpString, phpStringToCentavos } from "../lib/money.js";
+import { sendInstantServicesVerification } from "../lib/email.js";
 import {
   getOrderById,
   listOrdersForStaff,
@@ -106,7 +107,7 @@ export async function listOrders(env, staff, url) {
   );
 }
 
-export async function viewOrder(env, staff, orderId) {
+export async function viewOrder(env, staff, orderId, url) {
   const order = await requireOrder(env, orderId);
   const service = await getServiceById(env.DB, order.service_id);
   const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(order.client_id).first();
@@ -192,6 +193,31 @@ export async function viewOrder(env, staff, orderId) {
       </div>`
     : "";
 
+  // Lets staff manually re-trigger the client's verification email (the
+  // one handleBeginCheckout already sends best-effort -- a delivery
+  // failure there never blocks the order/client record from existing,
+  // matching every other transactional email in this codebase, but also
+  // never tells the customer anything went wrong). If a real email
+  // genuinely cannot be sent (no RESEND_API_KEY configured at all --
+  // every environment without a live Resend key, never production with
+  // one), the freshly-issued verification link is shown here instead,
+  // once, as a same-page redirect result -- never logged, never stored,
+  // gated behind this already Access-protected staff page exactly like
+  // every other customer detail on it (delivery address, payment proof).
+  const resentLink = url ? url.searchParams.get("resent_link") : null;
+  const resentOk = url ? url.searchParams.get("resent") === "1" : false;
+  const resendHtml = `
+    <form method="POST" action="/staff/instant-services/orders/${order.id}/resend-verification">
+      <button type="submit" class="secondary">Resend verification email</button>
+    </form>
+    ${resentOk ? '<p class="muted">Verification email resent.</p>' : ""}
+    ${
+      resentLink
+        ? `<p><strong>Email delivery is not configured in this environment.</strong> Use this link directly (valid 15 minutes, single-use):</p>
+           <p><a href="${escapeHtml(resentLink)}">${escapeHtml(resentLink)}</a></p>`
+        : ""
+    }`;
+
   return staffPage(
     `Instant Services Order ${order.id.slice(0, 8)}`,
     `<h1>Instant Services Order</h1>
@@ -201,6 +227,7 @@ export async function viewOrder(env, staff, orderId) {
        <p><strong>Status:</strong> <span class="status">${escapeHtml(order.status)}</span></p>
        ${order.application_id ? `<p><a href="/staff/applications/${order.application_id}">View application</a></p>` : ""}
        ${order.bi_form_submission_id ? `<p><a href="/staff/bi-forms/${order.bi_form_submission_id}">View questionnaire (${escapeHtml(submission ? submission.status : "")})</a></p>` : ""}
+       ${resendHtml}
      </div>
      <div class="card"><h2>Price</h2>${priceHtml}</div>
      <div class="card"><h2>Payments</h2>${paymentRows}</div>
@@ -208,6 +235,40 @@ export async function viewOrder(env, staff, orderId) {
      <div class="card"><h2>Order history</h2>${history.map((h) => `<p class="muted">${escapeHtml(h.changed_at)} — <span class="status">${escapeHtml(h.status)}</span>${h.note ? `: ${escapeHtml(h.note)}` : ""}</p>`).join("") || '<p class="muted">No history.</p>'}</div>`,
     staff.email
   );
+}
+
+// Re-issues a fresh, single-use verification token for the order's
+// client and attempts to email it, exactly as handleBeginCheckout
+// (routes/checkoutPublic.js) does on the initial request -- the ORIGINAL
+// token can never be recovered here (only its SHA-256 hash is ever
+// stored, by design), so a genuine resend always means a new token, old
+// one left to expire unused. On a real send failure (no RESEND_API_KEY
+// configured -- the only way this ever fails, since Resend itself is
+// never even called without one), redirects back to this same page with
+// the fresh link as a one-time query parameter for viewOrder to render
+// -- never written to the audit log or any persistent record.
+export async function resendOrderVerification(request, env, staff, orderId) {
+  const order = await requireOrder(env, orderId);
+  const client = await env.DB.prepare("SELECT * FROM clients WHERE id = ?").bind(order.client_id).first();
+  if (!client) throw new HttpError(404, "Not found");
+
+  const rawToken = newToken();
+  const tokenHash = await sha256Hex(rawToken);
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  await env.DB.prepare("INSERT INTO auth_tokens (id, client_id, token_hash, expires_at) VALUES (?, ?, ?, ?)")
+    .bind(newId(), client.id, tokenHash, expiresAt)
+    .run();
+
+  const verifyUrl = `${env.PUBLIC_SITE_URL}/instant-services/verify/?token=${rawToken}&order=${order.id}`;
+  await logAudit(env.DB, { actorType: "staff", actorIdOrEmail: staff.email, action: "resent_instant_services_verification", targetTable: "checkout_orders", targetId: order.id });
+
+  try {
+    await sendInstantServicesVerification(env, { to: client.email, url: verifyUrl, lang: client.preferred_communication_language || "en" });
+    return redirectTo(request, `/staff/instant-services/orders/${orderId}?resent=1`);
+  } catch (err) {
+    console.error("Resend of Instant Services verification failed:", err.message);
+    return redirectTo(request, `/staff/instant-services/orders/${orderId}?resent_link=${encodeURIComponent(verifyUrl)}`);
+  }
 }
 
 // ---------------------------------------------------------------------
