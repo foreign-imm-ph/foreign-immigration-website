@@ -143,6 +143,37 @@ test.describe("Journey 8: BI-form wizard + assisted-completion intake", () => {
     expect(box.height).toBeGreaterThan(0);
   });
 
+  test("live-preview overflow warning (FIS Smart Application System directive): appears for a too-long answer, never truncates the saved value, and clears once corrected", async ({ page }) => {
+    const serviceId = createActiveCheckoutServiceDirect({ serviceSlug: `e2e-wizard-overflow-${uniqueSuffix()}`, biFormId: "CCS-A-CDR-2016" });
+    await beginGuestOrderAndSignIn(page, { serviceId, fullName: "E2E Overflow Tester", emailPrefix: "e2e-j8d" });
+
+    await expect(page.locator(".portal-bi-form-choice-panel")).toBeVisible({ timeout: 15_000 });
+    await page.click(".portal-bi-form-choice-self");
+
+    const previewImg = page.locator(".portal-bi-form-preview-img");
+    await expect(previewImg).toBeVisible({ timeout: 15_000 });
+    await expect.poll(() => previewImg.evaluate((img) => img.naturalWidth), { timeout: 10_000 }).toBeGreaterThan(0);
+
+    // CCS-A-CDR-2016's lastName char-box field has 39 boxes -- 45
+    // characters guarantees overflow regardless of exact measured width.
+    const overlongLastName = "DELAROSAWINATAATMADJAHUTAGALUNGSANTOSXYZ";
+    expect(overlongLastName.length).toBeGreaterThan(39);
+    await page.fill('[data-answer-key="lastName"]', overlongLastName);
+
+    const warning = page.locator('[data-answer-key="lastName"]').locator("xpath=following-sibling::p[contains(@class,'portal-overflow-warning')]");
+    await expect(warning).toBeVisible({ timeout: 5_000 });
+    await expect(warning).toContainText("39"); // the field's actual box count, not a guessed number
+
+    // The saved answer is never shortened -- the full, untouched value
+    // the customer typed is still exactly what the input (and therefore
+    // what mergeCollect() will submit) holds.
+    await expect(page.locator('[data-answer-key="lastName"]')).toHaveValue(overlongLastName);
+
+    // Corrected to fit: the warning clears.
+    await page.fill('[data-answer-key="lastName"]', "Dela Cruz");
+    await expect(warning).toBeHidden({ timeout: 5_000 });
+  });
+
   test("assisted: a genuinely shorter intake, never auto-submitted, reviewed and deliberately confirmed, visible to staff as needing assistance", async ({ page }) => {
     const serviceId = createActiveCheckoutServiceDirect({ serviceSlug: `e2e-wizard-assist-${uniqueSuffix()}`, biFormId: "CCS-A-CDR-2016" });
     const { orderId } = await beginGuestOrderAndSignIn(page, { serviceId, fullName: "E2E Assisted Tester", emailPrefix: "e2e-j8b" });

@@ -176,6 +176,15 @@ export async function handleBiFormPreviewImage(request, env, submissionId) {
     widthPx: result.widthPx,
     heightPx: result.heightPx,
     highlight: result.highlight,
+    // "FIS Smart Application System" directive: the live preview must
+    // never silently suggest a too-long answer fits. Same box-count
+    // comparison the final-document guard (staffBiForms.js's
+    // approveBiForm, commit 756296e) uses -- this is reported, not
+    // enforced, here: the wizard shows a warning but never blocks the
+    // customer from continuing, since the authoritative block already
+    // exists at Approve and a customer must never lose access to
+    // checkout over a field they may still want staff's help with.
+    overflowFields: result.overflowFields || [],
   });
 }
 

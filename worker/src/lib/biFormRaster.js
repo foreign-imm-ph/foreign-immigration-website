@@ -67,10 +67,10 @@ export async function renderDraftPreviewImage(env, biFormId, coordinateMap, ques
   const backgroundPngBytes = new Uint8Array(await backgroundObject.arrayBuffer());
 
   const { buildComposedSvg, renderComposedPng, highlightRectForQuestion } = await getComposer();
-  const { svg, widthPx, heightPx } = await buildComposedSvg(coordinateMap, questionnaire, data, backgroundPngBytes);
+  const { svg, widthPx, heightPx, overflowFields } = await buildComposedSvg(coordinateMap, questionnaire, data, backgroundPngBytes);
   const pngBytes = await renderComposedPng(svg, widthPx, heightPx, resvgWasmModule, fontBuffers);
   const highlight = activeQuestion ? highlightRectForQuestion(coordinateMap, activeQuestion) : null;
-  return { pngBytes, widthPx, heightPx, highlight };
+  return { pngBytes, widthPx, heightPx, highlight, overflowFields };
 }
 
 export async function composeAndFinalizeCustomerPreview(env, biFormId, coordinateMap, questionnaire, data) {

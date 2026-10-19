@@ -2092,6 +2092,12 @@ summary:focus-visible {
 
 .portal-required-mark { color: var(--color-accent, #b23b3b); }
 
+.portal-overflow-warning {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-accent, #b23b3b);
+}
+
 .portal-radio {
   display: inline-flex;
   align-items: center;

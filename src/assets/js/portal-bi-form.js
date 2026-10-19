@@ -116,6 +116,7 @@
       officialPreviewHeading: "Official Form Preview",
       officialPreviewUpdating: "Updating preview…",
       officialPreviewUnavailable: "A live preview isn't available for this form yet.",
+      overflowWarning: "This answer is {length} characters, but the official form has room for only {max}. Your full answer has been saved -- please shorten it if you can, or leave it as is and FIS will follow up to resolve it.",
       officialPreviewEnlargeLabel: "Enlarge",
       officialPreviewCollapseLabel: "Hide preview",
       officialPreviewShowLabel: "Show form preview",
@@ -169,6 +170,7 @@
       officialPreviewHeading: "官方表格预览",
       officialPreviewUpdating: "正在更新预览…",
       officialPreviewUnavailable: "此表格暂无实时预览。",
+      overflowWarning: "此答案长度为{length}个字符，但官方表格只能容纳{max}个字符。您的完整答案已保存——如果可以，请尽量缩短；如无法缩短，请保留原样，FIS将跟进协助解决。",
       officialPreviewEnlargeLabel: "放大",
       officialPreviewCollapseLabel: "隐藏预览",
       officialPreviewShowLabel: "显示表格预览",
@@ -222,6 +224,7 @@
       officialPreviewHeading: "官方表格預覽",
       officialPreviewUpdating: "正在更新預覽…",
       officialPreviewUnavailable: "此表格暫無即時預覽。",
+      overflowWarning: "此答案長度為{length}個字符，但官方表格只能容納{max}個字符。您的完整答案已保存——如果可以，請盡量縮短；如無法縮短，請保留原樣，FIS將跟進協助解決。",
       officialPreviewEnlargeLabel: "放大",
       officialPreviewCollapseLabel: "隱藏預覽",
       officialPreviewShowLabel: "顯示表格預覽",
@@ -275,6 +278,7 @@
       officialPreviewHeading: "공식 양식 미리보기",
       officialPreviewUpdating: "미리보기 업데이트 중…",
       officialPreviewUnavailable: "이 양식에는 아직 실시간 미리보기를 사용할 수 없습니다.",
+      overflowWarning: "이 답변은 {length}자이지만, 공식 양식에는 {max}자까지만 들어갑니다. 전체 답변은 이미 저장되었습니다 -- 가능하다면 줄여 주시고, 줄일 수 없다면 그대로 두시면 FIS가 후속 조치를 취하겠습니다.",
       officialPreviewEnlargeLabel: "확대",
       officialPreviewCollapseLabel: "미리보기 숨기기",
       officialPreviewShowLabel: "양식 미리보기 표시",
@@ -328,6 +332,7 @@
       officialPreviewHeading: "公式フォームのプレビュー",
       officialPreviewUpdating: "プレビューを更新中…",
       officialPreviewUnavailable: "このフォームのライブプレビューはまだご利用いただけません。",
+      overflowWarning: "この回答は{length}文字ですが、公式様式には{max}文字までしか入りません。回答全文はすでに保存されています -- 可能であれば短くしてください。短縮できない場合はそのままで構いません。FISが後ほどご連絡し対応いたします。",
       officialPreviewEnlargeLabel: "拡大",
       officialPreviewCollapseLabel: "プレビューを隠す",
       officialPreviewShowLabel: "フォームのプレビューを表示",
@@ -381,6 +386,7 @@
       officialPreviewHeading: "Xem trước mẫu đơn chính thức",
       officialPreviewUpdating: "Đang cập nhật bản xem trước…",
       officialPreviewUnavailable: "Bản xem trước trực tiếp chưa khả dụng cho mẫu đơn này.",
+      overflowWarning: "Câu trả lời này có {length} ký tự, nhưng mẫu đơn chính thức chỉ có chỗ cho {max} ký tự. Toàn bộ câu trả lời của quý khách đã được lưu -- vui lòng rút ngắn nếu có thể; nếu không, cứ để nguyên và FIS sẽ liên hệ để giải quyết.",
       officialPreviewEnlargeLabel: "Phóng to",
       officialPreviewCollapseLabel: "Ẩn bản xem trước",
       officialPreviewShowLabel: "Hiện bản xem trước mẫu đơn",
@@ -977,6 +983,32 @@
         }
         imgEl.addEventListener("load", positionHighlight);
 
+        // "FIS Smart Application System" directive: the live preview must
+        // never silently suggest a too-long answer fits. overflowFields
+        // comes from the SAME box-count comparison the final-document
+        // guard (staffBiForms.js's approveBiForm, commit 756296e) uses --
+        // this is a WARNING only, never a block: the customer keeps full
+        // access to checkout regardless, and their complete, untouched
+        // answer is already saved (this panel never rewrites anything,
+        // it only reads back what mergeCollect() already captured).
+        function clearOverflowWarnings() {
+          var existing = rootEl.querySelectorAll(".portal-overflow-warning");
+          for (var i = 0; i < existing.length; i++) existing[i].parentNode.removeChild(existing[i]);
+        }
+        function applyOverflowWarnings(overflowFields) {
+          clearOverflowWarnings();
+          (overflowFields || []).forEach(function (o) {
+            var fieldEl = rootEl.querySelector('[data-answer-key="' + o.key + '"]') || rootEl.querySelector('[data-sub-key="' + o.key + '"]');
+            var wrapper = fieldEl && fieldEl.closest(".form-field");
+            if (!wrapper) return;
+            var msg = t(lang, "overflowWarning").replace("{length}", String(o.length)).replace("{max}", String(o.maxLength));
+            var p = document.createElement("p");
+            p.className = "portal-overflow-warning";
+            p.textContent = msg;
+            wrapper.appendChild(p);
+          });
+        }
+
         function schedulePreview(activeFieldKey) {
           clearTimeout(debounceTimer);
           debounceTimer = setTimeout(function () { fetchPreview(activeFieldKey); }, 750);
@@ -1006,6 +1038,7 @@
               imgEl.src = "data:image/png;base64," + result.imageBase64;
               imgEl.hidden = false;
               positionHighlight();
+              applyOverflowWarnings(result.overflowFields);
             })
             .catch(function () {
               if (mySeq !== requestSeq) return;

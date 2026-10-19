@@ -133,7 +133,7 @@ function mapPointToCanvasTdPt(pageHeightPt, regions, dims, yPdf, hintYBottom, hi
 // Builds the SVG <text> elements for every customer-visible field with a
 // resolved, non-empty value. Mirrors render-pipeline.js's drawFields()
 // field-by-field, but emits SVG markup instead of pdf-lib drawText calls.
-function buildFieldTextElements(coordinateMap, measureFont, resolved) {
+function buildFieldTextElements(coordinateMap, measureFont, resolved, overflowFields) {
   const pageHeightPt = coordinateMap.pageHeightPt;
   const regions = getRegions(coordinateMap);
   const dims = getCanvasDims(coordinateMap);
@@ -146,6 +146,19 @@ function buildFieldTextElements(coordinateMap, measureFont, resolved) {
     const f = coordinateMap.charBoxFields[key];
     const v = String(value ?? "").toUpperCase();
     const nBoxes = f.colsPt.length - 1;
+    // Same comparison pdf-fields.js's populateCharField uses for the
+    // final-document overflow guard (worker/src/routes/staffBiForms.js's
+    // approveBiForm, commit 756296e) -- this is what "preview and final
+    // validation agree on overflow conditions" means in practice: one
+    // formula (value.length > nBoxes), computed from the same
+    // coordinate-map box count, never two independently-maintained
+    // thresholds that could drift apart. Reported here (not thrown) --
+    // the live preview must never block an in-progress draft; it only
+    // surfaces the SAME fact the final guard will enforce at Approve,
+    // early enough for the customer to self-correct if they want to.
+    if (overflowFields && v.length > nBoxes) {
+      overflowFields.push({ key, label: f.label, length: v.length, maxLength: nBoxes });
+    }
     const chars = v.slice(0, nBoxes).split("");
     if (!chars.length) continue;
     const size = fitCharFontSize(measureFont, chars, f.colsPt[1] - f.colsPt[0], f.yTopPt - f.yBottomPt);
@@ -370,7 +383,8 @@ async function buildComposedSvg(coordinateMap, questionnaire, data, backgroundPn
   const bindings = (questionnaire && questionnaire.fieldBindings) || {};
   const resolved = resolveFieldValues(bindings, data);
 
-  const fieldElements = buildFieldTextElements(coordinateMap, measureFont, resolved);
+  const overflowFields = [];
+  const fieldElements = buildFieldTextElements(coordinateMap, measureFont, resolved, overflowFields);
   const dividerElement = buildDividerCaptionElement(dims);
   const watermarkElement = buildWatermarkElement(coordinateMap, measureFont, dims);
 
@@ -384,7 +398,7 @@ async function buildComposedSvg(coordinateMap, questionnaire, data, backgroundPn
     ${watermarkElement}
   </svg>`;
 
-  return { svg, widthPx, heightPx, dims };
+  return { svg, widthPx, heightPx, dims, overflowFields };
 }
 
 // Renders the composed SVG to PNG via resvg-wasm. `resvgWasmInput` is the

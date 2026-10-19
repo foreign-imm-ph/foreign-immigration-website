@@ -37,7 +37,7 @@ const {
 } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
 const { composeCustomerCanvas, finalizeCustomerPreview } = require(path.join(ENGINE_DIR, "lib", "raster-pipeline"));
 const { getCanvasDims } = require(path.join(ENGINE_DIR, "lib", "render-pipeline"));
-const { composeAndFinalizeCustomerPreviewWasm, highlightRectForField, highlightRectForQuestion } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
+const { composeAndFinalizeCustomerPreviewWasm, highlightRectForField, highlightRectForQuestion, buildComposedSvg } = require(path.join(ENGINE_DIR, "lib", "svg-compose"));
 const { assertMetadata, auditContentStreams, auditBoundaryExpansion, checkFieldInk } = require(path.join(ENGINE_DIR, "lib", "validate"));
 const raster = require(path.join(ENGINE_DIR, "lib", "raster"));
 const { execFileSync } = require("child_process");
@@ -370,6 +370,12 @@ for (const formId of FORM_IDS) {
   const originalPath = originalPathFor(formId);
   const skip = !originalPath;
   const skipReason = `FIS_BI_ORIGINALS_DIR not set or missing ${formId}.pdf -- original BI templates are confidential and are not committed to this repository`;
+  // Not every mapped form has a customer-visible char-box field --
+  // 2014-01-011, for instance, is checkbox-only (civil status). Overflow
+  // can only ever apply to a char-box field, so the three overflow tests
+  // below skip cleanly for such a form rather than asserting a false
+  // universal invariant.
+  const hasCustomerCharBoxField = Object.keys(fieldsForAudience(loadFormConfig(formId).coordinateMap, "customer").charBoxFields).length > 0;
 
   test(`${formId}: baseline fixture generates with zero overflow and passes all security audits`, { skip: skip && skipReason }, async () => {
     const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
@@ -421,6 +427,65 @@ for (const formId of FORM_IDS) {
     const scale = 300 / 72;
     const tolerance = regions.length * 2 * (1 / scale);
     assert.ok(Math.abs(dims.heightPt - expectedHeight) < tolerance, `composed canvas height ${dims.heightPt} does not match expected ${expectedHeight} (tolerance ${tolerance.toFixed(3)}pt)`);
+  });
+
+  // "FIS Smart Application System" directive: "Verify that preview
+  // validation and final-document validation agree on overflow
+  // conditions." Feeds the SAME deliberately-overlong value into both
+  // pipelines -- buildStaffDocument (the final-document guard
+  // staffBiForms.js's approveBiForm, commit 756296e, blocks on) and
+  // buildComposedSvg (the live Client Portal preview, this commit) --
+  // and asserts both flag the identical field. A silent disagreement
+  // here (one truncates unflagged where the other catches it) would be
+  // exactly the kind of drift the directive is guarding against.
+  test(`${formId}: live-preview overflow detection agrees with the final-document overflow guard`, { skip: (skip && skipReason) || (!hasCustomerCharBoxField && "no customer-visible char-box field on this form") }, async () => {
+    const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    const bindings = questionnaire.fieldBindings || {};
+
+    const customerFields = fieldsForAudience(coordinateMap, "customer");
+    const charBoxKeys = Object.keys(customerFields.charBoxFields);
+    const targetKey = charBoxKeys[0];
+    const nBoxes = coordinateMap.charBoxFields[targetKey].colsPt.length - 1;
+    const overlongValue = "X".repeat(nBoxes + 5);
+    const data = Object.assign({}, sampleData, { [targetKey]: overlongValue });
+
+    const staffDoc = await buildStaffDocument(originalBytes, coordinateMap, bindings, data);
+    const finalFlagsTarget = staffDoc.overflowReport.some((o) => o.issue.includes(`"${overlongValue}"`));
+    assert.ok(finalFlagsTarget, `expected the final-document guard to flag the deliberately overlong ${targetKey}: ${JSON.stringify(staffDoc.overflowReport)}`);
+
+    const { canvasPng: backgroundPngBytes } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+    const { overflowFields } = await buildComposedSvg(coordinateMap, questionnaire, data, backgroundPngBytes);
+    const previewFlagsTarget = overflowFields.some((o) => o.key === targetKey && o.length === overlongValue.length && o.maxLength === nBoxes);
+    assert.ok(previewFlagsTarget, `expected the live-preview overflow detector to flag the same deliberately overlong ${targetKey}: ${JSON.stringify(overflowFields)}`);
+  });
+
+  // Ordinary (non-overflowing) values must never be flagged by either
+  // pipeline -- the baseline-fixture test above already proves this for
+  // buildStaffDocument; this proves buildComposedSvg agrees too.
+  test(`${formId}: live-preview overflow detector reports nothing for the ordinary baseline fixture`, { skip: (skip && skipReason) || (!hasCustomerCharBoxField && "no customer-visible char-box field on this form") }, async () => {
+    const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    const { canvasPng: backgroundPngBytes } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+    const { overflowFields } = await buildComposedSvg(coordinateMap, questionnaire, sampleData, backgroundPngBytes);
+    assert.equal(overflowFields.length, 0, `unexpected live-preview overflow on baseline fixture data: ${JSON.stringify(overflowFields)}`);
+  });
+
+  test(`${formId}: live-preview overflow clears once the answer is corrected to fit`, { skip: (skip && skipReason) || (!hasCustomerCharBoxField && "no customer-visible char-box field on this form") }, async () => {
+    const { coordinateMap, questionnaire, sampleData } = loadFormConfig(formId);
+    const originalBytes = fs.readFileSync(originalPath);
+    const customerFields = fieldsForAudience(coordinateMap, "customer");
+    const targetKey = Object.keys(customerFields.charBoxFields)[0];
+    const nBoxes = coordinateMap.charBoxFields[targetKey].colsPt.length - 1;
+    const { canvasPng: backgroundPngBytes } = await composeCustomerCanvas(originalBytes, coordinateMap, 300);
+
+    const overlongData = Object.assign({}, sampleData, { [targetKey]: "X".repeat(nBoxes + 5) });
+    const overlong = await buildComposedSvg(coordinateMap, questionnaire, overlongData, backgroundPngBytes);
+    assert.ok(overlong.overflowFields.some((o) => o.key === targetKey), "expected the overlong value to be flagged first");
+
+    const correctedData = Object.assign({}, sampleData, { [targetKey]: "X".repeat(Math.max(1, nBoxes - 1)) });
+    const corrected = await buildComposedSvg(coordinateMap, questionnaire, correctedData, backgroundPngBytes);
+    assert.ok(!corrected.overflowFields.some((o) => o.key === targetKey), `expected the corrected, in-bounds value to clear the warning for ${targetKey}: ${JSON.stringify(corrected.overflowFields)}`);
   });
 
   test(`${formId}: targeted per-field ink check -- every customer-visible field with a value is actually drawn, every staff-only field is absent from the customer-fields document`, { skip: skip && skipReason }, async () => {
